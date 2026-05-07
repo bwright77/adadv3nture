@@ -1,0 +1,45 @@
+import { C } from '../../tokens'
+
+interface InspireDetailProps {
+  photo: string
+  year: string
+  place: string
+  onClose: () => void
+}
+
+export function InspireDetail({ photo, year, place, onClose }: InspireDetailProps) {
+  const yearsAgo = 2026 - parseInt(year, 10)
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 60,
+      background: `url(${photo}) center/cover no-repeat`,
+    }}>
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.85) 100%)',
+      }} />
+
+      <div style={{ position: 'relative', zIndex: 10 }}>
+        <div style={{ padding: '56px 18px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.cream }}>
+          <button onClick={onClose} style={{
+            fontSize: 22, fontWeight: 300, background: 'none', border: 'none', cursor: 'pointer', color: C.cream,
+          }}>×</button>
+          <span className="badge" style={{ fontSize: 10, letterSpacing: '0.2em' }}>
+            ON THIS DAY · {yearsAgo}Y AGO
+          </span>
+          <span style={{ fontSize: 18, opacity: 0.5 }}>↗</span>
+        </div>
+      </div>
+
+      <div style={{ position: 'absolute', bottom: 38, left: 0, right: 0, padding: '0 22px', color: C.cream, zIndex: 10 }}>
+        <div className="badge" style={{ fontSize: 24, lineHeight: 1.05 }}>{place.toUpperCase()}</div>
+        <div className="mono" style={{ fontSize: 12, opacity: 0.85, marginTop: 6 }}>
+          May {year} · the adventure
+        </div>
+        <div style={{ fontSize: 13, marginTop: 14, opacity: 0.95, lineHeight: 1.5, fontStyle: 'italic' }}>
+          The 4pm hour is what these become.
+        </div>
+      </div>
+    </div>
+  )
+}

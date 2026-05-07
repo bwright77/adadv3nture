@@ -1,0 +1,24 @@
+# deps
+node_modules
+
+# build
+dist
+
+# env — never commit
+.env
+.env.local
+.env.*.local
+
+# editor
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# vite
+.vite
+
+# design artifacts — local only, not part of the codebase
+project/

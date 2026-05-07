@@ -1,0 +1,15 @@
+export const C = {
+  cream:   '#F5EDD6',
+  creamDk: '#E8DFC6',
+  rust:    '#C4522A',
+  rustDk:  '#8B3A1E',
+  teal:    '#5BBCB8',
+  tealDk:  '#2F8783',
+  dark:    '#1A1208',
+  paper:   '#FBF7EC',
+  sand:    '#D4824A',
+  sandLt:  '#E8C99A',
+  ink60:   'rgba(26,18,8,0.6)',
+  ink40:   'rgba(26,18,8,0.4)',
+  ink20:   'rgba(26,18,8,0.18)',
+} as const
