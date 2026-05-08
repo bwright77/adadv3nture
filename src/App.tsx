@@ -30,11 +30,13 @@ function Dashboard() {
   const bgPhoto = useBgPhoto(tod)
   const todayPhoto = useInspiration()
   const [tab, setTab] = useState<Tab>(() => {
-    // After Strava OAuth redirect, land on log tab
     const params = new URLSearchParams(window.location.search)
     if (params.get('strava') === 'connected') {
       window.history.replaceState({}, '', '/')
       return 'log'
+    }
+    if (params.get('google') === 'connected') {
+      window.history.replaceState({}, '', '/')
     }
     return 'home'
   })

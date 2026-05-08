@@ -1,25 +1,17 @@
 import { Header } from '../ui/Header'
-import { Glass } from '../ui/Glass'
-import { CardLabel } from '../ui/CardLabel'
 import { WWA } from './widgets/WWA'
 import { WInbox } from './widgets/WInbox'
 import { WMIT } from './widgets/WMIT'
 import { WDrinks } from './widgets/WDrinks'
 import { WWeather } from './widgets/WWeather'
 import { WInspire } from './widgets/WInspire'
-import { C } from '../../tokens'
+import { WCalendar } from './widgets/WCalendar'
 import type { InspirationPhoto } from '../../hooks/useInspiration'
 
 interface MidMorningViewProps {
   inspirationPhoto: InspirationPhoto | null
   onInspireExpand?: (photo: InspirationPhoto) => void
 }
-
-const EVENTS = [
-  { t: '9:30',  l: 'Triage + plan' },
-  { t: '11:30', l: 'José + PFB' },
-  { t: '2:30',  l: 'School pickup' },
-]
 
 export function MidMorningView({ inspirationPhoto, onInspireExpand }: MidMorningViewProps) {
   return (
@@ -30,18 +22,7 @@ export function MidMorningView({ inspirationPhoto, onInspireExpand }: MidMorning
         gap: 10, padding: '0 14px 100px',
       }}>
         <WWA dark />
-        <Glass dark span={6} pad={14}>
-          <CardLabel dark>Calendar · today</CardLabel>
-          {EVENTS.map((e, i) => (
-            <div key={i} style={{
-              display: 'flex', gap: 10, padding: '5px 0',
-              borderBottom: i < EVENTS.length - 1 ? '0.5px dashed rgba(255,255,255,0.15)' : 'none',
-            }}>
-              <span className="mono" style={{ fontSize: 10, color: C.teal, width: 30 }}>{e.t}</span>
-              <span style={{ fontSize: 11 }}>{e.l}</span>
-            </div>
-          ))}
-        </Glass>
+        <WCalendar dark span={6} />
         <WInbox dark />
         <WMIT dark />
         <WDrinks dark />
