@@ -4,7 +4,7 @@ export type TimeOfDay = 'morning' | 'mid-morning' | 'afternoon' | 'evening'
 
 function getTimeOfDay(date: Date): TimeOfDay {
   const mins = date.getHours() * 60 + date.getMinutes()
-  if (mins >= 7 * 60 + 35 && mins < 9 * 60 + 30) return 'morning'
+  if (mins >= 6 * 60 && mins < 9 * 60 + 30) return 'morning'
   if (mins >= 9 * 60 + 30 && mins < 14 * 60 + 30) return 'mid-morning'
   if (mins >= 14 * 60 + 30 && mins < 18 * 60) return 'afternoon'
   return 'evening'

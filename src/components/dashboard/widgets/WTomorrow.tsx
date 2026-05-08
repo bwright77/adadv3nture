@@ -12,8 +12,11 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 const DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 const DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 
-function tomorrowDate() {
-  const d = new Date()
+function nextMorningDate() {
+  const now = new Date()
+  // Before 6am still feels like "tonight" — the morning coming up is today
+  if (now.getHours() < 6) return now
+  const d = new Date(now)
   d.setDate(d.getDate() + 1)
   return d
 }
@@ -28,7 +31,7 @@ export function WTomorrow({ dark }: WTomorrowProps) {
     getProgram(user.id).then(setProgram).catch(() => null)
   }, [user])
 
-  const tmrw = tomorrowDate()
+  const tmrw = nextMorningDate()
   const dow = tmrw.getDay()
   const isMonday = dow === 1
   const dateLabel = `${DOW_FULL[dow]} · ${MONTHS[tmrw.getMonth()]} ${tmrw.getDate()}`
