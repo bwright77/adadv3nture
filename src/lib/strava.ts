@@ -127,12 +127,12 @@ export async function syncActivities(userId: string, daysBack = 90): Promise<num
     duration_seconds: a.elapsed_time,
     distance_miles: a.distance ? metersToMiles(a.distance) : null,
     elevation_feet: a.total_elevation_gain ? metersToFeet(a.total_elevation_gain) : null,
-    avg_hr: a.average_heartrate ?? null,
-    max_hr: a.max_heartrate ?? null,
+    avg_hr: a.average_heartrate ? Math.round(a.average_heartrate) : null,
+    max_hr: a.max_heartrate ? Math.round(a.max_heartrate) : null,
     avg_pace_seconds_per_mile: a.average_speed ? mpsToSecondsPerMile(a.average_speed) : null,
-    avg_watts: a.average_watts ?? null,
+    avg_watts: a.average_watts ? Math.round(a.average_watts) : null,
     total_output_kj: a.kilojoules ?? null,
-    calories: a.calories ?? null,
+    calories: a.calories ? Math.round(a.calories) : null,
   }))
 
   // Insert in batches of 100
