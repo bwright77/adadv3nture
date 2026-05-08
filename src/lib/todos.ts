@@ -5,6 +5,7 @@ const db = supabase as any
 export type TodoCategory = 'body' | 'career' | 'family' | 'home' | 'personal'
 export type TodoEffort = 'quick' | 'half_day' | 'full_day' | 'multi_day'
 export type TodoStatus = 'todo' | 'in_progress' | 'done'
+export type TodoUrgency = 'fire' | 'deck' | 'rain'
 
 export interface Todo {
   id: string
@@ -15,6 +16,7 @@ export interface Todo {
   weather_required: 'any' | 'dry' | 'sunny'
   effort: TodoEffort | null
   priority_order: number
+  urgency: TodoUrgency
   status: TodoStatus
   completed_at: string | null
   created_at: string
@@ -45,7 +47,12 @@ export async function getCompletedTodos(userId: string, category: TodoCategory):
   return (data ?? []) as Todo[]
 }
 
-export async function addTodo(userId: string, category: TodoCategory, title: string): Promise<Todo> {
+export async function addTodo(
+  userId: string,
+  category: TodoCategory,
+  title: string,
+  urgency: TodoUrgency = 'deck',
+): Promise<Todo> {
   const { data: existing } = await supabase
     .from('todos')
     .select('priority_order')
@@ -58,11 +65,16 @@ export async function addTodo(userId: string, category: TodoCategory, title: str
 
   const { data, error } = await db
     .from('todos')
-    .insert({ user_id: userId, category, title, priority_order: maxOrder + 1, status: 'todo' })
+    .insert({ user_id: userId, category, title, urgency, priority_order: maxOrder + 1, status: 'todo' })
     .select()
     .single()
   if (error) throw new Error(error.message)
   return data as Todo
+}
+
+export async function setTodoUrgency(id: string, urgency: TodoUrgency): Promise<void> {
+  const { error } = await db.from('todos').update({ urgency }).eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 export async function completeTodo(id: string): Promise<void> {

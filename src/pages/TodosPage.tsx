@@ -2,13 +2,79 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { C } from '../tokens'
 import {
-  getTodos, getCompletedTodos, addTodo, completeTodo, deleteTodo, moveTodo,
-  type Todo, type TodoCategory,
+  getTodos, getCompletedTodos, addTodo, completeTodo, deleteTodo, moveTodo, setTodoUrgency,
+  type Todo, type TodoCategory, type TodoUrgency,
 } from '../lib/todos'
 import {
   getActiveReminders, addReminder, snoozeReminder, completeReminder, deleteReminder,
   type Reminder,
 } from '../lib/reminders'
+
+const URGENCY_ORDER: Record<TodoUrgency, number> = { fire: 0, deck: 1, rain: 2 }
+
+const URGENCY: Record<TodoUrgency, { label: string; glyph: string; color: string; bg: string; rowBg: string; dim: boolean }> = {
+  fire: { label: 'FIRE',     glyph: '◆', color: '#C4522A', bg: 'rgba(196,82,42,0.14)', rowBg: 'rgba(196,82,42,0.05)', dim: false },
+  deck: { label: 'ON DECK',  glyph: '●', color: 'rgba(26,18,8,0.4)', bg: 'transparent', rowBg: '#fff', dim: false },
+  rain: { label: 'RAIN DAY', glyph: '○', color: '#2A6F6C', bg: 'rgba(91,188,184,0.12)', rowBg: '#fff', dim: true },
+}
+
+function UrgencyChip({ urgency, onChange }: { urgency: TodoUrgency; onChange: (u: TodoUrgency) => void }) {
+  const u = URGENCY[urgency]
+  const cycle: Record<TodoUrgency, TodoUrgency> = { fire: 'deck', deck: 'rain', rain: 'fire' }
+  return (
+    <button
+      onClick={e => { e.stopPropagation(); onChange(cycle[urgency]) }}
+      title={`Priority: ${u.label} — tap to change`}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 4,
+        padding: urgency === 'deck' ? '3px 6px' : '3px 8px',
+        borderRadius: 999, border: urgency === 'rain' ? `1px solid ${u.color}` : 'none',
+        background: u.bg, cursor: 'pointer', flexShrink: 0,
+        transition: 'background 0.15s',
+      }}
+    >
+      <span style={{ fontSize: 8, color: u.color, lineHeight: 1 }}>{u.glyph}</span>
+      {urgency !== 'deck' && (
+        <span className="mono" style={{ fontSize: 'var(--fs-10)', color: u.color, fontWeight: 700, letterSpacing: '0.1em', lineHeight: 1 }}>
+          {u.label}
+        </span>
+      )}
+    </button>
+  )
+}
+
+function UrgencySelector({ value, onChange }: { value: TodoUrgency; onChange: (u: TodoUrgency) => void }) {
+  return (
+    <div style={{ display: 'flex', gap: 6 }}>
+      {(['fire', 'deck', 'rain'] as TodoUrgency[]).map(u => {
+        const tier = URGENCY[u]
+        const active = value === u
+        return (
+          <button
+            key={u}
+            onClick={() => onChange(u)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
+              border: active
+                ? `1.5px solid ${tier.color}`
+                : `1px solid rgba(26,18,8,0.15)`,
+              background: active ? tier.bg : 'transparent',
+              transition: 'all 0.15s',
+            }}
+          >
+            <span style={{ fontSize: 8, color: tier.color }}>{tier.glyph}</span>
+            <span className="mono" style={{
+              fontSize: 'var(--fs-10)', fontWeight: active ? 700 : 500,
+              color: active ? tier.color : 'rgba(26,18,8,0.45)',
+              letterSpacing: '0.1em',
+            }}>{tier.label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 const CATEGORIES: { id: TodoCategory; label: string; color: string }[] = [
   { id: 'body',     label: 'Body',     color: C.teal },
@@ -28,6 +94,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
   const [showDone, setShowDone] = useState(false)
   const [adding, setAdding] = useState(false)
   const [draft, setDraft] = useState('')
+  const [draftUrgency, setDraftUrgency] = useState<TodoUrgency>('deck')
   const [loading, setLoading] = useState(true)
   const inputRef = useRef<HTMLInputElement>(null)
   const [reminders, setReminders] = useState<Reminder[]>([])
@@ -35,6 +102,13 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
   const [reminderDraft, setReminderDraft] = useState('')
 
   const current = CATEGORIES.find(c => c.id === cat)!
+
+  function sortByUrgency(list: Todo[]): Todo[] {
+    return [...list].sort((a, b) => {
+      const ud = URGENCY_ORDER[a.urgency] - URGENCY_ORDER[b.urgency]
+      return ud !== 0 ? ud : a.priority_order - b.priority_order
+    })
+  }
 
   async function load() {
     if (!user) return
@@ -44,7 +118,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
       getCompletedTodos(user.id, cat),
       getActiveReminders(user.id),
     ])
-    setTodos(open)
+    setTodos(sortByUrgency(open))
     setDone(closed)
     setReminders(active)
     setLoading(false)
@@ -58,10 +132,16 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
 
   async function handleAdd() {
     if (!user || !draft.trim()) { setAdding(false); setDraft(''); return }
-    const item = await addTodo(user.id, cat, draft.trim())
-    setTodos(prev => [...prev, item])
+    const item = await addTodo(user.id, cat, draft.trim(), draftUrgency)
+    setTodos(prev => sortByUrgency([...prev, item]))
     setDraft('')
+    setDraftUrgency('deck')
     setAdding(false)
+  }
+
+  async function handleUrgencyChange(id: string, urgency: TodoUrgency) {
+    setTodos(prev => sortByUrgency(prev.map(t => t.id === id ? { ...t, urgency } : t)))
+    await setTodoUrgency(id, urgency)
   }
 
   async function handleComplete(id: string) {
@@ -251,41 +331,45 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
                 onComplete={() => handleComplete(t.id)}
                 onDelete={() => handleDelete(t.id)}
                 onMove={dir => handleMove(t.id, dir)}
+                onUrgencyChange={u => handleUrgencyChange(t.id, u)}
               />
             ))
           )}
 
           {/* Add input */}
           {adding ? (
-            <div style={{
-              position: 'relative', marginTop: 8,
-            }}>
+            <div style={{ position: 'relative', marginTop: 8 }}>
               <div style={{
                 position: 'absolute', left: 0, top: 0, bottom: 0, width: 4,
                 background: current.color, borderRadius: '4px 0 0 4px',
               }} />
               <div style={{
                 marginLeft: 4,
-                display: 'flex', alignItems: 'center', gap: 10,
                 background: '#fff', border: `1.5px solid ${current.color}`,
                 borderLeft: 'none', borderRadius: '0 14px 14px 0',
                 padding: '10px 14px',
               }}>
-                <input
-                  ref={inputRef}
-                  value={draft}
-                  onChange={e => setDraft(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { setAdding(false); setDraft('') } }}
-                  placeholder={`Add to ${current.label}…`}
-                  style={{
-                    flex: 1, border: 'none', outline: 'none', fontSize: 'var(--fs-16)',
-                    background: 'transparent', color: C.dark, fontFamily: 'inherit',
-                  }}
-                />
-                <button onClick={handleAdd} style={{ background: current.color, color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 'var(--fs-14)', fontWeight: 700, cursor: 'pointer' }}>
-                  Add
-                </button>
-                <button onClick={() => { setAdding(false); setDraft('') }} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-18)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input
+                    ref={inputRef}
+                    value={draft}
+                    onChange={e => setDraft(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { setAdding(false); setDraft('') } }}
+                    placeholder={`Add to ${current.label}…`}
+                    style={{
+                      flex: 1, border: 'none', outline: 'none', fontSize: 'var(--fs-16)',
+                      background: 'transparent', color: C.dark, fontFamily: 'inherit',
+                    }}
+                  />
+                  <button onClick={handleAdd} style={{ background: current.color, color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 'var(--fs-14)', fontWeight: 700, cursor: 'pointer' }}>
+                    Add
+                  </button>
+                  <button onClick={() => { setAdding(false); setDraft('') }} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-18)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                </div>
+                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em' }}>PRIORITY:</span>
+                  <UrgencySelector value={draftUrgency} onChange={setDraftUrgency} />
+                </div>
               </div>
             </div>
           ) : (
@@ -350,7 +434,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
 }
 
 function TodoRow({
-  todo, accent, isFirst, isLast, onComplete, onDelete, onMove,
+  todo, accent, isFirst, isLast, onComplete, onDelete, onMove, onUrgencyChange,
 }: {
   todo: Todo
   accent: string
@@ -359,54 +443,69 @@ function TodoRow({
   onComplete: () => void
   onDelete: () => void
   onMove: (dir: 'up' | 'down') => void
+  onUrgencyChange: (u: TodoUrgency) => void
 }) {
+  const urg = URGENCY[todo.urgency ?? 'deck']
+  const isFire = todo.urgency === 'fire'
+  const isRain = todo.urgency === 'rain'
+
   return (
-    <div style={{ position: 'relative', marginBottom: 8 }}>
-      {/* Category strap */}
+    <div style={{
+      position: 'relative', marginBottom: 8,
+      opacity: isRain ? 0.65 : 1,
+      transition: 'opacity 0.2s',
+    }}>
+      {/* Category strap — thicker + glow for fire */}
       <div style={{
-        position: 'absolute', left: 0, top: 0, bottom: 0, width: 4,
-        background: accent, borderRadius: '4px 0 0 4px',
+        position: 'absolute', left: 0, top: 0, bottom: 0,
+        width: isFire ? 5 : 4,
+        background: isFire ? `linear-gradient(180deg, ${accent}, #E8703A)` : accent,
+        borderRadius: '4px 0 0 4px',
+        boxShadow: isFire ? `2px 0 8px ${accent}55` : 'none',
       }} />
       <div style={{
         marginLeft: 4,
-        display: 'flex', alignItems: 'center', gap: 10,
-        background: '#fff', border: `0.5px solid ${C.ink20}`,
+        background: urg.rowBg,
+        border: isFire
+          ? `0.5px solid rgba(196,82,42,0.25)`
+          : `0.5px solid ${C.ink20}`,
         borderLeft: 'none', borderRadius: '0 14px 14px 0',
         padding: '12px 14px',
       }}>
-        {/* Check */}
-        <button
-          onClick={onComplete}
-          style={{
-            width: 22, height: 22, borderRadius: 6,
-            border: `2px solid ${accent}`, background: 'transparent',
-            cursor: 'pointer', flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        />
-
-        {/* Title */}
-        <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--fs-16)', lineHeight: 1.4, color: C.dark, wordBreak: 'break-word' }}>
-          {todo.title}
-        </span>
-
-        {/* Reorder */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Check */}
           <button
-            onClick={() => onMove('up')} disabled={isFirst}
-            style={{ background: 'none', border: 'none', cursor: isFirst ? 'default' : 'pointer', color: isFirst ? C.ink20 : C.ink40, fontSize: 'var(--fs-12)', lineHeight: 1, padding: '1px 3px' }}
-          >▲</button>
-          <button
-            onClick={() => onMove('down')} disabled={isLast}
-            style={{ background: 'none', border: 'none', cursor: isLast ? 'default' : 'pointer', color: isLast ? C.ink20 : C.ink40, fontSize: 'var(--fs-12)', lineHeight: 1, padding: '1px 3px' }}
-          >▼</button>
+            onClick={onComplete}
+            style={{
+              width: 22, height: 22, borderRadius: 6,
+              border: `2px solid ${isFire ? accent : C.ink20}`,
+              background: 'transparent', cursor: 'pointer', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          />
+
+          {/* Title */}
+          <span style={{
+            flex: 1, minWidth: 0,
+            fontSize: 'var(--fs-16)', lineHeight: 1.4, color: C.dark,
+            wordBreak: 'break-word',
+            fontWeight: isFire ? 600 : 400,
+          }}>
+            {todo.title}
+          </span>
+
+          {/* Urgency chip */}
+          <UrgencyChip urgency={todo.urgency ?? 'deck'} onChange={onUrgencyChange} />
+
+          {/* Reorder */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
+            <button onClick={() => onMove('up')} disabled={isFirst} style={{ background: 'none', border: 'none', cursor: isFirst ? 'default' : 'pointer', color: isFirst ? C.ink20 : C.ink40, fontSize: 'var(--fs-12)', lineHeight: 1, padding: '1px 3px' }}>▲</button>
+            <button onClick={() => onMove('down')} disabled={isLast} style={{ background: 'none', border: 'none', cursor: isLast ? 'default' : 'pointer', color: isLast ? C.ink20 : C.ink40, fontSize: 'var(--fs-12)', lineHeight: 1, padding: '1px 3px' }}>▼</button>
+          </div>
+
+          {/* Delete */}
+          <button onClick={onDelete} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-17)', cursor: 'pointer', lineHeight: 1, flexShrink: 0, padding: '0 2px' }}>×</button>
         </div>
-
-        {/* Delete */}
-        <button
-          onClick={onDelete}
-          style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-17)', cursor: 'pointer', lineHeight: 1, flexShrink: 0, padding: '0 2px' }}
-        >×</button>
       </div>
     </div>
   )
