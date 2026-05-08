@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any
 
 export interface Reminder {
   id: string
@@ -30,7 +32,7 @@ export async function addReminder(
   category: string,
   urgency: 'high' | 'medium' | 'low' = 'medium',
 ): Promise<Reminder> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('persistent_reminders')
     .insert({ user_id: userId, title, category, urgency, surfaces_daily: true })
     .select()
@@ -42,7 +44,7 @@ export async function addReminder(
 export async function snoozeReminder(id: string): Promise<void> {
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
-  const { error } = await supabase
+  const { error } = await db
     .from('persistent_reminders')
     .update({ snoozed_until: tomorrow.toISOString().substring(0, 10) })
     .eq('id', id)
@@ -50,7 +52,7 @@ export async function snoozeReminder(id: string): Promise<void> {
 }
 
 export async function completeReminder(id: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from('persistent_reminders')
     .update({ completed_at: new Date().toISOString() })
     .eq('id', id)

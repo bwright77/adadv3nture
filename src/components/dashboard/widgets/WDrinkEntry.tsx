@@ -3,7 +3,7 @@ import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
-import { getDrinksForDate, setDrinksForDate, getLast7Days } from '../../../lib/drinks'
+import { setDrinksForDate, getLast7Days } from '../../../lib/drinks'
 
 interface WDrinkEntryProps { dark?: boolean }
 

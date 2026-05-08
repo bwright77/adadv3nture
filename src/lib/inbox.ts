@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any
 
 export interface InboxItem {
   id: string
@@ -9,7 +11,7 @@ export interface InboxItem {
 }
 
 export async function addInboxItem(userId: string, content: string): Promise<InboxItem> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('inbox_items')
     .insert({ user_id: userId, content: content.trim() })
     .select()
@@ -35,7 +37,7 @@ export async function deleteInboxItem(id: string): Promise<void> {
 }
 
 export async function markProcessed(id: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from('inbox_items')
     .update({ processed: true, processed_at: new Date().toISOString() })
     .eq('id', id)

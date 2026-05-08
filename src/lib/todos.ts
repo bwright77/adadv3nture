@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any
 
 export type TodoCategory = 'body' | 'career' | 'family' | 'home' | 'personal'
 export type TodoEffort = 'quick' | 'half_day' | 'full_day' | 'multi_day'
@@ -54,7 +56,7 @@ export async function addTodo(userId: string, category: TodoCategory, title: str
 
   const maxOrder = (existing?.[0] as { priority_order: number } | undefined)?.priority_order ?? -1
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('todos')
     .insert({ user_id: userId, category, title, priority_order: maxOrder + 1, status: 'todo' })
     .select()
@@ -64,7 +66,7 @@ export async function addTodo(userId: string, category: TodoCategory, title: str
 }
 
 export async function completeTodo(id: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from('todos')
     .update({ status: 'done', completed_at: new Date().toISOString() })
     .eq('id', id)
@@ -85,7 +87,7 @@ export async function moveTodo(id: string, direction: 'up' | 'down', todos: Todo
   const a = todos[idx]
   const b = todos[swapIdx]
   await Promise.all([
-    supabase.from('todos').update({ priority_order: b.priority_order }).eq('id', a.id),
-    supabase.from('todos').update({ priority_order: a.priority_order }).eq('id', b.id),
+    db.from('todos').update({ priority_order: b.priority_order }).eq('id', a.id),
+    db.from('todos').update({ priority_order: a.priority_order }).eq('id', b.id),
   ])
 }

@@ -5,7 +5,7 @@ import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getTodayEvents, isGoogleConnected, getGoogleAuthUrl, type CalendarEvent } from '../../../lib/google-calendar'
 
-interface WCalendarProps { dark?: boolean; span?: number }
+interface WCalendarProps { dark?: boolean; span?: number; tomorrow?: boolean }
 
 function formatTime(iso: string): string {
   if (!iso.includes('T')) return 'all day'
@@ -13,7 +13,7 @@ function formatTime(iso: string): string {
     .toLowerCase().replace(' ', '')
 }
 
-export function WCalendar({ dark, span = 6 }: WCalendarProps) {
+export function WCalendar({ dark, span = 6, tomorrow = false }: WCalendarProps) {
   const { user } = useAuth()
   const [events, setEvents] = useState<CalendarEvent[] | null>(null)
   const [connected, setConnected] = useState<boolean | null>(null)
@@ -23,11 +23,11 @@ export function WCalendar({ dark, span = 6 }: WCalendarProps) {
     isGoogleConnected(user.id).then(async c => {
       setConnected(c)
       if (c) {
-        const evts = await getTodayEvents(user.id)
+        const evts = await getTodayEvents(user.id, tomorrow ? 1 : 0)
         setEvents(evts)
       }
     }).catch(() => setConnected(false))
-  }, [user])
+  }, [user, tomorrow])
 
   function handleConnect() {
     if (!user) return
@@ -37,7 +37,7 @@ export function WCalendar({ dark, span = 6 }: WCalendarProps) {
   if (connected === null) {
     return (
       <Glass dark={dark} span={span} pad={14}>
-        <CardLabel dark={dark}>Calendar · today</CardLabel>
+        <CardLabel dark={dark}>Calendar · {tomorrow ? 'tomorrow' : 'today'}</CardLabel>
         <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>Loading…</div>
       </Glass>
     )
@@ -46,7 +46,7 @@ export function WCalendar({ dark, span = 6 }: WCalendarProps) {
   if (!connected) {
     return (
       <Glass dark={dark} span={span} pad={14}>
-        <CardLabel dark={dark}>Calendar · today</CardLabel>
+        <CardLabel dark={dark}>Calendar · {tomorrow ? 'tomorrow' : 'today'}</CardLabel>
         <button
           onClick={handleConnect}
           style={{
@@ -63,7 +63,7 @@ export function WCalendar({ dark, span = 6 }: WCalendarProps) {
 
   return (
     <Glass dark={dark} span={span} pad={14}>
-      <CardLabel dark={dark}>Calendar · today</CardLabel>
+      <CardLabel dark={dark}>Calendar · {tomorrow ? 'tomorrow' : 'today'}</CardLabel>
       {!events ? (
         <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>Loading…</div>
       ) : events.length === 0 ? (

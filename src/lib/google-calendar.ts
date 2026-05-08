@@ -49,11 +49,12 @@ export interface CalendarEvent {
   location?: string
 }
 
-export async function getTodayEvents(userId: string): Promise<CalendarEvent[]> {
+export async function getTodayEvents(userId: string, offsetDays = 0): Promise<CalendarEvent[]> {
   const token = await getValidToken(userId)
   if (!token) return []
 
   const now = new Date()
+  now.setDate(now.getDate() + offsetDays)
   const timeMin = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
   const timeMax = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString()
 

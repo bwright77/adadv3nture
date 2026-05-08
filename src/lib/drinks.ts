@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any
 
 function toDateStr(d: Date): string {
   return d.toISOString().substring(0, 10)
@@ -15,7 +17,7 @@ export async function getDrinksForDate(userId: string, date: string): Promise<nu
 }
 
 export async function setDrinksForDate(userId: string, date: string, count: number): Promise<void> {
-  const { error } = await supabase
+  const { error } = await db
     .from('recovery_signals')
     .upsert(
       { user_id: userId, signal_date: date, drinks_consumed: count, source: 'manual' },
