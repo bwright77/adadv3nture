@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { C } from '../tokens'
-import { getInboxItems, deleteInboxItem, markProcessed, type InboxItem } from '../lib/inbox'
+import { getInboxItems, deleteInboxItem, type InboxItem } from '../lib/inbox'
+import { RouteSheet } from '../components/inbox/RouteSheet'
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -45,7 +46,7 @@ function SwipeableItem({ item, i, onDelete, onRoute }: {
     setDx(e.clientX - startX.current)
   }
   function onPointerUp() {
-    if (dx > THRESHOLD) onRoute()
+    if (dx > THRESHOLD) { setDx(0); onRoute(); return }
     else if (dx < -THRESHOLD) onDelete()
     else setDx(0)
     setDragging(false)
@@ -123,6 +124,7 @@ export function InboxPage({ bgPhoto }: InboxPageProps) {
   const { user } = useAuth()
   const [items, setItems] = useState<InboxItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [routing, setRouting] = useState<InboxItem | null>(null)
 
   async function load() {
     if (!user) return
@@ -139,9 +141,9 @@ export function InboxPage({ bgPhoto }: InboxPageProps) {
     await deleteInboxItem(id)
   }
 
-  async function handleRoute(id: string) {
+  function handleRouteDone(id: string) {
     setItems(prev => prev.filter(i => i.id !== id))
-    await markProcessed(id)
+    setRouting(null)
   }
 
   const count = items.length
@@ -207,6 +209,14 @@ export function InboxPage({ bgPhoto }: InboxPageProps) {
         <div style={{ height: 24, background: `linear-gradient(180deg, ${C.dark} 0%, ${C.paper} 100%)` }} />
       )}
 
+      {routing && (
+        <RouteSheet
+          item={routing}
+          onDone={handleRouteDone}
+          onClose={() => setRouting(null)}
+        />
+      )}
+
       <div style={{ padding: '0 14px 100px' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: C.ink40, fontSize: 'var(--fs-15)' }}>Loading…</div>
@@ -226,7 +236,7 @@ export function InboxPage({ bgPhoto }: InboxPageProps) {
                 item={item}
                 i={i}
                 onDelete={() => handleDelete(item.id)}
-                onRoute={() => handleRoute(item.id)}
+                onRoute={() => setRouting(item)}
               />
             ))}
           </>
