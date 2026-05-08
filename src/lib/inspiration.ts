@@ -137,9 +137,9 @@ export async function getDailyInspiration(userId: string): Promise<InspirationPh
     const pool = rows.filter(r => new Date(r.taken_at + 'T12:00:00').getMonth() + 1 === contrastMonth)
     if (pool.length > 0) {
       const pick = pool[Math.floor(Math.random() * Math.min(pool.length, 5))]
-      await db.from('inspiration_photos')
+      db.from('inspiration_photos')
         .update({ times_surfaced: pick.times_surfaced + 1, last_surfaced_at: new Date().toISOString() })
-        .eq('id', pick.id)
+        .eq('id', pick.id).then(() => {}).catch(() => {})
       return toPhoto(pick)
     }
   }
@@ -157,9 +157,9 @@ export async function getDailyInspiration(userId: string): Promise<InspirationPh
   const pool = onThisDay.length > 0 ? onThisDay : sameMonth.length > 0 ? sameMonth : rows
   const pick = pool[Math.floor(Math.random() * Math.min(pool.length, 5))]
 
-  await db.from('inspiration_photos')
+  db.from('inspiration_photos')
     .update({ times_surfaced: pick.times_surfaced + 1, last_surfaced_at: new Date().toISOString() })
-    .eq('id', pick.id)
+    .eq('id', pick.id).then(() => {}).catch(() => {})
 
   return toPhoto(pick)
 }
