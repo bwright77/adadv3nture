@@ -9,10 +9,9 @@ interface SparkProps {
 }
 
 export function Spark({ data, color = C.rust, h = 28, w = 100, fill = false }: SparkProps) {
-  const max = Math.max(...data)
-  const min = Math.min(...data)
+  const max = Math.max(...data, 1)
   const pts = data
-    .map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / (max - min || 1)) * h}`)
+    .map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * h}`)
     .join(' ')
   return (
     <svg width={w} height={h} style={{ display: 'block' }}>

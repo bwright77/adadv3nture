@@ -108,6 +108,7 @@ export function TodosPage({ bgPhoto, initialTab }: TodosPageProps) {
   const [draftUrgency, setDraftUrgency] = useState<TodoUrgency>('deck')
   const [loading, setLoading] = useState(true)
   const inputRef = useRef<HTMLInputElement>(null)
+  const sortTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [addingReminder, setAddingReminder] = useState(false)
   const [reminderDraft, setReminderDraft] = useState('')
@@ -152,7 +153,11 @@ export function TodosPage({ bgPhoto, initialTab }: TodosPageProps) {
   }
 
   async function handleUrgencyChange(id: string, urgency: TodoUrgency) {
-    setTodos(prev => sortByUrgency(prev.map(t => t.id === id ? { ...t, urgency } : t)))
+    setTodos(prev => prev.map(t => t.id === id ? { ...t, urgency } : t))
+    if (sortTimerRef.current) clearTimeout(sortTimerRef.current)
+    sortTimerRef.current = setTimeout(() => {
+      setTodos(prev => sortByUrgency([...prev]))
+    }, 3000)
     await setTodoUrgency(id, urgency)
   }
 
