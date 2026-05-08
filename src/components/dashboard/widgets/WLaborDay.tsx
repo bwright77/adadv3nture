@@ -10,14 +10,20 @@ function daysUntil(target: Date): number {
 
 export function WLaborDay({ dark }: WLaborDayProps) {
   const days = daysUntil(new Date('2026-09-01'))
+  const weeks = Math.floor(days / 7)
+  const urgentColor = days < 60 ? C.rust : days < 90 ? C.sand : undefined
+
   return (
     <Glass dark={dark} span={6} pad={14}>
-      <CardLabel dark={dark}>Labor day · countdown</CardLabel>
-      <div className="mono" style={{ fontSize: 26, fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0' }}>
-        {days}<span style={{ fontSize: 11, opacity: 0.5 }}>d</span>
+      <CardLabel dark={dark}>Labor day · Sept 1</CardLabel>
+      <div className="mono" style={{ fontSize: 26, fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0', color: urgentColor }}>
+        {weeks}<span style={{ fontSize: 11, opacity: 0.5 }}>wk</span>
+        <span style={{ fontSize: 13, opacity: 0.45, marginLeft: 4 }}>{days}d</span>
       </div>
-      <div style={{ fontSize: 11, marginTop: 2, opacity: 0.7 }}>WA income or job · fish-or-cut-bait</div>
-      <div className="mono" style={{ fontSize: 9.5, color: C.rust, marginTop: 6 }}>● PFB call pending → Jenn</div>
+      <div className="badge" style={{ fontSize: 10, marginTop: 4, color: urgentColor ?? (dark ? C.cream : C.dark) }}>
+        WA income or get a job
+      </div>
+      <div className="mono" style={{ fontSize: 9.5, color: C.rust, marginTop: 5 }}>● PFB call pending → Jenn</div>
     </Glass>
   )
 }
