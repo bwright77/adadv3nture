@@ -16,7 +16,7 @@ interface MidMorningViewProps {
 export function MidMorningView({ inspirationPhoto, onInspireExpand }: MidMorningViewProps) {
   return (
     <>
-      <Header greeting="11:14 · WA block" sub="QUIET HOURS · INBOX TRIAGED · 2H30 LEFT" dark />
+      <Header sub="WA BLOCK · QUIET HOURS" dark />
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
         gap: 10, padding: '0 14px 100px',

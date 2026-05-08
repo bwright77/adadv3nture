@@ -17,7 +17,7 @@ interface EveningViewProps {
 export function EveningView({ inspirationPhoto, onInspireExpand }: EveningViewProps) {
   return (
     <>
-      <Header greeting="8:11 · day's end" sub="LOG · TOMORROW PREVIEW · MIND IS YOURS" dark />
+      <Header sub="LOG · TOMORROW PREVIEW · MIND IS YOURS" dark />
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
         gap: 10, padding: '0 14px 100px',

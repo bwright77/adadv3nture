@@ -16,7 +16,7 @@ interface AfternoonViewProps {
 export function AfternoonView({ inspirationPhoto, onInspireExpand }: AfternoonViewProps) {
   return (
     <>
-      <Header greeting="3:42 · 4pm hour" sub="KIDS HOME 3:45 · DRY WINDOW UNTIL 6" dark />
+      <Header sub="4PM HOUR · KIDS HOME SOON" dark />
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
         gap: 10, padding: '0 14px 100px',

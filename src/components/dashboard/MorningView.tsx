@@ -18,7 +18,7 @@ interface MorningViewProps {
 export function MorningView({ inspirationPhoto, onInspireExpand }: MorningViewProps) {
   return (
     <>
-      <Header greeting="Wed · May 7" sub="DENVER · 54° CLEAR · BOOT CAMP D1" dark />
+      <Header sub="DENVER · BOOT CAMP D1" dark />
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
         gap: 10, padding: '0 14px 100px',
