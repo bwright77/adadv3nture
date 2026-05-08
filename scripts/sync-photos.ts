@@ -119,7 +119,7 @@ async function main() {
           taken_at: takenAt,
           original_filename: filename,
         },
-        { onConflict: 'user_id,storage_path' },
+        { onConflict: 'user_id,original_filename' },
       )
       if (dbErr) throw dbErr
 
