@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 const db = supabase as any
 
 export type ProjectCategory = 'art' | 'software' | 'home' | 'career' | 'other'
-export type ProjectStatus = 'active' | 'complete' | 'paused'
+export type ProjectStatus = 'active' | 'complete' | 'paused' | 'dead'
 
 export interface Project {
   id: string
@@ -35,6 +35,15 @@ export interface ProjectUpdate {
   created_at: string
 }
 
+export interface ProjectContact {
+  id: string
+  project_id: string
+  name: string
+  title: string | null
+  relationship_note: string | null
+  sort_order: number
+}
+
 export async function getProjects(userId: string, category?: ProjectCategory): Promise<Project[]> {
   let q = supabase
     .from('projects')
@@ -50,18 +59,42 @@ export async function getProjects(userId: string, category?: ProjectCategory): P
 
 export async function getProjectWithMilestones(
   projectId: string
-): Promise<{ project: Project; milestones: ProjectMilestone[]; updates: ProjectUpdate[] }> {
-  const [pRes, mRes, uRes] = await Promise.all([
+): Promise<{ project: Project; milestones: ProjectMilestone[]; updates: ProjectUpdate[]; contacts: ProjectContact[] }> {
+  const [pRes, mRes, uRes, cRes] = await Promise.all([
     supabase.from('projects').select('*').eq('id', projectId).single(),
     supabase.from('project_milestones').select('*').eq('project_id', projectId).order('sort_order'),
     supabase.from('project_updates').select('*').eq('project_id', projectId).order('created_at', { ascending: false }).limit(10),
+    supabase.from('project_contacts').select('*').eq('project_id', projectId).order('sort_order'),
   ])
   if (pRes.error) throw new Error(pRes.error.message)
   return {
     project: pRes.data as Project,
     milestones: (mRes.data ?? []) as ProjectMilestone[],
     updates: (uRes.data ?? []) as ProjectUpdate[],
+    contacts: (cRes.data ?? []) as ProjectContact[],
   }
+}
+
+export async function addContact(
+  projectId: string,
+  name: string,
+  title?: string,
+  relationship_note?: string,
+): Promise<ProjectContact> {
+  const { data: existing } = await supabase.from('project_contacts').select('sort_order').eq('project_id', projectId).order('sort_order', { ascending: false }).limit(1)
+  const nextOrder = ((existing as { sort_order: number }[] | null)?.[0]?.sort_order ?? -1) + 1
+  const { data, error } = await db
+    .from('project_contacts')
+    .insert({ project_id: projectId, name, title: title ?? null, relationship_note: relationship_note ?? null, sort_order: nextOrder })
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data as ProjectContact
+}
+
+export async function deleteContact(id: string): Promise<void> {
+  const { error } = await db.from('project_contacts').delete().eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 export async function updateProjectProgress(id: string, progress_pct: number): Promise<void> {

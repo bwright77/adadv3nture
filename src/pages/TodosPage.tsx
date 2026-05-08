@@ -11,6 +11,7 @@ import {
 } from '../lib/reminders'
 import { TrainingView } from '../components/todos/TrainingView'
 import { ProjectsView } from '../components/todos/ProjectsView'
+import { CareerView } from '../components/todos/CareerView'
 
 const URGENCY_ORDER: Record<TodoUrgency, number> = { fire: 0, deck: 1, rain: 2 }
 
@@ -107,7 +108,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
   const [addingReminder, setAddingReminder] = useState(false)
   const [reminderDraft, setReminderDraft] = useState('')
 
-  const isTodoTab = tab !== 'training' && tab !== 'projects'
+  const isTodoTab = tab !== 'training' && tab !== 'projects' && tab !== 'career'
   const current = TABS.find(t => t.id === (isTodoTab ? cat : tab))!
 
   function sortByUrgency(list: Todo[]): Todo[] {
@@ -290,7 +291,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
                 key={t.id}
                 onClick={() => {
                   setTab(t.id)
-                  if (t.id !== 'training' && t.id !== 'projects') setCat(t.id as TodoCategory)
+                  if (t.id !== 'training' && t.id !== 'projects' && t.id !== 'career') setCat(t.id as TodoCategory)
                   setShowDone(false)
                 }}
                 style={{
@@ -319,6 +320,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
 
         {/* Special views */}
         {tab === 'training' && <TrainingView />}
+        {tab === 'career'   && <CareerView />}
         {tab === 'projects' && <ProjectsView />}
 
         {/* List */}

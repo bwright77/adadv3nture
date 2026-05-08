@@ -3,13 +3,15 @@ import { C } from '../../tokens'
 import {
   toggleMilestone, addUpdate, updateNextAction, updateProjectProgress,
   addMilestone, deleteMilestone, reorderMilestones,
-  type Project, type ProjectMilestone, type ProjectUpdate,
+  addContact, deleteContact,
+  type Project, type ProjectMilestone, type ProjectUpdate, type ProjectContact,
 } from '../../lib/projects'
 
 interface ProjectDetailProps {
   project: Project
   milestones: ProjectMilestone[]
   updates: ProjectUpdate[]
+  contacts: ProjectContact[]
   onClose: () => void
   onUpdate: () => void
 }
@@ -31,8 +33,9 @@ function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
 }
 
-export function ProjectDetail({ project, milestones, updates, onClose, onUpdate }: ProjectDetailProps) {
+export function ProjectDetail({ project, milestones, updates, contacts, onClose, onUpdate }: ProjectDetailProps) {
   const [localMilestones, setLocalMilestones] = useState(milestones)
+  const [localContacts, setLocalContacts] = useState(contacts)
   const [editingAction, setEditingAction] = useState(false)
   const [actionDraft, setActionDraft] = useState(project.next_action ?? '')
   const [updatesLocal, setUpdatesLocal] = useState(updates)
@@ -40,6 +43,10 @@ export function ProjectDetail({ project, milestones, updates, onClose, onUpdate 
   const [addingNote, setAddingNote] = useState(false)
   const [addingMilestone, setAddingMilestone] = useState(false)
   const [milestoneDraft, setMilestoneDraft] = useState('')
+  const [addingContact, setAddingContact] = useState(false)
+  const [contactName, setContactName] = useState('')
+  const [contactTitle, setContactTitle] = useState('')
+  const [contactRelationship, setContactRelationship] = useState('')
 
   // Drag state
   const [dragIdx, setDragIdx] = useState<number | null>(null)
@@ -118,6 +125,21 @@ export function ProjectDetail({ project, milestones, updates, onClose, onUpdate 
     if (dragIdx === null) return
     setDragIdx(null)
     reorderMilestones(localMilestones.map((m, i) => ({ id: m.id, sort_order: i }))).catch(() => null)
+  }
+
+  async function handleAddContact() {
+    if (!contactName.trim()) { setAddingContact(false); return }
+    const c = await addContact(project.id, contactName.trim(), contactTitle.trim() || undefined, contactRelationship.trim() || undefined)
+    setLocalContacts(prev => [...prev, c])
+    setContactName(''); setContactTitle(''); setContactRelationship('')
+    setAddingContact(false)
+    onUpdate()
+  }
+
+  async function handleDeleteContact(id: string) {
+    setLocalContacts(prev => prev.filter(c => c.id !== id))
+    await deleteContact(id)
+    onUpdate()
   }
 
   async function handleSaveAction() {
@@ -213,6 +235,70 @@ export function ProjectDetail({ project, milestones, updates, onClose, onUpdate 
             <div style={{ height: 6, width: `${pct}%`, background: color, borderRadius: 3, transition: 'width 0.3s' }} />
           </div>
         </div>
+
+        {/* Contacts */}
+        {(localContacts.length > 0 || project.category === 'career') && (
+          <div style={{ marginBottom: 20 }}>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40, marginBottom: 8 }}>
+              ◆ CONTACTS
+            </div>
+            {localContacts.map(c => (
+              <div key={c.id} style={{
+                display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8,
+                background: '#fff', border: `0.5px solid ${C.ink20}`, borderRadius: 12,
+                padding: '10px 14px', marginBottom: 6,
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 'var(--fs-15)', fontWeight: 600, color: C.dark }}>{c.name}</div>
+                  {c.title && <div className="mono" style={{ fontSize: 'var(--fs-11)', color: C.ink60, marginTop: 2 }}>{c.title}</div>}
+                  {c.relationship_note && <div style={{ fontSize: 'var(--fs-12)', color: C.ink40, marginTop: 3, fontStyle: 'italic' }}>{c.relationship_note}</div>}
+                </div>
+                <button onClick={() => handleDeleteContact(c.id)} style={{ background: 'none', border: 'none', color: C.ink20, fontSize: 'var(--fs-17)', cursor: 'pointer', padding: '0 4px', flexShrink: 0 }}>×</button>
+              </div>
+            ))}
+            {addingContact ? (
+              <div style={{ background: '#fff', border: `1.5px solid ${color}`, borderRadius: 12, padding: '10px 12px', marginTop: 4 }}>
+                <input
+                  autoFocus
+                  value={contactName}
+                  onChange={e => setContactName(e.target.value)}
+                  placeholder="Name *"
+                  style={{ width: '100%', border: 'none', outline: 'none', fontSize: 'var(--fs-15)', fontFamily: 'inherit', marginBottom: 6, background: 'transparent' }}
+                />
+                <input
+                  value={contactTitle}
+                  onChange={e => setContactTitle(e.target.value)}
+                  placeholder="Title / org"
+                  style={{ width: '100%', border: 'none', outline: 'none', fontSize: 'var(--fs-13)', fontFamily: 'inherit', marginBottom: 6, background: 'transparent', color: C.ink60 }}
+                />
+                <input
+                  value={contactRelationship}
+                  onChange={e => setContactRelationship(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleAddContact(); if (e.key === 'Escape') { setAddingContact(false) } }}
+                  placeholder="Relationship note"
+                  style={{ width: '100%', border: 'none', outline: 'none', fontSize: 'var(--fs-13)', fontFamily: 'inherit', marginBottom: 8, background: 'transparent', color: C.ink60 }}
+                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={handleAddContact} style={{ background: color, color: '#fff', border: 'none', borderRadius: 8, padding: '4px 12px', fontSize: 'var(--fs-13)', fontWeight: 700, cursor: 'pointer' }}>Add</button>
+                  <button onClick={() => { setAddingContact(false); setContactName(''); setContactTitle(''); setContactRelationship('') }} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-16)', cursor: 'pointer' }}>Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setAddingContact(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '8px 14px', borderRadius: 12, marginTop: 4,
+                  border: `1px dashed ${C.ink20}`, background: 'transparent',
+                  color: C.ink60, fontSize: 'var(--fs-14)', cursor: 'pointer', width: '100%',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <span style={{ color, fontSize: 'var(--fs-16)' }}>+</span> Add contact
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Next action */}
         <div style={{ marginBottom: 20 }}>
