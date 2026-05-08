@@ -4,6 +4,10 @@ import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
 import { addInboxItem, getInboxItems, type InboxItem } from '../../lib/inbox'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const SpeechRecognition = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition
+const hasSpeech = !!SpeechRecognition
+
 interface CaptureSheetProps {
   onClose: () => void
 }
@@ -13,7 +17,11 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
   const [recent, setRecent] = useState<InboxItem[]>([])
+  const [listening, setListening] = useState(false)
+  const [interim, setInterim] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null)
 
   useEffect(() => {
     textareaRef.current?.focus()
@@ -21,6 +29,47 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
       getInboxItems(user.id).then(items => setRecent(items.slice(0, 3))).catch(() => null)
     }
   }, [user])
+
+  function startListening() {
+    if (!hasSpeech || listening) return
+    const rec = new SpeechRecognition()
+    rec.lang = 'en-US'
+    rec.interimResults = true
+    rec.continuous = false
+    recognitionRef.current = rec
+
+    rec.onstart = () => { setListening(true); setInterim('') }
+
+    rec.onresult = (e: any) => {
+      let final = ''
+      let interimText = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript
+        if (e.results[i].isFinal) final += t
+        else interimText += t
+      }
+      if (final) {
+        setText(prev => {
+          const joined = prev.trim() ? prev.trimEnd() + ' ' + final : final
+          return joined.charAt(0).toUpperCase() + joined.slice(1)
+        })
+        setInterim('')
+      } else {
+        setInterim(interimText)
+      }
+    }
+
+    rec.onerror = () => { setListening(false); setInterim('') }
+    rec.onend = () => { setListening(false); setInterim('') }
+
+    rec.start()
+  }
+
+  function stopListening() {
+    recognitionRef.current?.stop()
+  }
+
+  useEffect(() => () => recognitionRef.current?.abort(), [])
 
   async function handleSave() {
     if (!text.trim() || !user) { onClose(); return }
@@ -76,9 +125,38 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
           }}
         />
 
+        {/* Interim speech preview */}
+        {interim && (
+          <div style={{
+            fontSize: 15, color: C.ink40, fontStyle: 'italic',
+            lineHeight: 1.4, marginBottom: 6, paddingBottom: 6,
+            borderBottom: `0.5px dashed ${C.ink20}`,
+          }}>
+            {interim}
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12 }}>
+          {hasSpeech && (
+            <button
+              onPointerDown={startListening}
+              onPointerUp={stopListening}
+              onPointerLeave={stopListening}
+              style={{
+                width: 44, height: 44, borderRadius: 22, border: 'none',
+                cursor: 'pointer', flexShrink: 0,
+                background: listening ? C.rust : C.ink20,
+                color: listening ? C.cream : C.ink60,
+                fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'background 0.15s',
+                boxShadow: listening ? `0 0 0 4px ${C.rust}44` : 'none',
+              }}
+            >
+              🎙
+            </button>
+          )}
           <div style={{ flex: 1, fontSize: 11, color: C.ink60 }}>
-            ⌘↵ to save · esc to cancel
+            {listening ? 'listening…' : hasSpeech ? 'hold mic to speak' : '⌘↵ to save'}
           </div>
           <button
             onClick={handleSave}
