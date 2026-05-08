@@ -104,7 +104,7 @@ export function TodosPage() {
   }
 
   return (
-    <div style={{ position: 'relative', zIndex: 10 }}>
+    <div style={{ position: 'relative', zIndex: 10, overflowX: 'hidden' }}>
       <Header greeting="Lists" sub="" dark={false} />
 
       {/* Persistent reminders */}
@@ -121,7 +121,7 @@ export function TodosPage() {
               borderRadius: 12, padding: '9px 12px', marginBottom: 6,
             }}>
               {r.urgency === 'high' && <span style={{ fontSize: 12, flexShrink: 0 }}>!</span>}
-              <span style={{ flex: 1, fontSize: 12.5, color: C.dark, lineHeight: 1.4 }}>{r.title}</span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: C.dark, lineHeight: 1.4, wordBreak: 'break-word' }}>{r.title}</span>
               <button onClick={() => handleSnooze(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: C.ink40, padding: '2px 4px' }}>zzz</button>
               <button onClick={() => handleCompleteReminder(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: C.teal, padding: '2px 4px' }}>✓</button>
               <button onClick={() => handleDeleteReminder(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: C.ink40, padding: '2px 4px' }}>×</button>
@@ -336,7 +336,7 @@ function TodoRow({
       />
 
       {/* Title */}
-      <span style={{ flex: 1, fontSize: 14, lineHeight: 1.4, color: C.dark }}>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.4, color: C.dark, wordBreak: 'break-word' }}>
         {todo.title}
       </span>
 
