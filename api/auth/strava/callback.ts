@@ -45,6 +45,16 @@ export default async function handler(req: Request): Promise<Response> {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
+  // Ensure public.users row exists before inserting oauth_tokens (FK dependency)
+  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(state)
+  if (authUser) {
+    await supabase.from('users').upsert({
+      id: authUser.id,
+      email: authUser.email ?? '',
+      name: authUser.user_metadata?.full_name ?? null,
+    }, { onConflict: 'id' })
+  }
+
   await supabase.from('oauth_tokens').upsert({
     user_id: state,
     provider: 'strava',
