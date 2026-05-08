@@ -6,10 +6,14 @@ import { WDrinkEntry } from './widgets/WDrinkEntry'
 import { WInspire } from './widgets/WInspire'
 import { WPilots } from './widgets/WPilots'
 import { C } from '../../tokens'
+import type { InspirationPhoto } from '../../hooks/useInspiration'
 
-interface EveningViewProps { onInspireExpand?: (photo: string, year: string, place: string) => void }
+interface EveningViewProps {
+  inspirationPhoto: InspirationPhoto | null
+  onInspireExpand?: (photo: InspirationPhoto) => void
+}
 
-export function EveningView({ onInspireExpand }: EveningViewProps) {
+export function EveningView({ inspirationPhoto, onInspireExpand }: EveningViewProps) {
   return (
     <>
       <Header greeting="8:11 · day's end" sub="LOG · TOMORROW PREVIEW · MIND IS YOURS" dark />
@@ -29,8 +33,9 @@ export function EveningView({ onInspireExpand }: EveningViewProps) {
           </div>
         </Glass>
         <WInspire
-          dark photo="/photos/family-harbor.jpg" year="2024" place="Catalina · all five"
-          onExpand={() => onInspireExpand?.('/photos/family-harbor.jpg', '2024', 'Catalina · all five')}
+          dark
+          photo={inspirationPhoto}
+          onExpand={() => inspirationPhoto && onInspireExpand?.(inspirationPhoto)}
         />
         <WPilots dark />
       </div>

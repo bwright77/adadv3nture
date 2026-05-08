@@ -1,0 +1,541 @@
+[
+  {
+    "filename": "20040501-IMG_5063.jpg",
+    "takenAt": "2004-05-01",
+    "month": 5,
+    "day": 1,
+    "year": 2004
+  },
+  {
+    "filename": "20100515-CRW_0005.jpg",
+    "takenAt": "2010-05-15",
+    "month": 5,
+    "day": 15,
+    "year": 2010
+  },
+  {
+    "filename": "20120101-IMG_1786_63267.jpg",
+    "takenAt": "2012-01-01",
+    "month": 1,
+    "day": 1,
+    "year": 2012
+  },
+  {
+    "filename": "20120505-IMG_3498.jpg",
+    "takenAt": "2012-05-05",
+    "month": 5,
+    "day": 5,
+    "year": 2012
+  },
+  {
+    "filename": "20130112-IMG_0200.jpg",
+    "takenAt": "2013-01-12",
+    "month": 1,
+    "day": 12,
+    "year": 2013
+  },
+  {
+    "filename": "20130518-IMG_7003_48645.jpg",
+    "takenAt": "2013-05-18",
+    "month": 5,
+    "day": 18,
+    "year": 2013
+  },
+  {
+    "filename": "20140519-IMG_0670.jpg",
+    "takenAt": "2014-05-19",
+    "month": 5,
+    "day": 19,
+    "year": 2014
+  },
+  {
+    "filename": "20150110-IMG_0164.jpg",
+    "takenAt": "2015-01-10",
+    "month": 1,
+    "day": 10,
+    "year": 2015
+  },
+  {
+    "filename": "20150516-IMG_0990.jpg",
+    "takenAt": "2015-05-16",
+    "month": 5,
+    "day": 16,
+    "year": 2015
+  },
+  {
+    "filename": "20160119-IMG_1194.jpg",
+    "takenAt": "2016-01-19",
+    "month": 1,
+    "day": 19,
+    "year": 2016
+  },
+  {
+    "filename": "20160130-IMG_1213.jpg",
+    "takenAt": "2016-01-30",
+    "month": 1,
+    "day": 30,
+    "year": 2016
+  },
+  {
+    "filename": "20170114-IMG_1658.jpg",
+    "takenAt": "2017-01-14",
+    "month": 1,
+    "day": 14,
+    "year": 2017
+  },
+  {
+    "filename": "20170509-_MG_0663.jpg",
+    "takenAt": "2017-05-09",
+    "month": 5,
+    "day": 9,
+    "year": 2017
+  },
+  {
+    "filename": "20170510-_MG_0795.jpg",
+    "takenAt": "2017-05-10",
+    "month": 5,
+    "day": 10,
+    "year": 2017
+  },
+  {
+    "filename": "20170513-_MG_1257.jpg",
+    "takenAt": "2017-05-13",
+    "month": 5,
+    "day": 13,
+    "year": 2017
+  },
+  {
+    "filename": "20170513-_MG_1397.jpg",
+    "takenAt": "2017-05-13",
+    "month": 5,
+    "day": 13,
+    "year": 2017
+  },
+  {
+    "filename": "20170514-_MG_1456.jpg",
+    "takenAt": "2017-05-14",
+    "month": 5,
+    "day": 14,
+    "year": 2017
+  },
+  {
+    "filename": "20180113-IMG_1915.jpg",
+    "takenAt": "2018-01-13",
+    "month": 1,
+    "day": 13,
+    "year": 2018
+  },
+  {
+    "filename": "20180506-IMG_2183.jpg",
+    "takenAt": "2018-05-06",
+    "month": 5,
+    "day": 6,
+    "year": 2018
+  },
+  {
+    "filename": "20190505-_MG_0790.jpg",
+    "takenAt": "2019-05-05",
+    "month": 5,
+    "day": 5,
+    "year": 2019
+  },
+  {
+    "filename": "20200102-IMG_2527.jpg",
+    "takenAt": "2020-01-02",
+    "month": 1,
+    "day": 2,
+    "year": 2020
+  },
+  {
+    "filename": "20200103-IMG_2560.jpg",
+    "takenAt": "2020-01-03",
+    "month": 1,
+    "day": 3,
+    "year": 2020
+  },
+  {
+    "filename": "20200103-IMG_8656.jpg",
+    "takenAt": "2020-01-03",
+    "month": 1,
+    "day": 3,
+    "year": 2020
+  },
+  {
+    "filename": "20200104-IMG_2600.jpg",
+    "takenAt": "2020-01-04",
+    "month": 1,
+    "day": 4,
+    "year": 2020
+  },
+  {
+    "filename": "20200104-IMG_8728.jpg",
+    "takenAt": "2020-01-04",
+    "month": 1,
+    "day": 4,
+    "year": 2020
+  },
+  {
+    "filename": "20200105-IMG_2715.jpg",
+    "takenAt": "2020-01-05",
+    "month": 1,
+    "day": 5,
+    "year": 2020
+  },
+  {
+    "filename": "20200124-IMG_3574.jpg",
+    "takenAt": "2020-01-24",
+    "month": 1,
+    "day": 24,
+    "year": 2020
+  },
+  {
+    "filename": "20200501-78FEFBAB-4929-4442-8834-49F6862B80E6.jpg",
+    "takenAt": "2020-05-01",
+    "month": 5,
+    "day": 1,
+    "year": 2020
+  },
+  {
+    "filename": "20200509-IMG_3917.jpg",
+    "takenAt": "2020-05-09",
+    "month": 5,
+    "day": 9,
+    "year": 2020
+  },
+  {
+    "filename": "20200514-IMG_8813.jpg",
+    "takenAt": "2020-05-14",
+    "month": 5,
+    "day": 14,
+    "year": 2020
+  },
+  {
+    "filename": "20210101-0O4A3734.jpg",
+    "takenAt": "2021-01-01",
+    "month": 1,
+    "day": 1,
+    "year": 2021
+  },
+  {
+    "filename": "20210118-C7A85D9B-9F2E-42DF-AE3C-275B1F594B9E.jpg",
+    "takenAt": "2021-01-18",
+    "month": 1,
+    "day": 18,
+    "year": 2021
+  },
+  {
+    "filename": "20210509-0O4A4201.jpg",
+    "takenAt": "2021-05-09",
+    "month": 5,
+    "day": 9,
+    "year": 2021
+  },
+  {
+    "filename": "20220109-66343657030__834F6D77-4CD9-45B5-A628-6D2299E3CF3F.jpg",
+    "takenAt": "2022-01-09",
+    "month": 1,
+    "day": 9,
+    "year": 2022
+  },
+  {
+    "filename": "20220111-IMG_1632.jpg",
+    "takenAt": "2022-01-11",
+    "month": 1,
+    "day": 11,
+    "year": 2022
+  },
+  {
+    "filename": "20220116-IMG_1642.jpg",
+    "takenAt": "2022-01-16",
+    "month": 1,
+    "day": 16,
+    "year": 2022
+  },
+  {
+    "filename": "20220117-0O4A6904.jpg",
+    "takenAt": "2022-01-17",
+    "month": 1,
+    "day": 17,
+    "year": 2022
+  },
+  {
+    "filename": "20220123-IMG_1657.jpg",
+    "takenAt": "2022-01-23",
+    "month": 1,
+    "day": 23,
+    "year": 2022
+  },
+  {
+    "filename": "20220129-IMG_1662.jpg",
+    "takenAt": "2022-01-29",
+    "month": 1,
+    "day": 29,
+    "year": 2022
+  },
+  {
+    "filename": "20220129-IMG_1665_jpg.jpg",
+    "takenAt": "2022-01-29",
+    "month": 1,
+    "day": 29,
+    "year": 2022
+  },
+  {
+    "filename": "20220504-IMG_1962_jpg.jpg",
+    "takenAt": "2022-05-04",
+    "month": 5,
+    "day": 4,
+    "year": 2022
+  },
+  {
+    "filename": "20220508-IMG_2023_jpg.jpg",
+    "takenAt": "2022-05-08",
+    "month": 5,
+    "day": 8,
+    "year": 2022
+  },
+  {
+    "filename": "20220510-IMG_2025.jpg",
+    "takenAt": "2022-05-10",
+    "month": 5,
+    "day": 10,
+    "year": 2022
+  },
+  {
+    "filename": "20220515-IMG_2037_jpg.jpg",
+    "takenAt": "2022-05-15",
+    "month": 5,
+    "day": 15,
+    "year": 2022
+  },
+  {
+    "filename": "20230106-IMG_2481.jpg",
+    "takenAt": "2023-01-06",
+    "month": 1,
+    "day": 6,
+    "year": 2023
+  },
+  {
+    "filename": "20230115-IMG_2495.jpg",
+    "takenAt": "2023-01-15",
+    "month": 1,
+    "day": 15,
+    "year": 2023
+  },
+  {
+    "filename": "20230121-IMG_2500_jpg.jpg",
+    "takenAt": "2023-01-21",
+    "month": 1,
+    "day": 21,
+    "year": 2023
+  },
+  {
+    "filename": "20230122-IMG_2503_jpg.jpg",
+    "takenAt": "2023-01-22",
+    "month": 1,
+    "day": 22,
+    "year": 2023
+  },
+  {
+    "filename": "20230520-0O4A9696.jpg",
+    "takenAt": "2023-05-20",
+    "month": 5,
+    "day": 20,
+    "year": 2023
+  },
+  {
+    "filename": "20230520-noah_jaz_jump copy.jpg",
+    "takenAt": "2023-05-20",
+    "month": 5,
+    "day": 20,
+    "year": 2023
+  },
+  {
+    "filename": "20230521-0O4A9738.jpg",
+    "takenAt": "2023-05-21",
+    "month": 5,
+    "day": 21,
+    "year": 2023
+  },
+  {
+    "filename": "20240119-IMG_2596.jpg",
+    "takenAt": "2024-01-19",
+    "month": 1,
+    "day": 19,
+    "year": 2024
+  },
+  {
+    "filename": "20240123-IMG_3780_jpg.jpg",
+    "takenAt": "2024-01-23",
+    "month": 1,
+    "day": 23,
+    "year": 2024
+  },
+  {
+    "filename": "20240128-IMG_3789.jpg",
+    "takenAt": "2024-01-28",
+    "month": 1,
+    "day": 28,
+    "year": 2024
+  },
+  {
+    "filename": "20240128-IMG_3791.jpg",
+    "takenAt": "2024-01-28",
+    "month": 1,
+    "day": 28,
+    "year": 2024
+  },
+  {
+    "filename": "20240131-IMG_0734.jpg",
+    "takenAt": "2024-01-31",
+    "month": 1,
+    "day": 31,
+    "year": 2024
+  },
+  {
+    "filename": "20240502-0O4A0178.jpg",
+    "takenAt": "2024-05-02",
+    "month": 5,
+    "day": 2,
+    "year": 2024
+  },
+  {
+    "filename": "20240503-0O4A0191.jpg",
+    "takenAt": "2024-05-03",
+    "month": 5,
+    "day": 3,
+    "year": 2024
+  },
+  {
+    "filename": "20240503-0O4A0202.jpg",
+    "takenAt": "2024-05-03",
+    "month": 5,
+    "day": 3,
+    "year": 2024
+  },
+  {
+    "filename": "20240504-0O4A0709.jpg",
+    "takenAt": "2024-05-04",
+    "month": 5,
+    "day": 4,
+    "year": 2024
+  },
+  {
+    "filename": "20240505-0O4A0763.jpg",
+    "takenAt": "2024-05-05",
+    "month": 5,
+    "day": 5,
+    "year": 2024
+  },
+  {
+    "filename": "20240506-0O4A0896.jpg",
+    "takenAt": "2024-05-06",
+    "month": 5,
+    "day": 6,
+    "year": 2024
+  },
+  {
+    "filename": "20240506-0O4A0921.jpg",
+    "takenAt": "2024-05-06",
+    "month": 5,
+    "day": 6,
+    "year": 2024
+  },
+  {
+    "filename": "20240512-IMG_4050.jpg",
+    "takenAt": "2024-05-12",
+    "month": 5,
+    "day": 12,
+    "year": 2024
+  },
+  {
+    "filename": "20240517-IMG_4059_jpg.jpg",
+    "takenAt": "2024-05-17",
+    "month": 5,
+    "day": 17,
+    "year": 2024
+  },
+  {
+    "filename": "20240517-IMG_4066_jpg.jpg",
+    "takenAt": "2024-05-17",
+    "month": 5,
+    "day": 17,
+    "year": 2024
+  },
+  {
+    "filename": "20240519-IMG_4075.jpg",
+    "takenAt": "2024-05-19",
+    "month": 5,
+    "day": 19,
+    "year": 2024
+  },
+  {
+    "filename": "20250112-IMG_4646_jpg.jpg",
+    "takenAt": "2025-01-12",
+    "month": 1,
+    "day": 12,
+    "year": 2025
+  },
+  {
+    "filename": "20250125-IMG_4678.jpg",
+    "takenAt": "2025-01-25",
+    "month": 1,
+    "day": 25,
+    "year": 2025
+  },
+  {
+    "filename": "20250502-IMG_5164.jpg",
+    "takenAt": "2025-05-02",
+    "month": 5,
+    "day": 2,
+    "year": 2025
+  },
+  {
+    "filename": "20250507-IMG_5192.jpg",
+    "takenAt": "2025-05-07",
+    "month": 5,
+    "day": 7,
+    "year": 2025
+  },
+  {
+    "filename": "20250511-IMG_5218.jpg",
+    "takenAt": "2025-05-11",
+    "month": 5,
+    "day": 11,
+    "year": 2025
+  },
+  {
+    "filename": "20260104-IMG_0488.jpg",
+    "takenAt": "2026-01-04",
+    "month": 1,
+    "day": 4,
+    "year": 2026
+  },
+  {
+    "filename": "20260107-IMG_0491.jpg",
+    "takenAt": "2026-01-07",
+    "month": 1,
+    "day": 7,
+    "year": 2026
+  },
+  {
+    "filename": "20260108-IMG_0495.jpg",
+    "takenAt": "2026-01-08",
+    "month": 1,
+    "day": 8,
+    "year": 2026
+  },
+  {
+    "filename": "20260120-PXL_20251226_220157893.jpg",
+    "takenAt": "2026-01-20",
+    "month": 1,
+    "day": 20,
+    "year": 2026
+  },
+  {
+    "filename": "20260127-IMG_0522.jpg",
+    "takenAt": "2026-01-27",
+    "month": 1,
+    "day": 27,
+    "year": 2026
+  }
+]

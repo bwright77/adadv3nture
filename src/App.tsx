@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useTimeOfDay, BG_PHOTOS } from './hooks/useTimeOfDay'
+import { useInspiration } from './hooks/useInspiration'
+import type { InspirationPhoto } from './hooks/useInspiration'
 import type { Tab } from './components/ui/TabBar'
 import { TabBar } from './components/ui/TabBar'
 import { FAB } from './components/ui/FAB'
@@ -11,9 +13,8 @@ import { InboxPage } from './pages/InboxPage'
 import { TrendsPage } from './pages/TrendsPage'
 import { CaptureSheet } from './components/inbox/CaptureSheet'
 import { InspireDetail } from './components/dashboard/InspireDetail'
+import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { C } from './tokens'
-
-interface InspireEntry { photo: string; year: string; place: string }
 
 const VEIL: Record<string, string> = {
   'morning':     'linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.6) 100%)',
@@ -22,23 +23,19 @@ const VEIL: Record<string, string> = {
   'evening':     'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)',
 }
 
-export default function App() {
+function Dashboard() {
   const tod = useTimeOfDay()
+  const todayPhoto = useInspiration()
   const [tab, setTab] = useState<Tab>('home')
   const [capture, setCapture] = useState(false)
-  const [inspire, setInspire] = useState<InspireEntry | null>(null)
+  const [inspirePhoto, setInspirePhoto] = useState<InspirationPhoto | null>(null)
 
   const isDark = tab === 'home'
   const bgPhoto = BG_PHOTOS[tod]
 
-  const openInspire = (photo: string, year: string, place: string) => {
-    setInspire({ photo, year, place })
-  }
-
   return (
     <div style={{ position: 'relative', minHeight: '100dvh', background: C.dark, overflowX: 'hidden' }}>
 
-      {/* fixed background photo — only on today tab */}
       {tab === 'home' && (
         <>
           <div style={{
@@ -55,20 +52,18 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: C.paper }} />
       )}
 
-      {/* scrollable content */}
       <div style={{
         position: 'relative', zIndex: 2,
         overflowY: 'auto', overflowX: 'hidden',
         minHeight: '100dvh',
         paddingTop: 'env(safe-area-inset-top, 16px)',
       }}>
-        {/* status bar spacer */}
         <div style={{ height: 44 }} />
 
-        {tab === 'home' && tod === 'morning'     && <MorningView     onInspireExpand={openInspire} />}
-        {tab === 'home' && tod === 'mid-morning' && <MidMorningView  onInspireExpand={openInspire} />}
-        {tab === 'home' && tod === 'afternoon'   && <AfternoonView   onInspireExpand={openInspire} />}
-        {tab === 'home' && tod === 'evening'     && <EveningView     onInspireExpand={openInspire} />}
+        {tab === 'home' && tod === 'morning'     && <MorningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
+        {tab === 'home' && tod === 'mid-morning' && <MidMorningView  inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
+        {tab === 'home' && tod === 'afternoon'   && <AfternoonView   inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
+        {tab === 'home' && tod === 'evening'     && <EveningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
         {tab === 'trends' && <TrendsPage />}
         {tab === 'inbox'  && <InboxPage />}
         {tab === 'log'    && (
@@ -85,14 +80,20 @@ export default function App() {
       <FAB onClick={() => setCapture(true)} />
 
       {capture && <CaptureSheet onClose={() => setCapture(false)} />}
-      {inspire && (
+      {inspirePhoto && (
         <InspireDetail
-          photo={inspire.photo}
-          year={inspire.year}
-          place={inspire.place}
-          onClose={() => setInspire(null)}
+          photo={inspirePhoto}
+          onClose={() => setInspirePhoto(null)}
         />
       )}
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
   )
 }

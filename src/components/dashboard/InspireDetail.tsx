@@ -1,18 +1,17 @@
 import { C } from '../../tokens'
+import type { InspirationPhoto } from '../../hooks/useInspiration'
 
 interface InspireDetailProps {
-  photo: string
-  year: string
-  place: string
+  photo: InspirationPhoto
   onClose: () => void
 }
 
-export function InspireDetail({ photo, year, place, onClose }: InspireDetailProps) {
-  const yearsAgo = 2026 - parseInt(year, 10)
+export function InspireDetail({ photo, onClose }: InspireDetailProps) {
+  const yearsAgo = new Date().getFullYear() - photo.year
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 60,
-      background: `url(${photo}) center/cover no-repeat`,
+      background: `url(${photo.path}) center/cover no-repeat`,
     }}>
       <div style={{
         position: 'absolute', inset: 0,
@@ -32,12 +31,11 @@ export function InspireDetail({ photo, year, place, onClose }: InspireDetailProp
       </div>
 
       <div style={{ position: 'absolute', bottom: 38, left: 0, right: 0, padding: '0 22px', color: C.cream, zIndex: 10 }}>
-        <div className="badge" style={{ fontSize: 24, lineHeight: 1.05 }}>{place.toUpperCase()}</div>
-        <div className="mono" style={{ fontSize: 12, opacity: 0.85, marginTop: 6 }}>
-          May {year} · the adventure
+        <div className="badge" style={{ fontSize: 24, lineHeight: 1.05 }}>
+          {photo.takenAt.toUpperCase()}
         </div>
-        <div style={{ fontSize: 13, marginTop: 14, opacity: 0.95, lineHeight: 1.5, fontStyle: 'italic' }}>
-          The 4pm hour is what these become.
+        <div className="mono" style={{ fontSize: 12, opacity: 0.85, marginTop: 6 }}>
+          {photo.year} · the adventure
         </div>
       </div>
     </div>

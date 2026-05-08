@@ -8,8 +8,12 @@ import { WDrinks } from './widgets/WDrinks'
 import { WWeather } from './widgets/WWeather'
 import { WInspire } from './widgets/WInspire'
 import { C } from '../../tokens'
+import type { InspirationPhoto } from '../../hooks/useInspiration'
 
-interface MidMorningViewProps { onInspireExpand?: (photo: string, year: string, place: string) => void }
+interface MidMorningViewProps {
+  inspirationPhoto: InspirationPhoto | null
+  onInspireExpand?: (photo: InspirationPhoto) => void
+}
 
 const EVENTS = [
   { t: '9:30',  l: 'Triage + plan' },
@@ -17,7 +21,7 @@ const EVENTS = [
   { t: '2:30',  l: 'School pickup' },
 ]
 
-export function MidMorningView({ onInspireExpand }: MidMorningViewProps) {
+export function MidMorningView({ inspirationPhoto, onInspireExpand }: MidMorningViewProps) {
   return (
     <>
       <Header greeting="11:14 · WA block" sub="QUIET HOURS · INBOX TRIAGED · 2H30 LEFT" dark />
@@ -43,8 +47,9 @@ export function MidMorningView({ onInspireExpand }: MidMorningViewProps) {
         <WDrinks dark />
         <WWeather dark />
         <WInspire
-          dark photo="/photos/river-canyon.jpg" year="2018" place="Gates of Lodore · day 2"
-          onExpand={() => onInspireExpand?.('/photos/river-canyon.jpg', '2018', 'Gates of Lodore · day 2')}
+          dark
+          photo={inspirationPhoto}
+          onExpand={() => inspirationPhoto && onInspireExpand?.(inspirationPhoto)}
         />
       </div>
     </>

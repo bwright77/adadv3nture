@@ -7,10 +7,14 @@ import { WDrinks } from './widgets/WDrinks'
 import { WMIT } from './widgets/WMIT'
 import { WInspire } from './widgets/WInspire'
 import { WLaborDay } from './widgets/WLaborDay'
+import type { InspirationPhoto } from '../../hooks/useInspiration'
 
-interface MorningViewProps { onInspireExpand?: (photo: string, year: string, place: string) => void }
+interface MorningViewProps {
+  inspirationPhoto: InspirationPhoto | null
+  onInspireExpand?: (photo: InspirationPhoto) => void
+}
 
-export function MorningView({ onInspireExpand }: MorningViewProps) {
+export function MorningView({ inspirationPhoto, onInspireExpand }: MorningViewProps) {
   return (
     <>
       <Header greeting="Wed · May 7" sub="DENVER · 54° CLEAR · BOOT CAMP D1" dark />
@@ -25,8 +29,9 @@ export function MorningView({ onInspireExpand }: MorningViewProps) {
         <WDrinks dark />
         <WMIT dark />
         <WInspire
-          dark photo="/photos/ski-summit.jpg" year="2021" place="Berthoud Pass · skin lap"
-          onExpand={() => onInspireExpand?.('/photos/ski-summit.jpg', '2021', 'Berthoud Pass · skin lap')}
+          dark
+          photo={inspirationPhoto}
+          onExpand={() => inspirationPhoto && onInspireExpand?.(inspirationPhoto)}
         />
         <WLaborDay dark />
       </div>
