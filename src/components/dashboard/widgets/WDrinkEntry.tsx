@@ -70,7 +70,7 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
             fontSize: 22, fontWeight: 300,
           }}
         >−</button>
-        <div className="mono" style={{ fontSize: 56, fontWeight: 700, lineHeight: 1 }}>{count}</div>
+        <div className="mono" style={{ fontSize: 56, fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0' }}>{count}</div>
         <button
           onClick={() => updateCount(today, count + 1)}
           style={{

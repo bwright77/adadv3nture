@@ -13,7 +13,7 @@ export function WLaborDay({ dark }: WLaborDayProps) {
   return (
     <Glass dark={dark} span={6} pad={14}>
       <CardLabel dark={dark}>Labor day · countdown</CardLabel>
-      <div className="mono" style={{ fontSize: 26, fontWeight: 700, lineHeight: 1 }}>
+      <div className="mono" style={{ fontSize: 26, fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0' }}>
         {days}<span style={{ fontSize: 11, opacity: 0.5 }}>d</span>
       </div>
       <div style={{ fontSize: 11, marginTop: 2, opacity: 0.7 }}>WA income or job · fish-or-cut-bait</div>

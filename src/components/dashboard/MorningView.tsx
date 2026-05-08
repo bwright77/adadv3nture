@@ -8,6 +8,7 @@ import { WWeather } from './widgets/WWeather'
 import { WDrinks } from './widgets/WDrinks'
 import { WMIT } from './widgets/WMIT'
 import { WInspire } from './widgets/WInspire'
+import { WForecast } from './widgets/WForecast'
 import { WLaborDay } from './widgets/WLaborDay'
 import { WCalendar } from './widgets/WCalendar'
 import { useAuth } from '../../contexts/AuthContext'
@@ -59,6 +60,7 @@ export function MorningView({ inspirationPhoto, onInspireExpand }: MorningViewPr
           photo={inspirationPhoto}
           onExpand={() => inspirationPhoto && onInspireExpand?.(inspirationPhoto)}
         />
+        <WForecast dark />
         <WLaborDay dark />
       </div>
     </>

@@ -1,6 +1,17 @@
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY as string
 const DENVER = { lat: 39.7392, lon: -104.9903, label: 'Denver · 5,318ft' }
 
+export interface DayForecast {
+  date: string             // 'YYYY-MM-DD'
+  label: string            // 'Today' | 'Tomorrow' | 'Mon' | 'Tue' | etc.
+  highF: number
+  lowF: number
+  condition: string
+  precipPct: number        // 0–100, max pop across slots
+  isRaining: boolean
+  isSnowing: boolean
+}
+
 export interface WeatherData {
   label: string
   tempF: number
@@ -17,6 +28,8 @@ export interface WeatherData {
   // 4pm window (3pm–6pm forecast)
   afternoonWet: boolean
   afternoonTempF: number | null
+  // Multi-day forecast
+  dailyForecast: DayForecast[]
 }
 
 interface OWMCurrent {
@@ -51,7 +64,7 @@ export async function getWeather(coords?: { lat: number; lon: number; label: str
 
   const [current, forecast] = await Promise.all([
     fetchJSON<OWMCurrent>(`${base}/weather?${params}`),
-    fetchJSON<OWMForecast>(`${base}/forecast?${params}&cnt=16`),
+    fetchJSON<OWMForecast>(`${base}/forecast?${params}&cnt=40`),
   ])
 
   const condition = current.weather[0]?.main ?? 'Clear'
@@ -79,6 +92,60 @@ export async function getWeather(coords?: { lat: number; lon: number; label: str
     ? Math.round(afternoonSlots.reduce((s, x) => s + x.main.temp, 0) / afternoonSlots.length)
     : null
 
+  // Group 3-hour slots into daily forecasts (next 5 days)
+  const dayMap = new Map<string, OWMForecastItem[]>()
+  for (const slot of forecast.list) {
+    const d = new Date(slot.dt * 1000)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const arr = dayMap.get(key) ?? []
+    arr.push(slot)
+    dayMap.set(key, arr)
+  }
+
+  const today = new Date()
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const tomorrowDate = new Date(today)
+  tomorrowDate.setDate(today.getDate() + 1)
+  const tomorrowKey = `${tomorrowDate.getFullYear()}-${String(tomorrowDate.getMonth() + 1).padStart(2, '0')}-${String(tomorrowDate.getDate()).padStart(2, '0')}`
+  const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+  const dailyForecast: DayForecast[] = []
+  for (const [dateKey, slots] of dayMap) {
+    if (dailyForecast.length >= 5) break
+    const temps = slots.map(s => s.main.temp)
+    const dayHigh = Math.round(Math.max(...temps))
+    const dayLow = Math.round(Math.min(...temps))
+    const maxPop = Math.round(Math.max(...slots.map(s => s.pop)) * 100)
+    // Dominant condition: prefer precipitation conditions over clear
+    const conditionCounts = slots.reduce((acc, s) => {
+      const c = s.weather[0]?.main ?? 'Clear'
+      acc[c] = (acc[c] ?? 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    const precipConditions = ['Thunderstorm', 'Rain', 'Drizzle', 'Snow']
+    const dayCondition = precipConditions.find(c => conditionCounts[c]) ??
+      Object.entries(conditionCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'Clear'
+
+    let label: string
+    if (dateKey === todayKey) label = 'Today'
+    else if (dateKey === tomorrowKey) label = 'Tomorrow'
+    else {
+      const d = new Date(dateKey + 'T12:00:00')
+      label = DOW[d.getDay()]
+    }
+
+    dailyForecast.push({
+      date: dateKey,
+      label,
+      highF: dayHigh,
+      lowF: dayLow,
+      condition: dayCondition,
+      precipPct: maxPop,
+      isRaining: ['Rain', 'Drizzle', 'Thunderstorm'].includes(dayCondition),
+      isSnowing: dayCondition === 'Snow',
+    })
+  }
+
   return {
     label: loc.label,
     tempF,
@@ -93,6 +160,7 @@ export async function getWeather(coords?: { lat: number; lon: number; label: str
     bikeOk: tempF < 90 && !isRaining && !isSnowing,
     afternoonWet,
     afternoonTempF: afternoonTempF ?? tempF,
+    dailyForecast,
   }
 }
 

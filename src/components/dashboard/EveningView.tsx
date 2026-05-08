@@ -4,6 +4,7 @@ import { CardLabel } from '../ui/CardLabel'
 import { WReview } from './widgets/WReview'
 import { WDrinkEntry } from './widgets/WDrinkEntry'
 import { WInspire } from './widgets/WInspire'
+import { WForecast } from './widgets/WForecast'
 import { WPilots } from './widgets/WPilots'
 import { WCalendar } from './widgets/WCalendar'
 import { C } from '../../tokens'
@@ -39,6 +40,7 @@ export function EveningView({ inspirationPhoto, onInspireExpand }: EveningViewPr
           photo={inspirationPhoto}
           onExpand={() => inspirationPhoto && onInspireExpand?.(inspirationPhoto)}
         />
+        <WForecast dark />
         <WPilots dark />
       </div>
     </>

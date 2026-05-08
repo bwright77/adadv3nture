@@ -8,7 +8,7 @@ export function WMIT({ dark }: WMITProps) {
   return (
     <Glass dark={dark} span={4} pad={14}>
       <CardLabel dark={dark}>MIT · today</CardLabel>
-      <div className="mono" style={{ fontSize: 26, fontWeight: 700, lineHeight: 1 }}>
+      <div className="mono" style={{ fontSize: 26, fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0' }}>
         73<span style={{ fontSize: 12, opacity: 0.5 }}>%</span>
       </div>
       <div className="mono" style={{ fontSize: 9.5, opacity: 0.55, marginTop: 2 }}>↑12 vs last wk</div>

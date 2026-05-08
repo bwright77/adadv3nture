@@ -43,7 +43,7 @@ export function WWeather({ dark }: WWeatherProps) {
       <CardLabel dark={dark}>{weather.label}</CardLabel>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
         <span style={{ fontSize: 13 }}>{icon}</span>
-        <span className="mono" style={{ fontSize: 26, fontWeight: 700 }}>{weather.tempF}°</span>
+        <span className="mono" style={{ fontSize: 26, fontWeight: 700, fontFeatureSettings: '"zero" 0' }}>{weather.tempF}°</span>
         <span style={{ fontSize: 10, opacity: 0.6 }}>↑{weather.highF} ↓{weather.lowF}</span>
       </div>
       <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2, textTransform: 'capitalize' }}>

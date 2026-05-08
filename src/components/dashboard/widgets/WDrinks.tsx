@@ -25,7 +25,7 @@ export function WDrinks({ dark }: WDrinksProps) {
   return (
     <Glass dark={dark} span={4} pad={14}>
       <CardLabel dark={dark}>Drinks · 7d</CardLabel>
-      <div className="mono" style={{ fontSize: 26, fontWeight: 700, lineHeight: 1 }}>
+      <div className="mono" style={{ fontSize: 26, fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0' }}>
         {avg}<span style={{ fontSize: 11, opacity: 0.5 }}>/d</span>
       </div>
       <div className="mono" style={{
