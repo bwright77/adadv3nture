@@ -30,6 +30,8 @@ Deno.serve(async (req) => {
     return new Response('Unauthorized', { status: 401 })
   }
 
+  console.log('payload:', JSON.stringify(payload))
+
   if (!payload.date || !/^\d{4}-\d{2}-\d{2}$/.test(payload.date)) {
     return new Response('Invalid date — expected YYYY-MM-DD', { status: 400 })
   }
