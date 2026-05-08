@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { useTimeOfDay, useBgPhoto } from './hooks/useTimeOfDay'
+import { useTimeOfDay } from './hooks/useTimeOfDay'
 import { useInspiration } from './hooks/useInspiration'
 import type { InspirationPhoto } from './hooks/useInspiration'
 import type { Tab } from './components/ui/TabBar'
-import { useAuth } from './contexts/AuthContext'
 import { TabBar } from './components/ui/TabBar'
 import { FAB } from './components/ui/FAB'
 import { MorningView } from './components/dashboard/MorningView'
@@ -27,10 +26,9 @@ const VEIL: Record<string, string> = {
 }
 
 function Dashboard() {
-  const { user } = useAuth()
   const tod = useTimeOfDay()
-  const bgPhoto = useBgPhoto(tod, user?.id)
   const todayPhoto = useInspiration()
+  const bgPhoto = todayPhoto?.original_url ?? ''
   const [tab, setTab] = useState<Tab>(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('strava') === 'connected') {

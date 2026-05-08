@@ -9,6 +9,8 @@ import {
   getActiveReminders, addReminder, snoozeReminder, completeReminder, deleteReminder,
   type Reminder,
 } from '../lib/reminders'
+import { TrainingView } from '../components/todos/TrainingView'
+import { ProjectsView } from '../components/todos/ProjectsView'
 
 const URGENCY_ORDER: Record<TodoUrgency, number> = { fire: 0, deck: 1, rain: 2 }
 
@@ -76,19 +78,23 @@ function UrgencySelector({ value, onChange }: { value: TodoUrgency; onChange: (u
   )
 }
 
-const CATEGORIES: { id: TodoCategory; label: string; color: string }[] = [
-  { id: 'body',     label: 'Body',     color: C.teal },
-  { id: 'career',   label: 'Career',   color: C.rust },
-  { id: 'family',   label: 'Family',   color: C.sand },
-  { id: 'home',     label: 'Home',     color: '#8B7355' },
-  { id: 'personal', label: 'Personal', color: '#7B9E87' },
+type TabId = TodoCategory | 'training' | 'projects'
+
+const TABS: { id: TabId; label: string; color: string }[] = [
+  { id: 'training',  label: 'Training', color: C.teal },
+  { id: 'career',    label: 'Career',   color: C.rust },
+  { id: 'family',    label: 'Family',   color: C.sand },
+  { id: 'home',      label: 'Home',     color: '#8B7355' },
+  { id: 'projects',  label: 'Projects', color: '#7B9E87' },
 ]
+
 
 interface TodosPageProps { bgPhoto?: string }
 
 export function TodosPage({ bgPhoto }: TodosPageProps) {
   const { user } = useAuth()
-  const [cat, setCat] = useState<TodoCategory>('body')
+  const [tab, setTab] = useState<TabId>('training')
+  const [cat, setCat] = useState<TodoCategory>('career')
   const [todos, setTodos] = useState<Todo[]>([])
   const [done, setDone] = useState<Todo[]>([])
   const [showDone, setShowDone] = useState(false)
@@ -101,7 +107,8 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
   const [addingReminder, setAddingReminder] = useState(false)
   const [reminderDraft, setReminderDraft] = useState('')
 
-  const current = CATEGORIES.find(c => c.id === cat)!
+  const isTodoTab = tab !== 'training' && tab !== 'projects'
+  const current = TABS.find(t => t.id === (isTodoTab ? cat : tab))!
 
   function sortByUrgency(list: Todo[]): Todo[] {
     return [...list].sort((a, b) => {
@@ -111,7 +118,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
   }
 
   async function load() {
-    if (!user) return
+    if (!user || !isTodoTab) return
     setLoading(true)
     const [open, closed, active] = await Promise.all([
       getTodos(user.id, cat),
@@ -124,7 +131,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [cat, user])
+  useEffect(() => { load() }, [cat, user, isTodoTab])
 
   useEffect(() => {
     if (adding) inputRef.current?.focus()
@@ -202,7 +209,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
           <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.25em', opacity: 0.7 }}>◆ THE PORTFOLIO</div>
           <div className="badge" style={{ fontSize: 'var(--fs-56)', lineHeight: 0.88, marginTop: 6, letterSpacing: '0.005em' }}>LISTS.</div>
           <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.6, marginTop: 6, letterSpacing: '0.1em' }}>
-            {todos.length > 0 ? `${todos.length} OPEN · ${done.length} DONE` : 'KEEP ALL FIVE LIT'}
+            {isTodoTab && todos.length > 0 ? `${todos.length} OPEN · ${done.length} DONE` : 'KEEP ALL FIVE LIT'}
           </div>
         </div>
       </div>
@@ -214,7 +221,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
       <div style={{ padding: '0 14px' }}>
 
         {/* Persistent reminders */}
-        {(reminders.length > 0 || addingReminder) && (
+        {isTodoTab && (reminders.length > 0 || addingReminder) && (
           <div style={{ marginBottom: 12 }}>
             <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.rust, marginBottom: 6 }}>
               ● DAILY REMINDERS
@@ -266,7 +273,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
             )}
           </div>
         )}
-        {reminders.length === 0 && !addingReminder && (
+        {isTodoTab && reminders.length === 0 && !addingReminder && (
           <div style={{ textAlign: 'right', marginBottom: 8 }}>
             <button onClick={() => setAddingReminder(true)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-13)', cursor: 'pointer', fontWeight: 600 }}>
               + reminder
@@ -274,37 +281,48 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
           </div>
         )}
 
-        {/* Category tabs */}
+        {/* Tabs */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-          {CATEGORIES.map(c => (
-            <button
-              key={c.id}
-              onClick={() => { setCat(c.id); setShowDone(false) }}
-              style={{
-                flex: '1 1 0%', minWidth: 0,
-                padding: '7px 4px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                fontSize: 'var(--fs-12)', fontWeight: 700,
-                fontFamily: 'Sora, system-ui, sans-serif',
-                letterSpacing: '0.02em', overflow: 'hidden',
-                background: cat === c.id ? c.color : C.ink20,
-                color: cat === c.id ? '#fff' : C.ink60,
-                transition: 'background 0.15s, color 0.15s',
-                position: 'relative',
-              }}
-            >
-              {c.label.toUpperCase()}
-              {/* Active underline */}
-              {cat === c.id && (
-                <div style={{
-                  position: 'absolute', bottom: 0, left: '20%', right: '20%',
-                  height: 2, background: 'rgba(255,255,255,0.5)', borderRadius: 1,
-                }} />
-              )}
-            </button>
-          ))}
+          {TABS.map(t => {
+            const active = tab === t.id
+            return (
+              <button
+                key={t.id}
+                onClick={() => {
+                  setTab(t.id)
+                  if (t.id !== 'training' && t.id !== 'projects') setCat(t.id as TodoCategory)
+                  setShowDone(false)
+                }}
+                style={{
+                  flex: '1 1 0%', minWidth: 0,
+                  padding: '7px 4px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                  fontSize: 'var(--fs-12)', fontWeight: 700,
+                  fontFamily: 'Sora, system-ui, sans-serif',
+                  letterSpacing: '0.02em', overflow: 'hidden',
+                  background: active ? t.color : C.ink20,
+                  color: active ? '#fff' : C.ink60,
+                  transition: 'background 0.15s, color 0.15s',
+                  position: 'relative',
+                }}
+              >
+                {t.label.toUpperCase()}
+                {active && (
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: '20%', right: '20%',
+                    height: 2, background: 'rgba(255,255,255,0.5)', borderRadius: 1,
+                  }} />
+                )}
+              </button>
+            )
+          })}
         </div>
 
+        {/* Special views */}
+        {tab === 'training' && <TrainingView />}
+        {tab === 'projects' && <ProjectsView />}
+
         {/* List */}
+        {!isTodoTab ? null :
         <div style={{ paddingBottom: 140 }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: 40, color: C.ink40, fontSize: 'var(--fs-15)' }}>
@@ -427,7 +445,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
               ))}
             </div>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   )

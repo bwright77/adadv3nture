@@ -108,11 +108,11 @@ export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMo
       .select('drinks_consumed')
       .eq('user_id', user.id)
       .in('signal_date', dates)
-      .then(({ data }) => {
-        const total = (data ?? []).reduce((s, r) => s + (r.drinks_consumed ?? 0), 0)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then(({ data }: { data: any[] | null }) => {
+        const total = (data ?? []).reduce((s: number, r: any) => s + (r.drinks_consumed ?? 0), 0)
         setDrinksAvg(Math.round((total / 7) * 10) / 10)
       })
-      .catch(() => null)
   }, [user])
 
   const score = recovery?.score ?? 0

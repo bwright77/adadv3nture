@@ -1,0 +1,71 @@
+import { supabase } from './supabase'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any
+
+export type TrainingEventType = 'trail_run' | 'cycling_road' | 'cycling_gravel'
+export type TrainingStatus = 'active' | 'complete' | 'skipped'
+
+export interface TrainingGoal {
+  id: string
+  user_id: string
+  event_name: string
+  event_date: string
+  event_type: TrainingEventType
+  distance_label: string | null
+  elevation_label: string | null
+  location: string | null
+  is_anchor: boolean
+  status: TrainingStatus
+  notes: string | null
+  created_at: string
+}
+
+export interface TrainingWeek {
+  id: string
+  user_id: string
+  week_start: string
+  phase_label: string
+  target_run_miles: number | null
+  target_long_run_miles: number | null
+  target_cycling_miles: number | null
+  target_strength_sessions: number | null
+  actual_run_miles: number | null
+  actual_cycling_miles: number | null
+  actual_strength_sessions: number | null
+  notes: string | null
+}
+
+export async function getTrainingGoals(userId: string): Promise<TrainingGoal[]> {
+  const { data, error } = await supabase
+    .from('training_goals')
+    .select('*')
+    .eq('user_id', userId)
+    .neq('status', 'skipped')
+    .order('event_date', { ascending: true })
+  if (error) throw new Error(error.message)
+  return (data ?? []) as TrainingGoal[]
+}
+
+export async function getCurrentTrainingWeek(userId: string): Promise<TrainingWeek | null> {
+  const today = new Date()
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7))
+  const weekStart = monday.toISOString().substring(0, 10)
+
+  const { data, error } = await supabase
+    .from('training_weeks')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('week_start', weekStart)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  return data as TrainingWeek | null
+}
+
+export async function updateTrainingActuals(
+  id: string,
+  actuals: Partial<Pick<TrainingWeek, 'actual_run_miles' | 'actual_cycling_miles' | 'actual_strength_sessions'>>
+): Promise<void> {
+  const { error } = await db.from('training_weeks').update(actuals).eq('id', id)
+  if (error) throw new Error(error.message)
+}
