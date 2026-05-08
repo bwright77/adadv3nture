@@ -31,9 +31,9 @@ export function LoginPage() {
       <div style={{ width: '100%', maxWidth: 360 }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <img
-            src="/adadv3nture.png"
+            src="/adadv3nture_transparent.png"
             alt="adadv3nture"
-            style={{ width: 200, mixBlendMode: 'multiply', marginBottom: 8 }}
+            style={{ width: 200, marginBottom: 8 }}
           />
           <div style={{ color: C.ink60, fontSize: 13 }}>
             a dad adventure
