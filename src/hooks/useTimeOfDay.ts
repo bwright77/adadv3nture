@@ -39,6 +39,15 @@ interface ManifestPhoto {
   hour: number | null
 }
 
+const CONTRAST_PROBABILITY = 0.15
+
+function oppositeMonthPhotos(photos: ManifestPhoto[], m: number): ManifestPhoto[] {
+  const opposite = ((m - 1 + 6) % 12) + 1
+  // ±1 month window around the opposite point
+  const candidates = [opposite - 1, opposite, opposite + 1].map(x => ((x - 1 + 12) % 12) + 1)
+  return photos.filter(p => candidates.includes(p.month))
+}
+
 function pickBgPhoto(photos: ManifestPhoto[], tod: TimeOfDay): string {
   const today = new Date()
   const m = today.getMonth() + 1
@@ -46,9 +55,20 @@ function pickBgPhoto(photos: ManifestPhoto[], tod: TimeOfDay): string {
   const [hMin, hMax] = TOD_HOURS[tod]
 
   function matchesTime(p: ManifestPhoto): boolean {
-    if (p.hour === null) return true  // unknown time → always eligible
+    if (p.hour === null) return true
     if (tod === 'evening') return p.hour >= 17 || p.hour < 6
     return p.hour >= hMin && p.hour < hMax
+  }
+
+  function pick(pool: ManifestPhoto[]): string {
+    return '/photos/inspirations/' + pool[Math.floor(Math.random() * pool.length)].filename
+  }
+
+  // 15% chance: pull from the opposite season for a contrast shot
+  if (Math.random() < CONTRAST_PROBABILITY) {
+    const contrast = oppositeMonthPhotos(photos, m)
+    if (contrast.length >= 3) return pick(contrast)
+    // not enough contrast photos yet — fall through to normal selection
   }
 
   // Priority 1: seasonal (±14 days) + time-of-day match
@@ -57,18 +77,14 @@ function pickBgPhoto(photos: ManifestPhoto[], tod: TimeOfDay): string {
     return diff <= 14 || diff >= 31 * 12 - 14
   })
   const seasonalTimed = seasonal.filter(matchesTime)
-  if (seasonalTimed.length) {
-    return '/photos/inspirations/' + seasonalTimed[Math.floor(Math.random() * seasonalTimed.length)].filename
-  }
+  if (seasonalTimed.length) return pick(seasonalTimed)
 
   // Priority 2: time-of-day match from full library
   const timed = photos.filter(matchesTime)
-  if (timed.length) {
-    return '/photos/inspirations/' + timed[Math.floor(Math.random() * timed.length)].filename
-  }
+  if (timed.length) return pick(timed)
 
   // Priority 3: any photo
-  return '/photos/inspirations/' + photos[Math.floor(Math.random() * photos.length)].filename
+  return pick(photos)
 }
 
 // Cached per session so the background doesn't flicker on re-renders
