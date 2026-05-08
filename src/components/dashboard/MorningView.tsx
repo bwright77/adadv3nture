@@ -15,9 +15,14 @@ import { loadRecovery } from '../../lib/recovery'
 import { supabase } from '../../lib/supabase'
 import type { InspirationPhoto } from '../../hooks/useInspiration'
 
+import type { TimeOfDay } from '../../hooks/useTimeOfDay'
+
 interface MorningViewProps {
   inspirationPhoto: InspirationPhoto | null
   onInspireExpand?: (photo: InspirationPhoto) => void
+  activeTod: TimeOfDay
+  isOverride: boolean
+  onSetOverride: (tod: TimeOfDay | null) => void
 }
 
 interface BriefingData {
@@ -60,7 +65,7 @@ function LockStrip({ userId }: { userId: string | undefined }) {
   )
 }
 
-export function MorningView({ inspirationPhoto, onInspireExpand }: MorningViewProps) {
+export function MorningView({ inspirationPhoto, onInspireExpand, activeTod, isOverride, onSetOverride }: MorningViewProps) {
   const { user } = useAuth()
   const [briefingData, setBriefingData] = useState<BriefingData | null>(null)
   const [briefingLoading, setBriefingLoading] = useState(true)
@@ -77,7 +82,7 @@ export function MorningView({ inspirationPhoto, onInspireExpand }: MorningViewPr
 
   return (
     <>
-      <Header sub="DENVER · BOOT CAMP" dark />
+      <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
       <LockStrip userId={user?.id} />
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',

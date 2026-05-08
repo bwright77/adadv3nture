@@ -4,6 +4,13 @@ import { useAuth } from '../contexts/AuthContext'
 
 export type TimeOfDay = 'morning' | 'mid-morning' | 'afternoon' | 'evening'
 
+export const TOD_BLOCKS: Record<TimeOfDay, { label: string; sub: string; time: string }> = {
+  'morning':     { label: 'MORNING',     sub: 'DENVER · BOOT CAMP',              time: '7:35–9:30'  },
+  'mid-morning': { label: 'MID-MORNING', sub: 'WA BLOCK · QUIET HOURS',          time: '9:30–2:30'  },
+  'afternoon':   { label: 'AFTERNOON',   sub: '4PM HOUR · KIDS HOME SOON',        time: '2:30–6PM'   },
+  'evening':     { label: 'EVENING',     sub: 'LOG · TOMORROW · MIND IS YOURS',   time: '6PM+'       },
+}
+
 function getTimeOfDay(date: Date): TimeOfDay {
   const mins = date.getHours() * 60 + date.getMinutes()
   if (mins >= 6 * 60 && mins < 9 * 60 + 30) return 'morning'

@@ -7,16 +7,20 @@ import { WMIT } from './widgets/WMIT'
 import { WDrinks } from './widgets/WDrinks'
 import { WCalendar } from './widgets/WCalendar'
 import type { InspirationPhoto } from '../../hooks/useInspiration'
+import type { TimeOfDay } from '../../hooks/useTimeOfDay'
 
 interface AfternoonViewProps {
   inspirationPhoto: InspirationPhoto | null
   onInspireExpand?: (photo: InspirationPhoto) => void
+  activeTod: TimeOfDay
+  isOverride: boolean
+  onSetOverride: (tod: TimeOfDay | null) => void
 }
 
-export function AfternoonView({ inspirationPhoto, onInspireExpand }: AfternoonViewProps) {
+export function AfternoonView({ inspirationPhoto, onInspireExpand, activeTod, isOverride, onSetOverride }: AfternoonViewProps) {
   return (
     <>
-      <Header sub="4PM HOUR · KIDS HOME SOON" dark />
+      <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
         gap: 10, padding: '0 14px 100px',

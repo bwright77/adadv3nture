@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useTimeOfDay, useBgPhoto } from './hooks/useTimeOfDay'
+import { useState, useEffect } from 'react'
+import { useTimeOfDay, useBgPhoto, type TimeOfDay } from './hooks/useTimeOfDay'
 import { useInspiration } from './hooks/useInspiration'
 import type { InspirationPhoto } from './hooks/useInspiration'
 import type { Tab } from './components/ui/TabBar'
@@ -26,7 +26,13 @@ const VEIL: Record<string, string> = {
 }
 
 function Dashboard() {
-  const tod = useTimeOfDay()
+  const realTod = useTimeOfDay()
+  const [todOverride, setTodOverride] = useState<TimeOfDay | null>(null)
+  const tod = todOverride ?? realTod
+
+  // Auto-clear override when real time naturally transitions to a new block
+  useEffect(() => { setTodOverride(null) }, [realTod])
+
   const bgPhoto = useBgPhoto(tod)
   const todayPhoto = useInspiration()
   const [tab, setTab] = useState<Tab>(() => {
@@ -71,10 +77,10 @@ function Dashboard() {
       }}>
         {tab === 'home' && <div style={{ height: 'calc(env(safe-area-inset-top, 16px) + 28px)' }} />}
 
-        {tab === 'home' && tod === 'morning'     && <MorningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
-        {tab === 'home' && tod === 'mid-morning' && <MidMorningView  inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
-        {tab === 'home' && tod === 'afternoon'   && <AfternoonView   inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
-        {tab === 'home' && tod === 'evening'     && <EveningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
+        {tab === 'home' && tod === 'morning'     && <MorningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
+        {tab === 'home' && tod === 'mid-morning' && <MidMorningView  inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
+        {tab === 'home' && tod === 'afternoon'   && <AfternoonView   inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
+        {tab === 'home' && tod === 'evening'     && <EveningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
         {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} />}
         {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} />}
         {tab === 'inbox'  && <InboxPage  bgPhoto={bgPhoto || undefined} />}

@@ -7,16 +7,20 @@ import { WInspire } from './widgets/WInspire'
 import { WForecast } from './widgets/WForecast'
 import { WPilots } from './widgets/WPilots'
 import type { InspirationPhoto } from '../../hooks/useInspiration'
+import type { TimeOfDay } from '../../hooks/useTimeOfDay'
 
 interface EveningViewProps {
   inspirationPhoto: InspirationPhoto | null
   onInspireExpand?: (photo: InspirationPhoto) => void
+  activeTod: TimeOfDay
+  isOverride: boolean
+  onSetOverride: (tod: TimeOfDay | null) => void
 }
 
-export function EveningView({ inspirationPhoto, onInspireExpand }: EveningViewProps) {
+export function EveningView({ inspirationPhoto, onInspireExpand, activeTod, isOverride, onSetOverride }: EveningViewProps) {
   return (
     <>
-      <Header sub="LOG · TOMORROW PREVIEW · MIND IS YOURS" dark />
+      <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
         gap: 10, padding: '0 14px 100px',
