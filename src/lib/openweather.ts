@@ -68,7 +68,6 @@ export async function getWeather(coords?: { lat: number; lon: number; label: str
   const forecastLow = Math.round(Math.min(current.main.temp_min, ...temps))
 
   // Afternoon window: slots roughly 3pm–6pm local
-  const now = new Date()
   const afternoonSlots = forecast.list.filter(s => {
     const slotHour = new Date(s.dt * 1000).getHours()
     return slotHour >= 14 && slotHour <= 18

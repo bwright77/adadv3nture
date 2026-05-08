@@ -11,7 +11,7 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 60,
-      background: `url(${photo.path}) center/cover no-repeat`,
+      background: `url(${photo.original_url}) center/cover no-repeat`,
     }}>
       <div style={{
         position: 'absolute', inset: 0,

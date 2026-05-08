@@ -81,7 +81,7 @@ export function WWorkout({ dark }: WWorkoutProps) {
     const [acts, prog] = await Promise.all([
       getRecentActivities(user.id, 5),
       getProgram(user.id),
-    ])
+    ]) as [Activity[], ProgramState | null]
     setTodayAct(acts.find(a => a.activity_date === today) ?? null)
     setProgram(prog)
   }

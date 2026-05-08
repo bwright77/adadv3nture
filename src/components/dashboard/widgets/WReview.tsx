@@ -42,8 +42,8 @@ export function WReview({ dark }: WReviewProps) {
       getTodayPlan(user.id),
       getRecentActivities(user.id, 3),
     ]).then(([p, acts]) => {
-      setPlan(p)
-      setTodayAct(acts.find(a => a.activity_date === today) ?? null)
+      setPlan(p as DailyPlan | null)
+      setTodayAct((acts as Activity[]).find(a => a.activity_date === today) ?? null)
     }).catch(() => null)
   }, [user])
 

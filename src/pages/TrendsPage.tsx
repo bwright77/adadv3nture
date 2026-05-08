@@ -138,7 +138,7 @@ export function TrendsPage() {
                     { label: 'Run base', days: 54, color: C.rust },
                     { label: 'Cycling', days: 45, color: C.teal },
                     { label: 'Trail', days: 36, color: C.sand },
-                    { label: 'Taper', days: 6, color: C.sandLight },
+                    { label: 'Taper', days: 6, color: C.sandLt },
                   ].map((phase, i) => {
                     const total = 54 + 45 + 36 + 6
                     const isActive = i === 0
