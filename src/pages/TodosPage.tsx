@@ -6,6 +6,10 @@ import {
   getTodos, getCompletedTodos, addTodo, completeTodo, deleteTodo, moveTodo,
   type Todo, type TodoCategory,
 } from '../lib/todos'
+import {
+  getActiveReminders, addReminder, snoozeReminder, completeReminder, deleteReminder,
+  type Reminder,
+} from '../lib/reminders'
 
 const CATEGORIES: { id: TodoCategory; label: string; color: string }[] = [
   { id: 'body',     label: 'Body',     color: C.teal },
@@ -25,18 +29,23 @@ export function TodosPage() {
   const [draft, setDraft] = useState('')
   const [loading, setLoading] = useState(true)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [reminders, setReminders] = useState<Reminder[]>([])
+  const [addingReminder, setAddingReminder] = useState(false)
+  const [reminderDraft, setReminderDraft] = useState('')
 
   const current = CATEGORIES.find(c => c.id === cat)!
 
   async function load() {
     if (!user) return
     setLoading(true)
-    const [open, closed] = await Promise.all([
+    const [open, closed, active] = await Promise.all([
       getTodos(user.id, cat),
       getCompletedTodos(user.id, cat),
+      getActiveReminders(user.id),
     ])
     setTodos(open)
     setDone(closed)
+    setReminders(active)
     setLoading(false)
   }
 
@@ -71,9 +80,83 @@ export function TodosPage() {
     await load()
   }
 
+  async function handleAddReminder() {
+    if (!user || !reminderDraft.trim()) { setAddingReminder(false); setReminderDraft(''); return }
+    const r = await addReminder(user.id, reminderDraft.trim(), cat, 'medium')
+    setReminders(prev => [...prev, r])
+    setReminderDraft('')
+    setAddingReminder(false)
+  }
+
+  async function handleSnooze(id: string) {
+    setReminders(prev => prev.filter(r => r.id !== id))
+    await snoozeReminder(id)
+  }
+
+  async function handleCompleteReminder(id: string) {
+    setReminders(prev => prev.filter(r => r.id !== id))
+    await completeReminder(id)
+  }
+
+  async function handleDeleteReminder(id: string) {
+    setReminders(prev => prev.filter(r => r.id !== id))
+    await deleteReminder(id)
+  }
+
   return (
     <div style={{ position: 'relative', zIndex: 10 }}>
       <Header greeting="Lists" sub="" dark={false} />
+
+      {/* Persistent reminders */}
+      {(reminders.length > 0 || addingReminder) && (
+        <div style={{ padding: '0 16px 4px' }}>
+          <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', color: C.rust, marginBottom: 6, fontFamily: 'Sora, system-ui, sans-serif' }}>
+            DAILY REMINDERS
+          </div>
+          {reminders.map(r => (
+            <div key={r.id} style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: r.urgency === 'high' ? 'rgba(196,82,42,0.06)' : '#fff',
+              border: `0.5px solid ${r.urgency === 'high' ? 'rgba(196,82,42,0.3)' : C.ink20}`,
+              borderRadius: 12, padding: '9px 12px', marginBottom: 6,
+            }}>
+              {r.urgency === 'high' && <span style={{ fontSize: 12, flexShrink: 0 }}>!</span>}
+              <span style={{ flex: 1, fontSize: 12.5, color: C.dark, lineHeight: 1.4 }}>{r.title}</span>
+              <button onClick={() => handleSnooze(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: C.ink40, padding: '2px 4px' }}>zzz</button>
+              <button onClick={() => handleCompleteReminder(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: C.teal, padding: '2px 4px' }}>✓</button>
+              <button onClick={() => handleDeleteReminder(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: C.ink40, padding: '2px 4px' }}>×</button>
+            </div>
+          ))}
+          {addingReminder ? (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#fff', border: `1.5px solid ${C.rust}`, borderRadius: 12, padding: '8px 12px', marginBottom: 6 }}>
+              <input
+                autoFocus
+                value={reminderDraft}
+                onChange={e => setReminderDraft(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleAddReminder(); if (e.key === 'Escape') { setAddingReminder(false); setReminderDraft('') } }}
+                placeholder="Daily reminder…"
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, background: 'transparent', fontFamily: 'inherit' }}
+              />
+              <button onClick={handleAddReminder} style={{ background: C.rust, color: '#fff', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
+              <button onClick={() => { setAddingReminder(false); setReminderDraft('') }} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 16, cursor: 'pointer' }}>×</button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAddingReminder(true)}
+              style={{ background: 'none', border: 'none', color: C.rust, fontSize: 11, cursor: 'pointer', padding: '2px 0 8px', fontWeight: 600 }}
+            >
+              + reminder
+            </button>
+          )}
+        </div>
+      )}
+      {reminders.length === 0 && !addingReminder && (
+        <div style={{ padding: '0 16px 8px', textAlign: 'right' }}>
+          <button onClick={() => setAddingReminder(true)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 10.5, cursor: 'pointer', fontWeight: 600 }}>
+            + reminder
+          </button>
+        </div>
+      )}
 
       {/* Category tabs */}
       <div style={{
