@@ -1,13 +1,11 @@
 import { Header } from '../ui/Header'
-import { Glass } from '../ui/Glass'
-import { CardLabel } from '../ui/CardLabel'
 import { WReview } from './widgets/WReview'
 import { WDrinkEntry } from './widgets/WDrinkEntry'
+import { WTomorrow } from './widgets/WTomorrow'
+import { WCalendar } from './widgets/WCalendar'
 import { WInspire } from './widgets/WInspire'
 import { WForecast } from './widgets/WForecast'
 import { WPilots } from './widgets/WPilots'
-import { WCalendar } from './widgets/WCalendar'
-import { C } from '../../tokens'
 import type { InspirationPhoto } from '../../hooks/useInspiration'
 
 interface EveningViewProps {
@@ -25,15 +23,7 @@ export function EveningView({ inspirationPhoto, onInspireExpand }: EveningViewPr
       }}>
         <WReview dark />
         <WDrinkEntry dark />
-        <Glass dark span={12} pad={14}>
-          <CardLabel dark>Tomorrow · Thu May 8</CardLabel>
-          <div className="badge" style={{ fontSize: 13, marginTop: 2 }}>
-            RUN CLUB · WASH PARK · 6PM <span style={{ color: C.teal }}>SACRED</span>
-          </div>
-          <div className="mono" style={{ fontSize: 10, opacity: 0.6, marginTop: 4 }}>
-            AM · TS W1·D3 legs · PM · run club · family joins
-          </div>
-        </Glass>
+        <WTomorrow dark />
         <WCalendar dark span={12} />
         <WInspire
           dark
