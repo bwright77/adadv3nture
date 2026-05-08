@@ -5,6 +5,7 @@ import { WInspire } from './widgets/WInspire'
 import { WWeather } from './widgets/WWeather'
 import { WMIT } from './widgets/WMIT'
 import { WDrinks } from './widgets/WDrinks'
+import { WCalendar } from './widgets/WCalendar'
 import type { InspirationPhoto } from '../../hooks/useInspiration'
 
 interface AfternoonViewProps {
@@ -28,6 +29,7 @@ export function AfternoonView({ inspirationPhoto, onInspireExpand }: AfternoonVi
           onExpand={() => inspirationPhoto && onInspireExpand?.(inspirationPhoto)}
         />
         <WWeather dark />
+        <WCalendar dark span={12} />
         <WMIT dark />
         <WDrinks dark />
       </div>

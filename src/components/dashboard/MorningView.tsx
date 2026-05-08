@@ -7,6 +7,7 @@ import { WDrinks } from './widgets/WDrinks'
 import { WMIT } from './widgets/WMIT'
 import { WInspire } from './widgets/WInspire'
 import { WLaborDay } from './widgets/WLaborDay'
+import { WCalendar } from './widgets/WCalendar'
 import type { InspirationPhoto } from '../../hooks/useInspiration'
 
 interface MorningViewProps {
@@ -27,6 +28,7 @@ export function MorningView({ inspirationPhoto, onInspireExpand }: MorningViewPr
         <WRecovery dark />
         <WWeather dark />
         <WDrinks dark />
+        <WCalendar dark span={12} />
         <WMIT dark />
         <WInspire
           dark
