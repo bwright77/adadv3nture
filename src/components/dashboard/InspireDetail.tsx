@@ -15,6 +15,7 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
   const [idx, setIdx] = useState(0)
   const [dx, setDx] = useState(0)
   const [dragging, setDragging] = useState(false)
+  const [exitDx, setExitDx] = useState<number | null>(null)
   const startX = useRef(0)
   const THRESHOLD = 72
 
@@ -33,6 +34,10 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
   const subtitle = [current.location, current.activity_type].filter(Boolean).join(' · ')
   const monthDay = current.takenAt.slice(0, 5).replace('-', '·')
 
+  // The adjacent photo shown behind during a swipe
+  const activeDx = exitDx ?? dx
+  const backPhoto = activeDx < 0 ? photos[idx + 1] : activeDx > 0 ? photos[idx - 1] : null
+
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     startX.current = e.clientX
     setDragging(true)
@@ -43,26 +48,47 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
     setDx(e.clientX - startX.current)
   }
   function onPointerUp() {
-    if (dx < -THRESHOLD && idx < photos.length - 1) setIdx(i => i + 1)
-    else if (dx > THRESHOLD && idx > 0) setIdx(i => i - 1)
-    setDx(0)
     setDragging(false)
+    const W = window.innerWidth
+    if (dx < -THRESHOLD && idx < photos.length - 1) {
+      setExitDx(-W)
+      setTimeout(() => { setIdx(i => i + 1); setExitDx(null); setDx(0) }, 280)
+    } else if (dx > THRESHOLD && idx > 0) {
+      setExitDx(W)
+      setTimeout(() => { setIdx(i => i - 1); setExitDx(null); setDx(0) }, 280)
+    } else {
+      setDx(0)
+    }
   }
 
   return (
-    <div
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={() => { setDx(0); setDragging(false) }}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 60,
-        background: `url(${current.original_url}) center/cover no-repeat`,
-        transform: `translateX(${dx}px)`,
-        transition: dragging ? 'none' : 'transform 0.22s ease, background-image 0s',
-        touchAction: 'pan-y', userSelect: 'none',
-      }}
-    >
+    // Outer container never moves — overflow hidden means nothing bleeds through
+    <div style={{ position: 'fixed', inset: 0, zIndex: 60, overflow: 'hidden' }}>
+
+      {/* Back layer: adjacent photo, stationary — fills gap during swipe */}
+      {backPhoto && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: `url(${backPhoto.original_url}) center/cover no-repeat`,
+        }} />
+      )}
+
+      {/* Front layer: current photo + all overlays, slides with drag */}
+      {/* key={idx} forces a fresh DOM element on nav — no bounce-back animation */}
+      <div
+        key={idx}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={() => { setDx(0); setExitDx(null); setDragging(false) }}
+        style={{
+          position: 'absolute', inset: 0,
+          background: `url(${current.original_url}) center/cover no-repeat`,
+          transform: `translateX(${activeDx}px)`,
+          transition: dragging ? 'none' : 'transform 0.28s ease',
+          touchAction: 'pan-y', userSelect: 'none',
+        }}
+      >
       {/* Gradient overlay */}
       <div style={{
         position: 'absolute', inset: 0,
@@ -197,6 +223,8 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
             {photos.length > 1 ? `${idx + 1} / ${photos.length} MEMORIES` : 'SWIPE FOR MORE →'}
           </div>
         </div>
+      </div>
+
       </div>
     </div>
   )
