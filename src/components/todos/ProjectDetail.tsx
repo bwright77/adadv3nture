@@ -1,6 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { C } from '../../tokens'
-import { toggleMilestone, addUpdate, updateNextAction, updateProjectProgress, type Project, type ProjectMilestone, type ProjectUpdate } from '../../lib/projects'
+import {
+  toggleMilestone, addUpdate, updateNextAction, updateProjectProgress,
+  addMilestone, deleteMilestone, reorderMilestones,
+  type Project, type ProjectMilestone, type ProjectUpdate,
+} from '../../lib/projects'
 
 interface ProjectDetailProps {
   project: Project
@@ -34,19 +38,86 @@ export function ProjectDetail({ project, milestones, updates, onClose, onUpdate 
   const [updatesLocal, setUpdatesLocal] = useState(updates)
   const [noteDraft, setNoteDraft] = useState('')
   const [addingNote, setAddingNote] = useState(false)
+  const [addingMilestone, setAddingMilestone] = useState(false)
+  const [milestoneDraft, setMilestoneDraft] = useState('')
+
+  // Drag state
+  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const dragStartY = useRef(0)
+  const rowHeight = useRef(52)
+
   const color = CAT_COLOR[project.category] ?? C.rust
 
   const done = localMilestones.filter(m => m.done).length
   const total = localMilestones.length
   const pct = total > 0 ? Math.round((done / total) * 100) : project.progress_pct
 
-  async function handleToggle(m: ProjectMilestone) {
-    const updated = { ...m, done: !m.done, done_at: !m.done ? new Date().toISOString() : null }
-    setLocalMilestones(prev => prev.map(x => x.id === m.id ? updated : x))
-    await toggleMilestone(m.id, !m.done)
-    const newPct = Math.round((localMilestones.filter(x => x.id === m.id ? !m.done : x.done).length / total) * 100)
-    await updateProjectProgress(project.id, newPct)
+  async function recalcProgress(updated: ProjectMilestone[]) {
+    const d = updated.filter(m => m.done).length
+    const t = updated.length
+    const p = t > 0 ? Math.round((d / t) * 100) : 0
+    await updateProjectProgress(project.id, p)
     onUpdate()
+  }
+
+  async function handleToggle(m: ProjectMilestone) {
+    const updated = localMilestones.map(x =>
+      x.id === m.id ? { ...x, done: !m.done, done_at: !m.done ? new Date().toISOString() : null } : x
+    )
+    setLocalMilestones(updated)
+    await toggleMilestone(m.id, !m.done)
+    await recalcProgress(updated)
+  }
+
+  async function handleDeleteMilestone(id: string) {
+    const updated = localMilestones.filter(m => m.id !== id)
+    setLocalMilestones(updated)
+    await deleteMilestone(id)
+    await recalcProgress(updated)
+  }
+
+  async function handleAddMilestone() {
+    if (!milestoneDraft.trim()) { setAddingMilestone(false); return }
+    const nextOrder = localMilestones.length > 0
+      ? Math.max(...localMilestones.map(m => m.sort_order)) + 1
+      : 0
+    const m = await addMilestone(project.id, milestoneDraft.trim(), nextOrder)
+    const updated = [...localMilestones, m]
+    setLocalMilestones(updated)
+    setMilestoneDraft('')
+    setAddingMilestone(false)
+    await recalcProgress(updated)
+  }
+
+  // Drag handlers — items swap as pointer passes midpoint
+  function onDragStart(e: React.PointerEvent<HTMLDivElement>, idx: number) {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setDragIdx(idx)
+    dragStartY.current = e.clientY
+    const h = e.currentTarget.closest('[data-row]')?.getBoundingClientRect().height
+    if (h) rowHeight.current = h
+  }
+
+  function onDragMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (dragIdx === null) return
+    const dy = e.clientY - dragStartY.current
+    const steps = Math.round(dy / rowHeight.current)
+    if (steps === 0) return
+    const newIdx = Math.max(0, Math.min(localMilestones.length - 1, dragIdx + steps))
+    if (newIdx !== dragIdx) {
+      const items = [...localMilestones]
+      const [item] = items.splice(dragIdx, 1)
+      items.splice(newIdx, 0, item)
+      setLocalMilestones(items)
+      setDragIdx(newIdx)
+      dragStartY.current = e.clientY
+    }
+  }
+
+  function onDragEnd() {
+    if (dragIdx === null) return
+    setDragIdx(null)
+    reorderMilestones(localMilestones.map((m, i) => ({ id: m.id, sort_order: i }))).catch(() => null)
   }
 
   async function handleSaveAction() {
@@ -74,11 +145,11 @@ export function ProjectDetail({ project, milestones, updates, onClose, onUpdate 
       background: C.paper, overflowY: 'auto',
     }}>
       {/* Header */}
-      <div style={{ background: C.dark, padding: '56px 18px 20px', position: 'relative' }}>
+      <div style={{ background: C.dark, padding: 'calc(env(safe-area-inset-top, 0px) + 56px) 18px 20px', position: 'relative' }}>
         <button
           onClick={onClose}
           style={{
-            position: 'absolute', top: 16, left: 14,
+            position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 14px)', left: 14,
             background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: 8,
             color: C.cream, fontSize: 'var(--fs-20)', cursor: 'pointer',
             width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -96,7 +167,6 @@ export function ProjectDetail({ project, milestones, updates, onClose, onUpdate 
           </div>
         )}
 
-        {/* Deadline chips */}
         <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
           {softDays !== null && (
             <div style={{
@@ -182,35 +252,111 @@ export function ProjectDetail({ project, milestones, updates, onClose, onUpdate 
           <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40, marginBottom: 10 }}>
             ◆ MILESTONES
           </div>
-          {localMilestones.map(m => (
-            <button
+
+          {localMilestones.map((m, i) => (
+            <div
               key={m.id}
-              onClick={() => handleToggle(m)}
+              data-row="true"
               style={{
-                display: 'flex', alignItems: 'center', gap: 12, width: '100%',
-                background: m.done ? 'transparent' : '#fff',
-                border: `0.5px solid ${m.done ? C.ink20 : C.ink20}`,
-                borderRadius: 12, padding: '11px 14px', cursor: 'pointer',
-                marginBottom: 6, textAlign: 'left', fontFamily: 'inherit',
-                opacity: m.done ? 0.5 : 1, transition: 'opacity 0.2s',
+                display: 'flex', alignItems: 'center', gap: 10,
+                background: dragIdx === i ? '#fff' : (m.done ? 'transparent' : '#fff'),
+                border: `0.5px solid ${dragIdx === i ? color : C.ink20}`,
+                borderRadius: 12, padding: '11px 10px 11px 6px',
+                marginBottom: 6,
+                opacity: m.done && dragIdx !== i ? 0.5 : 1,
+                transition: 'opacity 0.2s, border-color 0.15s',
+                boxShadow: dragIdx === i ? '0 6px 20px rgba(0,0,0,0.12)' : 'none',
+                transform: dragIdx === i ? 'scale(1.01)' : 'scale(1)',
+                zIndex: dragIdx === i ? 5 : 0,
+                position: 'relative',
+                touchAction: 'none',
               }}
             >
-              <div style={{
-                width: 20, height: 20, borderRadius: 5, flexShrink: 0,
-                border: m.done ? 'none' : `2px solid ${color}`,
-                background: m.done ? color : 'transparent',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                {m.done && <span style={{ color: '#fff', fontSize: 10, lineHeight: 1 }}>✓</span>}
+              {/* Drag handle */}
+              <div
+                onPointerDown={e => onDragStart(e, i)}
+                onPointerMove={onDragMove}
+                onPointerUp={onDragEnd}
+                onPointerCancel={onDragEnd}
+                style={{
+                  padding: '4px 6px', cursor: 'grab', flexShrink: 0,
+                  color: C.ink20, fontSize: 12, lineHeight: 1,
+                  display: 'flex', flexDirection: 'column', gap: 3,
+                  userSelect: 'none',
+                }}
+              >
+                <div style={{ display: 'flex', gap: 2 }}>
+                  <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'currentColor' }} />
+                  <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'currentColor' }} />
+                </div>
+                <div style={{ display: 'flex', gap: 2 }}>
+                  <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'currentColor' }} />
+                  <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'currentColor' }} />
+                </div>
+                <div style={{ display: 'flex', gap: 2 }}>
+                  <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'currentColor' }} />
+                  <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'currentColor' }} />
+                </div>
               </div>
+
+              {/* Checkbox */}
+              <button
+                onClick={() => handleToggle(m)}
+                style={{
+                  width: 20, height: 20, borderRadius: 5, flexShrink: 0,
+                  border: m.done ? 'none' : `2px solid ${color}`,
+                  background: m.done ? color : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                {m.done && <span style={{ color: '#fff', fontSize: 10, lineHeight: 1 }}>✓</span>}
+              </button>
+
+              {/* Title */}
               <span style={{
                 flex: 1, fontSize: 'var(--fs-15)', color: C.dark, lineHeight: 1.4,
                 textDecoration: m.done ? 'line-through' : 'none',
               }}>
                 {m.title}
               </span>
-            </button>
+
+              {/* Delete */}
+              <button
+                onClick={() => handleDeleteMilestone(m.id)}
+                style={{ background: 'none', border: 'none', color: C.ink20, fontSize: 'var(--fs-17)', cursor: 'pointer', lineHeight: 1, padding: '0 4px', flexShrink: 0 }}
+              >×</button>
+            </div>
           ))}
+
+          {/* Add milestone */}
+          {addingMilestone ? (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#fff', border: `1.5px solid ${color}`, borderRadius: 12, padding: '8px 12px', marginTop: 4 }}>
+              <input
+                autoFocus
+                value={milestoneDraft}
+                onChange={e => setMilestoneDraft(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleAddMilestone(); if (e.key === 'Escape') { setAddingMilestone(false); setMilestoneDraft('') } }}
+                placeholder="New milestone…"
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 'var(--fs-15)', background: 'transparent', fontFamily: 'inherit' }}
+              />
+              <button onClick={handleAddMilestone} style={{ background: color, color: '#fff', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 'var(--fs-13)', fontWeight: 700, cursor: 'pointer' }}>Add</button>
+              <button onClick={() => { setAddingMilestone(false); setMilestoneDraft('') }} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-16)', cursor: 'pointer' }}>×</button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAddingMilestone(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '10px 14px', borderRadius: 12, marginTop: 4,
+                border: `1px dashed ${C.ink20}`, background: 'transparent',
+                color: C.ink60, fontSize: 'var(--fs-14)', cursor: 'pointer', width: '100%',
+                fontFamily: 'inherit',
+              }}
+            >
+              <span style={{ color, fontSize: 'var(--fs-16)' }}>+</span> Add milestone
+            </button>
+          )}
         </div>
 
         {/* Updates */}

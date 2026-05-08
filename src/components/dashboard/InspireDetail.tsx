@@ -34,9 +34,7 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
   const subtitle = [current.location, current.activity_type].filter(Boolean).join(' · ')
   const monthDay = current.takenAt.slice(0, 5).replace('-', '·')
 
-  // The adjacent photo shown behind during a swipe
   const activeDx = exitDx ?? dx
-  const backPhoto = activeDx < 0 ? photos[idx + 1] : activeDx > 0 ? photos[idx - 1] : null
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     startX.current = e.clientX
@@ -65,11 +63,19 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
     // Outer container never moves — overflow hidden means nothing bleeds through
     <div style={{ position: 'fixed', inset: 0, zIndex: 60, overflow: 'hidden' }}>
 
-      {/* Back layer: adjacent photo, stationary — fills gap during swipe */}
-      {backPhoto && (
+      {/* Adjacent photos — always in DOM so they preload; revealed by opacity when swiping */}
+      {photos[idx - 1] && (
         <div style={{
           position: 'absolute', inset: 0,
-          background: `url(${backPhoto.original_url}) center/cover no-repeat`,
+          background: `url(${photos[idx - 1].original_url}) center/cover no-repeat`,
+          opacity: activeDx > 0 ? 1 : 0,
+        }} />
+      )}
+      {photos[idx + 1] && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: `url(${photos[idx + 1].original_url}) center/cover no-repeat`,
+          opacity: activeDx < 0 ? 1 : 0,
         }} />
       )}
 

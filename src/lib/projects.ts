@@ -35,13 +35,15 @@ export interface ProjectUpdate {
   created_at: string
 }
 
-export async function getProjects(userId: string): Promise<Project[]> {
-  const { data, error } = await supabase
+export async function getProjects(userId: string, category?: ProjectCategory): Promise<Project[]> {
+  let q = supabase
     .from('projects')
     .select('*')
     .eq('user_id', userId)
     .neq('status', 'complete')
     .order('deadline_date', { ascending: true })
+  if (category) q = q.eq('category', category)
+  const { data, error } = await q
   if (error) throw new Error(error.message)
   return (data ?? []) as Project[]
 }
@@ -78,6 +80,29 @@ export async function toggleMilestone(id: string, done: boolean): Promise<void> 
     .update({ done, done_at: done ? new Date().toISOString() : null })
     .eq('id', id)
   if (error) throw new Error(error.message)
+}
+
+export async function addMilestone(projectId: string, title: string, sortOrder: number): Promise<ProjectMilestone> {
+  const { data, error } = await db
+    .from('project_milestones')
+    .insert({ project_id: projectId, title, sort_order: sortOrder })
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data as ProjectMilestone
+}
+
+export async function deleteMilestone(id: string): Promise<void> {
+  const { error } = await db.from('project_milestones').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function reorderMilestones(updates: { id: string; sort_order: number }[]): Promise<void> {
+  await Promise.all(
+    updates.map(({ id, sort_order }) =>
+      db.from('project_milestones').update({ sort_order }).eq('id', id)
+    )
+  )
 }
 
 export async function addUpdate(projectId: string, note: string): Promise<ProjectUpdate> {

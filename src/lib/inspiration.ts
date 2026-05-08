@@ -117,19 +117,24 @@ export async function getDailyInspiration(userId: string): Promise<InspirationPh
   const today = new Date()
   const month = today.getMonth() + 1
   const day = today.getDate()
+  const todayStr = today.toISOString().substring(0, 10)
 
-  // 15% chance: pull from the opposite season for contrast
+  const { data, error } = await supabase
+    .from('inspiration_photos')
+    .select('*')
+    .eq('user_id', userId)
+    .lt('taken_at', todayStr)
+    .order('times_surfaced', { ascending: true })
+    .order('user_starred', { ascending: false })
+    .limit(200)
+
+  if (error || !data || data.length === 0) return null
+  const rows = data as Parameters<typeof toPhoto>[0][]
+
+  // 15% chance: opposite season for contrast
   if (Math.random() < 0.15) {
     const contrastMonth = ((month - 1 + 6) % 12) + 1
-    const { data: contrast } = await supabase
-      .from('inspiration_photos')
-      .select('*')
-      .eq('user_id', userId)
-      .lt('taken_at', today.toISOString().substring(0, 10))
-      .order('times_surfaced', { ascending: true })
-      .limit(60) as { data: Parameters<typeof toPhoto>[0][] | null }
-
-    const pool = (contrast ?? []).filter(r => new Date(r.taken_at + 'T12:00:00').getMonth() + 1 === contrastMonth)
+    const pool = rows.filter(r => new Date(r.taken_at + 'T12:00:00').getMonth() + 1 === contrastMonth)
     if (pool.length > 0) {
       const pick = pool[Math.floor(Math.random() * Math.min(pool.length, 5))]
       await db.from('inspiration_photos')
@@ -139,57 +144,19 @@ export async function getDailyInspiration(userId: string): Promise<InspirationPh
     }
   }
 
-  // Priority 1: within ±3 days of today in any past year
-  const { data: onThisDay } = await supabase
-    .from('inspiration_photos')
-    .select('*')
-    .eq('user_id', userId)
-    .filter('taken_at', 'not.gte', today.toISOString().substring(0, 10))  // exclude future
-    .order('user_starred', { ascending: false })
-    .order('times_surfaced', { ascending: true })
-    .limit(20) as { data: Parameters<typeof toPhoto>[0][] | null }
-
-  const candidates = (onThisDay ?? []).filter(r => {
+  // Priority 1: ±3 days of today in any past year
+  const onThisDay = rows.filter(r => {
     const d = new Date(r.taken_at + 'T12:00:00')
     return d.getMonth() + 1 === month && Math.abs(d.getDate() - day) <= 3
   })
 
-  let pick: Parameters<typeof toPhoto>[0] | null = null
+  // Priority 2: same month
+  const sameMonth = rows.filter(r => new Date(r.taken_at + 'T12:00:00').getMonth() + 1 === month)
 
-  if (candidates.length > 0) {
-    pick = candidates[Math.floor(Math.random() * Math.min(candidates.length, 5))]
-  } else {
-    // Priority 2: same month
-    const { data: sameMonth } = await supabase
-      .from('inspiration_photos')
-      .select('*')
-      .eq('user_id', userId)
-      .order('user_starred', { ascending: false })
-      .order('times_surfaced', { ascending: true })
-      .limit(20) as { data: Parameters<typeof toPhoto>[0][] | null }
+  // Priority 3: any photo (rows already sorted by least-surfaced)
+  const pool = onThisDay.length > 0 ? onThisDay : sameMonth.length > 0 ? sameMonth : rows
+  const pick = pool[Math.floor(Math.random() * Math.min(pool.length, 5))]
 
-    const monthCandidates = (sameMonth ?? []).filter(r => {
-      const d = new Date(r.taken_at + 'T12:00:00')
-      return d.getMonth() + 1 === month
-    })
-
-    if (monthCandidates.length > 0) {
-      pick = monthCandidates[Math.floor(Math.random() * monthCandidates.length)]
-    } else {
-      // Priority 3: any photo, least surfaced
-      const { data: any } = await supabase
-        .from('inspiration_photos')
-        .select('*')
-        .eq('user_id', userId)
-        .order('times_surfaced', { ascending: true })
-        .limit(1) as { data: Parameters<typeof toPhoto>[0][] | null }
-      pick = any?.[0] ?? null
-    }
-  }
-
-  if (!pick) return null
-
-  // Increment times_surfaced
   await db.from('inspiration_photos')
     .update({ times_surfaced: pick.times_surfaced + 1, last_surfaced_at: new Date().toISOString() })
     .eq('id', pick.id)

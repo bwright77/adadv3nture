@@ -1,34 +1,84 @@
+import { useState, useEffect } from 'react'
 import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
+import { getProjects, type Project } from '../../../lib/projects'
+import { useAuth } from '../../../contexts/AuthContext'
 
 interface WWAProps { dark?: boolean }
 
+function daysUntil(dateStr: string | null): number | null {
+  if (!dateStr) return null
+  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86_400_000)
+}
+
+function DeadlineTag({ days }: { days: number }) {
+  const urgent = days <= 7
+  const soon = days <= 14
+  return (
+    <span className="mono" style={{
+      fontSize: 'var(--fs-10)', padding: '2px 7px', borderRadius: 999,
+      background: urgent ? C.rust : soon ? 'rgba(196,82,42,0.15)' : 'rgba(26,18,8,0.08)',
+      color: urgent ? C.cream : soon ? C.rust : C.ink60,
+      letterSpacing: '0.1em', flexShrink: 0,
+    }}>
+      {days}D
+    </span>
+  )
+}
+
+function ProjectRow({ project, dark, border }: { project: Project; dark?: boolean; border?: boolean }) {
+  const days = daysUntil(project.soft_deadline_date ?? project.deadline_date)
+  return (
+    <div style={{
+      paddingTop: border ? 10 : 0,
+      marginTop: border ? 10 : 0,
+      borderTop: border ? `0.5px dashed ${dark ? 'rgba(255,255,255,0.18)' : 'rgba(26,18,8,0.18)'}` : 'none',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="badge" style={{ fontSize: 'var(--fs-15)', color: dark ? C.cream : C.dark }}>
+            {project.title.toUpperCase()}
+          </div>
+          {project.next_action && (
+            <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.6, marginTop: 2, lineHeight: 1.4 }}>
+              {project.next_action}
+            </div>
+          )}
+        </div>
+        {days !== null && <DeadlineTag days={days} />}
+      </div>
+    </div>
+  )
+}
+
 export function WWA({ dark }: WWAProps) {
+  const { user } = useAuth()
+  const [projects, setProjects] = useState<Project[]>([])
+
+  useEffect(() => {
+    if (!user) return
+    getProjects(user.id, 'career').then(setProjects).catch(() => null)
+  }, [user])
+
+  const primary = projects[0]
+  const rest = projects.slice(1)
+
   return (
     <Glass dark={dark} span={12} pad={14}>
-      <CardLabel dark={dark}>Wright adventures · the meaning</CardLabel>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-        <div>
-          <div className="badge" style={{ fontSize: 'var(--fs-15)' }}>REPLY TO JENN · DATA TEAM CALL</div>
-          <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.6 }}>PFB · $50–85K · José + Liam on thread</div>
+      <CardLabel dark={dark}>Wright adventures · career</CardLabel>
+      {projects.length === 0 ? (
+        <div className="mono" style={{ fontSize: 'var(--fs-13)', opacity: 0.4, marginTop: 6 }}>
+          No active projects
         </div>
-        <div style={{
-          background: C.rust, color: C.cream,
-          fontSize: 'var(--fs-13)', padding: '6px 12px', borderRadius: 999, fontWeight: 600,
-        }}>
-          open
-        </div>
-      </div>
-      <div style={{
-        marginTop: 10, paddingTop: 10,
-        borderTop: `0.5px dashed ${dark ? 'rgba(255,255,255,0.18)' : 'rgba(26,18,8,0.18)'}`,
-      }}>
-        <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.55, display: 'flex', justifyContent: 'space-between' }}>
-          <span>GSEMA $50K — assessment draft</span>
-          <span>due Fri</span>
-        </div>
-      </div>
+      ) : (
+        <>
+          {primary && <ProjectRow project={primary} dark={dark} />}
+          {rest.map(p => (
+            <ProjectRow key={p.id} project={p} dark={dark} border />
+          ))}
+        </>
+      )}
     </Glass>
   )
 }
