@@ -160,23 +160,22 @@ export function TodosPage() {
 
       {/* Category tabs */}
       <div style={{
-        display: 'flex', gap: 8, padding: '0 16px 16px',
-        overflowX: 'auto', scrollbarWidth: 'none',
+        display: 'flex', gap: 6, padding: '0 16px 16px',
       }}>
         {CATEGORIES.map(c => (
           <button
             key={c.id}
             onClick={() => { setCat(c.id); setShowDone(false) }}
             style={{
-              flexShrink: 0,
-              padding: '6px 16px',
-              borderRadius: 999,
+              flex: 1,
+              padding: '7px 4px',
+              borderRadius: 10,
               border: 'none',
               cursor: 'pointer',
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: 700,
               fontFamily: 'Sora, system-ui, sans-serif',
-              letterSpacing: '0.04em',
+              letterSpacing: '0.03em',
               background: cat === c.id ? c.color : C.ink20,
               color: cat === c.id ? '#fff' : C.ink60,
               transition: 'background 0.15s, color 0.15s',
