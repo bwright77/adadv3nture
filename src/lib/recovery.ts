@@ -54,6 +54,23 @@ function toDateStr(d: Date): string {
   return d.toISOString().substring(0, 10)
 }
 
+function toDateStrOffset(daysBack: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() - daysBack)
+  return d.toISOString().substring(0, 10)
+}
+
+export async function getLast7DaysSteps(userId: string): Promise<{ date: string; count: number | null }[]> {
+  const days = Array.from({ length: 7 }, (_, i) => toDateStrOffset(i + 1)).reverse()
+  const { data } = await supabase
+    .from('recovery_signals')
+    .select('signal_date, steps_count')
+    .eq('user_id', userId)
+    .in('signal_date', days) as { data: { signal_date: string; steps_count: number | null }[] | null }
+  const map = new Map((data ?? []).map(r => [r.signal_date, r.steps_count]))
+  return days.map(date => ({ date, count: map.get(date) ?? null }))
+}
+
 export async function loadRecovery(userId: string): Promise<RecoveryResult> {
   const today = toDateStr(new Date())
   const yesterday = toDateStr(new Date(Date.now() - 86400000))

@@ -3,6 +3,7 @@ import { WWA } from './widgets/WWA'
 import { WInbox } from './widgets/WInbox'
 import { WMIT } from './widgets/WMIT'
 import { WDrinks } from './widgets/WDrinks'
+import { WSteps } from './widgets/WSteps'
 import { WWeather } from './widgets/WWeather'
 import { WInspire } from './widgets/WInspire'
 import { WCalendar } from './widgets/WCalendar'
@@ -32,6 +33,7 @@ export function MidMorningView({ inspirationPhoto, onInspireExpand, activeTod, i
         <WInbox dark />
         <WMIT dark />
         <WDrinks dark />
+        <WSteps dark />
         <WWeather dark />
         <WInspire
           dark

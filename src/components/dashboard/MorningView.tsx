@@ -5,6 +5,7 @@ import { WWorkout } from './widgets/WWorkout'
 import { WThinkingPrompt } from './widgets/WThinkingPrompt'
 import { WWeather } from './widgets/WWeather'
 import { WDrinks } from './widgets/WDrinks'
+import { WSteps } from './widgets/WSteps'
 import { WMIT } from './widgets/WMIT'
 import { WInspire } from './widgets/WInspire'
 import { WForecast } from './widgets/WForecast'
@@ -93,6 +94,7 @@ export function MorningView({ inspirationPhoto, onInspireExpand, activeTod, isOv
         <WThinkingPrompt dark prompt={briefingData?.thinking_prompt ?? null} loading={briefingLoading} />
         <WWeather dark />
         <WDrinks dark />
+        <WSteps dark />
         <WCalendar dark span={12} />
         <WMIT dark />
         <WInspire
