@@ -12,6 +12,7 @@ interface HealthPayload {
   hrv_ms?: number | null
   sleep_seconds?: number | null
   sleep_raw?: unknown    // raw Sleep samples from Shortcuts — logged to inspect structure
+  steps?: number | null
 }
 
 Deno.serve(async (req) => {
@@ -45,9 +46,10 @@ Deno.serve(async (req) => {
   }
 
   // Only set fields that were actually provided — nulls mean watch wasn't worn, not zero
-  if (payload.rhr != null)         row.rhr = Math.round(payload.rhr)
-  if (payload.hrv_ms != null)      row.hrv_ms = Math.round(payload.hrv_ms * 10) / 10
+  if (payload.rhr != null)           row.rhr = Math.round(payload.rhr)
+  if (payload.hrv_ms != null)        row.hrv_ms = Math.round(payload.hrv_ms * 10) / 10
   if (payload.sleep_seconds != null) row.sleep_duration_hours = Math.round((payload.sleep_seconds / 3600) * 10) / 10
+  if (payload.steps != null)         row.steps_count = Math.round(payload.steps)
 
   // Log raw sleep data so we can inspect the structure and determine how to parse it
   if (payload.sleep_raw != null) console.log('sleep_raw:', JSON.stringify(payload.sleep_raw))
