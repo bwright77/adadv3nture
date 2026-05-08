@@ -34,7 +34,7 @@ export function WInspire({ dark, photo, onExpand }: WInspireProps) {
           }} />
           <div style={{ position: 'absolute', left: 12, top: 10 }}>
             <span className="badge" style={{
-              fontSize: 8, color: C.cream, letterSpacing: '0.18em',
+              fontSize: 10, color: C.cream, letterSpacing: '0.18em',
               background: 'rgba(0,0,0,0.38)', padding: '3px 8px', borderRadius: 4,
             }}>
               ON THIS DAY
@@ -42,14 +42,14 @@ export function WInspire({ dark, photo, onExpand }: WInspireProps) {
           </div>
           <div style={{ position: 'absolute', left: 14, right: 14, bottom: 12, color: C.cream }}>
             {photo.caption && (
-              <div style={{ fontSize: 11, opacity: 0.9, lineHeight: 1.3, marginBottom: 3 }}>
+              <div style={{ fontSize: 13, opacity: 0.9, lineHeight: 1.3, marginBottom: 3 }}>
                 "{photo.caption}"
               </div>
             )}
-            <div className="badge" style={{ fontSize: 12, lineHeight: 1.1 }}>
+            <div className="badge" style={{ fontSize: 14, lineHeight: 1.1 }}>
               {subtitle || photo.takenAt}
             </div>
-            <div className="mono" style={{ fontSize: 9, opacity: 0.8, marginTop: 2 }}>
+            <div className="mono" style={{ fontSize: 11, opacity: 0.8, marginTop: 2 }}>
               {photo.year}{yearsAgo > 0 ? ` · ${yearsAgo}y ago` : ''}
             </div>
           </div>
@@ -60,10 +60,10 @@ export function WInspire({ dark, photo, onExpand }: WInspireProps) {
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 6,
         }}>
-          <span className="badge" style={{ fontSize: 8, opacity: 0.3, letterSpacing: '0.15em' }}>
+          <span className="badge" style={{ fontSize: 10, opacity: 0.3, letterSpacing: '0.15em' }}>
             ON THIS DAY
           </span>
-          <span style={{ fontSize: 10, opacity: 0.25 }}>
+          <span style={{ fontSize: 12, opacity: 0.25 }}>
             run: npm run sync-photos
           </span>
         </div>

@@ -15,7 +15,7 @@ function DirectionChip({ direction, isGood }: { direction: 'up' | 'down' | 'flat
       display: 'inline-block', width: 16, height: 16, borderRadius: '50%',
       background: neutral ? 'rgba(26,18,8,0.12)' : `${color}22`,
       color: neutral ? 'rgba(26,18,8,0.4)' : color,
-      fontSize: 9, fontWeight: 700, lineHeight: '16px', textAlign: 'center',
+      fontSize: 11, fontWeight: 700, lineHeight: '16px', textAlign: 'center',
       flexShrink: 0,
     }}>
       {neutral ? '→' : isGood ? '✓' : '↑'}
@@ -50,9 +50,9 @@ export function TrendsPage() {
           border: `0.5px solid ${C.ink20}`, overflow: 'hidden',
         }}>
           {loading ? (
-            <div style={{ padding: 20, fontSize: 12, opacity: 0.4 }}>Loading trends…</div>
+            <div style={{ padding: 20, fontSize: 14, opacity: 0.4 }}>Loading trends…</div>
           ) : rows.length === 0 ? (
-            <div style={{ padding: 20, fontSize: 12, opacity: 0.4 }}>No data yet.</div>
+            <div style={{ padding: 20, fontSize: 14, opacity: 0.4 }}>No data yet.</div>
           ) : rows.map((row, i) => (
             <div key={i} style={{
               padding: '13px 16px',
@@ -63,13 +63,13 @@ export function TrendsPage() {
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="badge" style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   color: row.isHero ? C.rust : C.dark,
                 }}>
                   {row.label}{row.isHero ? ' · meta' : ''}
                 </div>
                 <div className="mono" style={{
-                  fontSize: 9.5, marginTop: 2,
+                  fontSize: 11.5, marginTop: 2,
                   color: row.isGood === true ? C.tealDk : row.isGood === false ? C.rust : C.ink40,
                 }}>
                   {row.delta}
@@ -95,23 +95,23 @@ export function TrendsPage() {
         }}>
           <CardLabel>West Line Winder 30K · Sept 26 2026</CardLabel>
           {loading ? (
-            <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>Loading…</div>
+            <div style={{ fontSize: 13, opacity: 0.4, marginTop: 8 }}>Loading…</div>
           ) : r ? (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 10 }}>
                 <Ring pct={r.pct} color={C.rust} label={String(r.pct)} size={68} sw={6} />
                 <div style={{ flex: 1 }}>
-                  <div className="badge" style={{ fontSize: 13 }}>{r.label}</div>
-                  <div className="mono" style={{ fontSize: 9.5, color: C.ink60, marginTop: 3 }}>
+                  <div className="badge" style={{ fontSize: 15 }}>{r.label}</div>
+                  <div className="mono" style={{ fontSize: 11.5, color: C.ink60, marginTop: 3 }}>
                     {r.daysUntil} days out · {Math.floor(r.daysUntil / 7)} weeks
                   </div>
                   {r.longestRunMiles != null && (
-                    <div className="mono" style={{ fontSize: 9.5, color: C.ink60, marginTop: 1 }}>
+                    <div className="mono" style={{ fontSize: 11.5, color: C.ink60, marginTop: 1 }}>
                       longest run: {r.longestRunMiles.toFixed(1)} mi
                       {r.weeklyMilesAvg != null && ` · avg ${r.weeklyMilesAvg.toFixed(1)} mi/wk`}
                     </div>
                   )}
-                  <div className="mono" style={{ fontSize: 9.5, color: C.rust, marginTop: 3 }}>
+                  <div className="mono" style={{ fontSize: 11.5, color: C.rust, marginTop: 3 }}>
                     ↳ {r.nextMilestone}
                   </div>
                 </div>
@@ -122,7 +122,7 @@ export function TrendsPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   {['Run base', 'Cycling', 'Trail focus', 'Race'].map((phase, i) => (
                     <div key={i} className="mono" style={{
-                      fontSize: 8, opacity: i === 0 ? 1 : 0.4,
+                      fontSize: 10, opacity: i === 0 ? 1 : 0.4,
                       color: i === 0 ? C.rust : C.dark,
                     }}>
                       {phase}
@@ -151,7 +151,7 @@ export function TrendsPage() {
                     )
                   })}
                 </div>
-                <div className="mono" style={{ fontSize: 8, marginTop: 3, opacity: 0.5 }}>
+                <div className="mono" style={{ fontSize: 10, marginTop: 3, opacity: 0.5 }}>
                   May 8 → Jul 1 (run base) · Jul 1 → Aug 15 (cycling) · Aug 15 → Sep 20 (trail) · taper
                 </div>
               </div>
@@ -175,8 +175,8 @@ export function TrendsPage() {
               ['Z4 threshold', '165–178 bpm'],
             ].map(([label, val]) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontSize: 10, opacity: 0.55 }}>{label}</span>
-                <span className="mono" style={{ fontSize: 10, fontWeight: 700 }}>{val}</span>
+                <span style={{ fontSize: 12, opacity: 0.55 }}>{label}</span>
+                <span className="mono" style={{ fontSize: 12, fontWeight: 700 }}>{val}</span>
               </div>
             ))}
           </div>

@@ -23,7 +23,7 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
           <button onClick={onClose} style={{
             fontSize: 22, fontWeight: 300, background: 'none', border: 'none', cursor: 'pointer', color: C.cream,
           }}>×</button>
-          <span className="badge" style={{ fontSize: 10, letterSpacing: '0.2em' }}>
+          <span className="badge" style={{ fontSize: 12, letterSpacing: '0.2em' }}>
             ON THIS DAY · {yearsAgo}Y AGO
           </span>
           <span style={{ fontSize: 18, opacity: 0.5 }}>↗</span>
@@ -34,7 +34,7 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
         <div className="badge" style={{ fontSize: 24, lineHeight: 1.05 }}>
           {photo.takenAt.toUpperCase()}
         </div>
-        <div className="mono" style={{ fontSize: 12, opacity: 0.85, marginTop: 6 }}>
+        <div className="mono" style={{ fontSize: 14, opacity: 0.85, marginTop: 6 }}>
           {photo.year} · the adventure
         </div>
       </div>

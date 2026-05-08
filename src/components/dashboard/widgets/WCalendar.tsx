@@ -38,7 +38,7 @@ export function WCalendar({ dark, span = 6, tomorrow = false }: WCalendarProps) 
     return (
       <Glass dark={dark} span={span} pad={14}>
         <CardLabel dark={dark}>Calendar · {tomorrow ? 'tomorrow' : 'today'}</CardLabel>
-        <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>Loading…</div>
+        <div style={{ fontSize: 13, opacity: 0.4, marginTop: 8 }}>Loading…</div>
       </Glass>
     )
   }
@@ -52,7 +52,7 @@ export function WCalendar({ dark, span = 6, tomorrow = false }: WCalendarProps) 
           style={{
             marginTop: 10, padding: '8px 14px', borderRadius: 10,
             background: C.rust, color: C.cream, border: 'none',
-            fontSize: 11, fontWeight: 700, cursor: 'pointer',
+            fontSize: 13, fontWeight: 700, cursor: 'pointer',
           }}
         >
           Connect Google Calendar
@@ -65,9 +65,9 @@ export function WCalendar({ dark, span = 6, tomorrow = false }: WCalendarProps) 
     <Glass dark={dark} span={span} pad={14}>
       <CardLabel dark={dark}>Calendar · {tomorrow ? 'tomorrow' : 'today'}</CardLabel>
       {!events ? (
-        <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>Loading…</div>
+        <div style={{ fontSize: 13, opacity: 0.4, marginTop: 8 }}>Loading…</div>
       ) : events.length === 0 ? (
-        <div style={{ fontSize: 11, opacity: 0.4, marginTop: 8 }}>Nothing on the calendar today.</div>
+        <div style={{ fontSize: 13, opacity: 0.4, marginTop: 8 }}>Nothing on the calendar today.</div>
       ) : (
         events.map((e, i) => (
           <div key={e.id} style={{
@@ -78,12 +78,12 @@ export function WCalendar({ dark, span = 6, tomorrow = false }: WCalendarProps) 
             alignItems: 'baseline',
           }}>
             <span className="mono" style={{
-              fontSize: 10, color: dark ? C.teal : C.rust,
+              fontSize: 12, color: dark ? C.teal : C.rust,
               width: 38, flexShrink: 0,
             }}>
               {formatTime(e.start)}
             </span>
-            <span style={{ fontSize: 11, lineHeight: 1.3 }}>{e.title}</span>
+            <span style={{ fontSize: 13, lineHeight: 1.3 }}>{e.title}</span>
           </div>
         ))
       )}

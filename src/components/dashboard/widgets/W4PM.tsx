@@ -38,7 +38,7 @@ export function W4PM({ dark }: W4PMProps) {
     return (
       <Glass dark={dark} span={12} pad={16}>
         <CardLabel dark={dark}>4pm project</CardLabel>
-        <div style={{ opacity: 0.4, fontSize: 11, marginTop: 8 }}>Loading…</div>
+        <div style={{ opacity: 0.4, fontSize: 13, marginTop: 8 }}>Loading…</div>
       </Glass>
     )
   }
@@ -67,9 +67,9 @@ export function W4PM({ dark }: W4PMProps) {
       <Glass dark={dark} span={12} pad={16}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <CardLabel dark={dark}>4pm project · weather routed</CardLabel>
-          <span className="mono" style={{ fontSize: 9, color: weatherColor }}>{weatherTag}</span>
+          <span className="mono" style={{ fontSize: 11, color: weatherColor }}>{weatherTag}</span>
         </div>
-        <div style={{ fontSize: 12, opacity: 0.45, marginTop: 8 }}>No tasks in queue — add some in Lists.</div>
+        <div style={{ fontSize: 14, opacity: 0.45, marginTop: 8 }}>No tasks in queue — add some in Lists.</div>
       </Glass>
     )
   }
@@ -78,15 +78,15 @@ export function W4PM({ dark }: W4PMProps) {
     <Glass dark={dark} span={12} pad={16}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <CardLabel dark={dark}>4pm project · weather routed</CardLabel>
-        <span className="mono" style={{ fontSize: 9, color: weatherColor }}>{weatherTag}</span>
+        <span className="mono" style={{ fontSize: 11, color: weatherColor }}>{weatherTag}</span>
       </div>
       <div className="badge" style={{ fontSize: 17, marginTop: 4, lineHeight: 1.15 }}>
         {pick.title.toUpperCase()}
       </div>
       {pick.notes && (
-        <div style={{ fontSize: 11, opacity: 0.65, marginTop: 4, lineHeight: 1.4 }}>{pick.notes}</div>
+        <div style={{ fontSize: 13, opacity: 0.65, marginTop: 4, lineHeight: 1.4 }}>{pick.notes}</div>
       )}
-      <div className="mono" style={{ display: 'flex', gap: 6, marginTop: 10, fontSize: 10, flexWrap: 'wrap' }}>
+      <div className="mono" style={{ display: 'flex', gap: 6, marginTop: 10, fontSize: 12, flexWrap: 'wrap' }}>
         {pick.effort && (
           <span style={{
             background: C.teal + '33', color: dark ? C.teal : C.dark,

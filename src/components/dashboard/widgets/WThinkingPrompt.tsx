@@ -30,20 +30,20 @@ export function WThinkingPrompt({ dark, prompt, loading }: WThinkingPromptProps)
       <CardLabel dark={dark}>Thinking prompt</CardLabel>
 
       {loading ? (
-        <div style={{ opacity: 0.4, fontSize: 11, marginTop: 8 }}>Generating…</div>
+        <div style={{ opacity: 0.4, fontSize: 13, marginTop: 8 }}>Generating…</div>
       ) : !prompt ? (
-        <div style={{ opacity: 0.4, fontSize: 11, marginTop: 8 }}>No prompt yet.</div>
+        <div style={{ opacity: 0.4, fontSize: 13, marginTop: 8 }}>No prompt yet.</div>
       ) : (
         <>
           <div style={{
-            fontSize: 12, lineHeight: 1.5, marginTop: 6, fontStyle: 'italic',
+            fontSize: 14, lineHeight: 1.5, marginTop: 6, fontStyle: 'italic',
             color: dark ? C.cream : C.dark,
           }}>
             "{prompt}"
           </div>
 
           {saved ? (
-            <div style={{ marginTop: 8, fontSize: 10, color: C.teal, fontWeight: 600 }}>
+            <div style={{ marginTop: 8, fontSize: 12, color: C.teal, fontWeight: 600 }}>
               ✓ Logged at 9:30
             </div>
           ) : (
@@ -54,7 +54,7 @@ export function WThinkingPrompt({ dark, prompt, loading }: WThinkingPromptProps)
                 placeholder="Chew on it during the workout. Answer at 9:30…"
                 rows={2}
                 style={{
-                  width: '100%', fontSize: 11, lineHeight: 1.4, padding: '6px 8px',
+                  width: '100%', fontSize: 13, lineHeight: 1.4, padding: '6px 8px',
                   borderRadius: 8,
                   border: `1px solid ${dark ? 'rgba(255,255,255,0.15)' : C.ink20}`,
                   background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(26,18,8,0.04)',
@@ -68,7 +68,7 @@ export function WThinkingPrompt({ dark, prompt, loading }: WThinkingPromptProps)
                 style={{
                   marginTop: 4, background: C.rust, color: C.cream,
                   border: 'none', cursor: 'pointer',
-                  padding: '4px 12px', borderRadius: 8, fontSize: 10, fontWeight: 700,
+                  padding: '4px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700,
                   opacity: !answer.trim() ? 0.4 : 1,
                 }}
               >

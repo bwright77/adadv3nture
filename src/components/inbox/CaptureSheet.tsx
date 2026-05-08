@@ -128,7 +128,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
         {/* Interim speech preview */}
         {interim && (
           <div style={{
-            fontSize: 15, color: C.ink40, fontStyle: 'italic',
+            fontSize: 17, color: C.ink40, fontStyle: 'italic',
             lineHeight: 1.4, marginBottom: 6, paddingBottom: 6,
             borderBottom: `0.5px dashed ${C.ink20}`,
           }}>
@@ -155,7 +155,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
               🎙
             </button>
           )}
-          <div style={{ flex: 1, fontSize: 11, color: C.ink60 }}>
+          <div style={{ flex: 1, fontSize: 13, color: C.ink60 }}>
             {listening ? 'listening…' : hasSpeech ? 'hold mic to speak' : '⌘↵ to save'}
           </div>
           <button
@@ -163,7 +163,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
             disabled={saving || !text.trim()}
             style={{
               background: text.trim() ? C.rust : C.ink20,
-              color: C.cream, fontSize: 13,
+              color: C.cream, fontSize: 15,
               padding: '10px 18px', borderRadius: 22, fontWeight: 600,
               border: 'none', cursor: text.trim() ? 'pointer' : 'default',
               transition: 'background 0.15s',
@@ -177,7 +177,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
           <div style={{ marginTop: 16, paddingTop: 14, borderTop: `0.5px dashed ${C.ink20}` }}>
             <CardLabel>{recent.length} in inbox</CardLabel>
             {recent.map(item => (
-              <div key={item.id} className="mono" style={{ fontSize: 10, padding: '4px 0', color: C.ink60 }}>
+              <div key={item.id} className="mono" style={{ fontSize: 12, padding: '4px 0', color: C.ink60 }}>
                 · {item.content}
               </div>
             ))}

@@ -41,7 +41,7 @@ export function TabBar({ active, dark = false, onChange }: TabBarProps) {
           }}
         >
           <div style={{ fontSize: 18, lineHeight: 1 }}>{t.icon}</div>
-          <div style={{ fontSize: 10, marginTop: 3, fontWeight: 500, fontFamily: 'Sora, system-ui, sans-serif' }}>
+          <div style={{ fontSize: 12, marginTop: 3, fontWeight: 500, fontFamily: 'Sora, system-ui, sans-serif' }}>
             {t.label}
           </div>
         </button>

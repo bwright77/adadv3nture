@@ -110,7 +110,7 @@ export function TodosPage() {
       {/* Persistent reminders */}
       {(reminders.length > 0 || addingReminder) && (
         <div style={{ padding: '0 16px 4px' }}>
-          <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', color: C.rust, marginBottom: 6, fontFamily: 'Sora, system-ui, sans-serif' }}>
+          <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '0.08em', color: C.rust, marginBottom: 6, fontFamily: 'Sora, system-ui, sans-serif' }}>
             DAILY REMINDERS
           </div>
           {reminders.map(r => (
@@ -120,11 +120,11 @@ export function TodosPage() {
               border: `0.5px solid ${r.urgency === 'high' ? 'rgba(196,82,42,0.3)' : C.ink20}`,
               borderRadius: 12, padding: '9px 12px', marginBottom: 6,
             }}>
-              {r.urgency === 'high' && <span style={{ fontSize: 12, flexShrink: 0 }}>!</span>}
-              <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: C.dark, lineHeight: 1.4, wordBreak: 'break-word' }}>{r.title}</span>
-              <button onClick={() => handleSnooze(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: C.ink40, padding: '2px 4px' }}>zzz</button>
-              <button onClick={() => handleCompleteReminder(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: C.teal, padding: '2px 4px' }}>✓</button>
-              <button onClick={() => handleDeleteReminder(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: C.ink40, padding: '2px 4px' }}>×</button>
+              {r.urgency === 'high' && <span style={{ fontSize: 14, flexShrink: 0 }}>!</span>}
+              <span style={{ flex: 1, minWidth: 0, fontSize: 14.5, color: C.dark, lineHeight: 1.4, wordBreak: 'break-word' }}>{r.title}</span>
+              <button onClick={() => handleSnooze(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: C.ink40, padding: '2px 4px' }}>zzz</button>
+              <button onClick={() => handleCompleteReminder(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: C.teal, padding: '2px 4px' }}>✓</button>
+              <button onClick={() => handleDeleteReminder(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: C.ink40, padding: '2px 4px' }}>×</button>
             </div>
           ))}
           {addingReminder ? (
@@ -135,15 +135,15 @@ export function TodosPage() {
                 onChange={e => setReminderDraft(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleAddReminder(); if (e.key === 'Escape') { setAddingReminder(false); setReminderDraft('') } }}
                 placeholder="Daily reminder…"
-                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, background: 'transparent', fontFamily: 'inherit' }}
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 15, background: 'transparent', fontFamily: 'inherit' }}
               />
-              <button onClick={handleAddReminder} style={{ background: C.rust, color: '#fff', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Add</button>
+              <button onClick={handleAddReminder} style={{ background: C.rust, color: '#fff', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add</button>
               <button onClick={() => { setAddingReminder(false); setReminderDraft('') }} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 16, cursor: 'pointer' }}>×</button>
             </div>
           ) : (
             <button
               onClick={() => setAddingReminder(true)}
-              style={{ background: 'none', border: 'none', color: C.rust, fontSize: 11, cursor: 'pointer', padding: '2px 0 8px', fontWeight: 600 }}
+              style={{ background: 'none', border: 'none', color: C.rust, fontSize: 13, cursor: 'pointer', padding: '2px 0 8px', fontWeight: 600 }}
             >
               + reminder
             </button>
@@ -152,7 +152,7 @@ export function TodosPage() {
       )}
       {reminders.length === 0 && !addingReminder && (
         <div style={{ padding: '0 16px 8px', textAlign: 'right' }}>
-          <button onClick={() => setAddingReminder(true)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 10.5, cursor: 'pointer', fontWeight: 600 }}>
+          <button onClick={() => setAddingReminder(true)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 12.5, cursor: 'pointer', fontWeight: 600 }}>
             + reminder
           </button>
         </div>
@@ -173,7 +173,7 @@ export function TodosPage() {
               borderRadius: 10,
               border: 'none',
               cursor: 'pointer',
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 700,
               fontFamily: 'Sora, system-ui, sans-serif',
               letterSpacing: '0.03em',
@@ -191,18 +191,18 @@ export function TodosPage() {
       {/* List */}
       <div style={{ padding: '0 16px 140px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: C.ink40, fontSize: 13 }}>
+          <div style={{ textAlign: 'center', padding: 40, color: C.ink40, fontSize: 15 }}>
             Loading…
           </div>
         ) : todos.length === 0 && !adding ? (
           <div style={{
             textAlign: 'center', padding: '40px 0',
-            color: C.ink40, fontSize: 13, lineHeight: 1.6,
+            color: C.ink40, fontSize: 15, lineHeight: 1.6,
           }}>
             No open items in {current.label}.<br />
             <button
               onClick={() => setAdding(true)}
-              style={{ background: 'none', border: 'none', color: current.color, fontWeight: 700, cursor: 'pointer', fontSize: 13, marginTop: 8 }}
+              style={{ background: 'none', border: 'none', color: current.color, fontWeight: 700, cursor: 'pointer', fontSize: 15, marginTop: 8 }}
             >
               + Add one
             </button>
@@ -236,7 +236,7 @@ export function TodosPage() {
               onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { setAdding(false); setDraft('') } }}
               placeholder={`Add to ${current.label}…`}
               style={{
-                flex: 1, border: 'none', outline: 'none', fontSize: 14,
+                flex: 1, border: 'none', outline: 'none', fontSize: 16,
                 background: 'transparent', color: C.dark, fontFamily: 'inherit',
               }}
             />
@@ -244,7 +244,7 @@ export function TodosPage() {
               onClick={handleAdd}
               style={{
                 background: current.color, color: '#fff', border: 'none',
-                borderRadius: 8, padding: '5px 12px', fontSize: 12,
+                borderRadius: 8, padding: '5px 12px', fontSize: 14,
                 fontWeight: 700, cursor: 'pointer',
               }}
             >
@@ -265,7 +265,7 @@ export function TodosPage() {
                 display: 'flex', alignItems: 'center', gap: 8,
                 marginTop: 8, padding: '10px 14px', borderRadius: 14,
                 border: `1px dashed ${C.ink20}`, background: 'transparent',
-                color: C.ink60, fontSize: 13, cursor: 'pointer', width: '100%',
+                color: C.ink60, fontSize: 15, cursor: 'pointer', width: '100%',
               }}
             >
               <span style={{ fontSize: 16, color: current.color }}>+</span> Add to {current.label}
@@ -281,7 +281,7 @@ export function TodosPage() {
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 8,
-                color: C.ink40, fontSize: 11, fontWeight: 600,
+                color: C.ink40, fontSize: 13, fontWeight: 600,
                 letterSpacing: '0.06em', fontFamily: 'Sora, system-ui, sans-serif',
                 padding: '4px 0', width: '100%',
               }}
@@ -297,8 +297,8 @@ export function TodosPage() {
                 background: '#fff', border: `0.5px solid ${C.ink20}`,
                 borderRadius: 12, opacity: 0.5,
               }}>
-                <span style={{ fontSize: 14, color: current.color }}>✓</span>
-                <span style={{ fontSize: 13, textDecoration: 'line-through', color: C.ink60 }}>{t.title}</span>
+                <span style={{ fontSize: 16, color: current.color }}>✓</span>
+                <span style={{ fontSize: 15, textDecoration: 'line-through', color: C.ink60 }}>{t.title}</span>
               </div>
             ))}
           </div>
@@ -337,7 +337,7 @@ function TodoRow({
       />
 
       {/* Title */}
-      <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.4, color: C.dark, wordBreak: 'break-word' }}>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 16, lineHeight: 1.4, color: C.dark, wordBreak: 'break-word' }}>
         {todo.title}
       </span>
 
@@ -348,7 +348,7 @@ function TodoRow({
           disabled={isFirst}
           style={{
             background: 'none', border: 'none', cursor: isFirst ? 'default' : 'pointer',
-            color: isFirst ? C.ink20 : C.ink40, fontSize: 10, lineHeight: 1, padding: '1px 3px',
+            color: isFirst ? C.ink20 : C.ink40, fontSize: 12, lineHeight: 1, padding: '1px 3px',
           }}
         >▲</button>
         <button
@@ -356,7 +356,7 @@ function TodoRow({
           disabled={isLast}
           style={{
             background: 'none', border: 'none', cursor: isLast ? 'default' : 'pointer',
-            color: isLast ? C.ink20 : C.ink40, fontSize: 10, lineHeight: 1, padding: '1px 3px',
+            color: isLast ? C.ink20 : C.ink40, fontSize: 12, lineHeight: 1, padding: '1px 3px',
           }}
         >▼</button>
       </div>

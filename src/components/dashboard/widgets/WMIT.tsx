@@ -9,9 +9,9 @@ export function WMIT({ dark }: WMITProps) {
     <Glass dark={dark} span={4} pad={14}>
       <CardLabel dark={dark}>MIT · today</CardLabel>
       <div className="mono" style={{ fontSize: 26, fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0' }}>
-        73<span style={{ fontSize: 12, opacity: 0.5 }}>%</span>
+        73<span style={{ fontSize: 14, opacity: 0.5 }}>%</span>
       </div>
-      <div className="mono" style={{ fontSize: 9.5, opacity: 0.55, marginTop: 2 }}>↑12 vs last wk</div>
+      <div className="mono" style={{ fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>↑12 vs last wk</div>
       <div style={{ display: 'flex', gap: 3, marginTop: 8 }}>
         {[1, 1, 1, 0, 1].map((v, i) => (
           <div key={i} style={{

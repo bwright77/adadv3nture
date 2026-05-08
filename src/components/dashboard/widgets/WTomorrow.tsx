@@ -53,7 +53,7 @@ export function WTomorrow({ dark }: WTomorrowProps) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
         {/* Run Club callout if Monday */}
         {isMonday && (
-          <div className="badge" style={{ fontSize: 13 }}>
+          <div className="badge" style={{ fontSize: 15 }}>
             RUN CLUB · WASH PARK · 6PM{' '}
             <span style={{ color: C.teal }}>SACRED</span>
           </div>
@@ -69,12 +69,12 @@ export function WTomorrow({ dark }: WTomorrowProps) {
               {parts[0]}
             </span>
             {parts[1] && (
-              <span className="mono" style={{ fontSize: 10, color: C.teal }}>
+              <span className="mono" style={{ fontSize: 12, color: C.teal }}>
                 {parts[1]}
               </span>
             )}
             {parts[2] && (
-              <span className="mono" style={{ fontSize: 10, opacity: 0.6 }}>
+              <span className="mono" style={{ fontSize: 12, opacity: 0.6 }}>
                 · {parts[2]}
               </span>
             )}
@@ -83,7 +83,7 @@ export function WTomorrow({ dark }: WTomorrowProps) {
 
         {/* Weather routing line */}
         {tomorrowForecast && (
-          <div className="mono" style={{ fontSize: 9.5, opacity: 0.55, marginTop: 2 }}>
+          <div className="mono" style={{ fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
             {DOW_SHORT[dow]} forecast: {tomorrowForecast.highF}° high
             {tomorrowForecast.precipPct > 15 ? ` · ${tomorrowForecast.precipPct}% precip` : ''}
             {runOk !== null ? ` · run ${runOk ? '✓' : '✗'}` : ''}

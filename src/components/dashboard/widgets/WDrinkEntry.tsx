@@ -55,7 +55,7 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
     <Glass dark={dark} span={12} pad={16}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <CardLabel dark={dark}>Drinks today{saving ? ' …' : ''}</CardLabel>
-        <span className="mono" style={{ fontSize: 9, opacity: 0.55 }}>ratio · not streak</span>
+        <span className="mono" style={{ fontSize: 11, opacity: 0.55 }}>ratio · not streak</span>
       </div>
 
       {/* Today counter */}
@@ -83,7 +83,7 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
       </div>
 
       {/* 7-day average */}
-      <div className="mono" style={{ fontSize: 10, textAlign: 'center', marginTop: 6, opacity: 0.6 }}>
+      <div className="mono" style={{ fontSize: 12, textAlign: 'center', marginTop: 6, opacity: 0.6 }}>
         7d avg {sevenDayAvg}/d · goal ≤ 2.0 · {onTrack ? '✓ on track' : '↑ over goal'}
       </div>
 
@@ -93,12 +93,12 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             {past.map(d => (
               <div key={d.date} style={{ textAlign: 'center', flex: 1 }}>
-                <div className="mono" style={{ fontSize: 8.5, opacity: 0.5, marginBottom: 4 }}>{dayLabel(d.date)}</div>
+                <div className="mono" style={{ fontSize: 10.5, opacity: 0.5, marginBottom: 4 }}>{dayLabel(d.date)}</div>
                 {editing === d.date ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                     <button
                       onClick={() => updateCount(d.date, d.count + 1)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, opacity: 0.6, padding: '0 4px' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, opacity: 0.6, padding: '0 4px' }}
                     >▲</button>
                     <div className="mono" style={{
                       fontSize: 16, fontWeight: 700,
@@ -106,11 +106,11 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
                     }}>{d.count}</div>
                     <button
                       onClick={() => updateCount(d.date, d.count - 1)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, opacity: 0.6, padding: '0 4px' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, opacity: 0.6, padding: '0 4px' }}
                     >▼</button>
                     <button
                       onClick={() => setEditing(null)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 8, opacity: 0.4, marginTop: 2 }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, opacity: 0.4, marginTop: 2 }}
                     >done</button>
                   </div>
                 ) : (

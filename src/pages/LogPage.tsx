@@ -28,7 +28,7 @@ export function LogPage() {
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <div className="badge" style={{ fontSize: 22, color: C.dark }}>ACTIVITY LOG</div>
-        <div style={{ fontSize: 13, color: C.ink60, marginTop: 4 }}>Strava sync · last 90 days</div>
+        <div style={{ fontSize: 15, color: C.ink60, marginTop: 4 }}>Strava sync · last 90 days</div>
       </div>
 
       {/* Connection status */}
@@ -43,13 +43,13 @@ export function LogPage() {
         justifyContent: 'space-between',
       }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: C.dark }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: C.dark }}>
             {connected === null ? 'Checking Strava…'
               : connected ? '✓ Strava connected'
               : 'Strava not connected'}
           </div>
           {syncCount !== null && (
-            <div style={{ fontSize: 11, color: C.ink60, marginTop: 2 }}>
+            <div style={{ fontSize: 13, color: C.ink60, marginTop: 2 }}>
               Synced {syncCount} activities
             </div>
           )}
@@ -63,7 +63,7 @@ export function LogPage() {
               borderRadius: 8,
               background: syncing ? C.sandLt : C.teal,
               color: 'white',
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: 600,
               border: 'none',
               cursor: syncing ? 'not-allowed' : 'pointer',
@@ -79,7 +79,7 @@ export function LogPage() {
               borderRadius: 8,
               background: C.rust,
               color: 'white',
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: 600,
               border: 'none',
               cursor: 'pointer',
@@ -92,7 +92,7 @@ export function LogPage() {
 
       {/* Activity list */}
       {activities.length === 0 && connected === true && (
-        <div style={{ textAlign: 'center', padding: '40px 0', color: C.ink60, fontSize: 13 }}>
+        <div style={{ textAlign: 'center', padding: '40px 0', color: C.ink60, fontSize: 15 }}>
           No activities yet — tap Sync to load your history.
         </div>
       )}
@@ -108,10 +108,10 @@ export function LogPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 14 }}>{TYPE_ICON[a.activity_type] ?? '⚡'}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.dark }}>{a.title}</span>
+                <span style={{ fontSize: 16 }}>{TYPE_ICON[a.activity_type] ?? '⚡'}</span>
+                <span style={{ fontSize: 15, fontWeight: 600, color: C.dark }}>{a.title}</span>
               </div>
-              <div className="mono" style={{ display: 'flex', gap: 10, marginTop: 5, fontSize: 10, color: C.ink60 }}>
+              <div className="mono" style={{ display: 'flex', gap: 10, marginTop: 5, fontSize: 12, color: C.ink60 }}>
                 {a.distance_miles && <span>{a.distance_miles.toFixed(1)} mi</span>}
                 {a.duration_seconds && <span>{formatDuration(a.duration_seconds)}</span>}
                 {a.avg_pace_seconds_per_mile && a.activity_type === 'run' && (
@@ -121,7 +121,7 @@ export function LogPage() {
                 {a.elevation_feet && <span>+{a.elevation_feet.toLocaleString()} ft</span>}
               </div>
             </div>
-            <div className="mono" style={{ fontSize: 10, color: C.ink40, textAlign: 'right', whiteSpace: 'nowrap' }}>
+            <div className="mono" style={{ fontSize: 12, color: C.ink40, textAlign: 'right', whiteSpace: 'nowrap' }}>
               {new Date(a.activity_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </div>
           </div>

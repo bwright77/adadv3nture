@@ -47,11 +47,11 @@ export function InboxPage() {
       />
       <div style={{ padding: '0 16px 100px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: C.ink40, fontSize: 13 }}>Loading…</div>
+          <div style={{ textAlign: 'center', padding: 40, color: C.ink40, fontSize: 15 }}>Loading…</div>
         ) : items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: C.ink40, fontSize: 13, lineHeight: 1.8 }}>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: C.ink40, fontSize: 15, lineHeight: 1.8 }}>
             Inbox zero.<br />
-            <span style={{ fontSize: 11 }}>Tap + to capture something.</span>
+            <span style={{ fontSize: 13 }}>Tap + to capture something.</span>
           </div>
         ) : (
           items.map(item => (
@@ -60,21 +60,21 @@ export function InboxPage() {
               border: `0.5px solid ${C.ink20}`,
               borderRadius: 16, padding: 14, marginBottom: 10,
             }}>
-              <div style={{ fontSize: 13, lineHeight: 1.4, color: C.dark }}>{item.content}</div>
+              <div style={{ fontSize: 15, lineHeight: 1.4, color: C.dark }}>{item.content}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, alignItems: 'center' }}>
-                <span className="mono" style={{ fontSize: 9.5, color: C.ink60 }}>{timeAgo(item.captured_at)}</span>
+                <span className="mono" style={{ fontSize: 11.5, color: C.ink60 }}>{timeAgo(item.captured_at)}</span>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button
                     onClick={() => handleRoute(item.id)}
                     style={{
-                      fontSize: 10, padding: '4px 9px', borderRadius: 999,
+                      fontSize: 12, padding: '4px 9px', borderRadius: 999,
                       background: C.creamDk, color: C.dark, fontWeight: 600, border: 'none', cursor: 'pointer',
                     }}
                   >↗ route</button>
                   <button
                     onClick={() => handleDelete(item.id)}
                     style={{
-                      fontSize: 10, padding: '4px 9px', borderRadius: 999,
+                      fontSize: 12, padding: '4px 9px', borderRadius: 999,
                       background: 'transparent', color: C.ink60, fontWeight: 600, border: 'none', cursor: 'pointer',
                     }}
                   >× delete</button>

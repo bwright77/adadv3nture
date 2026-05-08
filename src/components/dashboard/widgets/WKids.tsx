@@ -19,8 +19,8 @@ export function WKids({ dark }: WKidsProps) {
             flex: 1, padding: 8, borderRadius: 12,
             background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(26,18,8,0.04)',
           }}>
-            <div className="badge" style={{ fontSize: 11 }}>{k.n}</div>
-            <div className="mono" style={{ fontSize: 9, opacity: 0.55 }}>{k.a}y · {k.note}</div>
+            <div className="badge" style={{ fontSize: 13 }}>{k.n}</div>
+            <div className="mono" style={{ fontSize: 11, opacity: 0.55 }}>{k.a}y · {k.note}</div>
           </div>
         ))}
       </div>
