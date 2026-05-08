@@ -11,6 +11,7 @@ import { AfternoonView } from './components/dashboard/AfternoonView'
 import { EveningView } from './components/dashboard/EveningView'
 import { InboxPage } from './pages/InboxPage'
 import { TrendsPage } from './pages/TrendsPage'
+import { LogPage } from './pages/LogPage'
 import { CaptureSheet } from './components/inbox/CaptureSheet'
 import { InspireDetail } from './components/dashboard/InspireDetail'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
@@ -26,7 +27,15 @@ const VEIL: Record<string, string> = {
 function Dashboard() {
   const tod = useTimeOfDay()
   const todayPhoto = useInspiration()
-  const [tab, setTab] = useState<Tab>('home')
+  const [tab, setTab] = useState<Tab>(() => {
+    // After Strava OAuth redirect, land on log tab
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('strava') === 'connected') {
+      window.history.replaceState({}, '', '/')
+      return 'log'
+    }
+    return 'home'
+  })
   const [capture, setCapture] = useState(false)
   const [inspirePhoto, setInspirePhoto] = useState<InspirationPhoto | null>(null)
 
@@ -66,14 +75,7 @@ function Dashboard() {
         {tab === 'home' && tod === 'evening'     && <EveningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
         {tab === 'trends' && <TrendsPage />}
         {tab === 'inbox'  && <InboxPage />}
-        {tab === 'log'    && (
-          <div style={{ padding: '20px 20px 100px', color: C.dark }}>
-            <div className="badge" style={{ fontSize: 22 }}>LOG</div>
-            <div style={{ fontSize: 14, opacity: 0.6, marginTop: 8 }}>
-              Activity log — Strava sync coming in build step 08.
-            </div>
-          </div>
-        )}
+        {tab === 'log'    && <LogPage />}
       </div>
 
       <TabBar active={tab} dark={isDark} onChange={setTab} />
