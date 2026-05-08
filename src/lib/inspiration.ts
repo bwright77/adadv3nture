@@ -55,32 +55,38 @@ function toPhoto(row: {
   }
 }
 
+// For background: strictly seasonal (near today in past years), no contrast
 export async function getSeasonalPhoto(userId: string): Promise<InspirationPhoto | null> {
   const today = new Date()
   const month = today.getMonth() + 1
   const day = today.getDate()
-  const useContrast = Math.random() < 0.15
-  const targetMonth = useContrast ? ((month - 1 + 6) % 12) + 1 : month
+  const todayStr = today.toISOString().substring(0, 10)
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('inspiration_photos')
     .select('*')
     .eq('user_id', userId)
-    .lt('taken_at', today.toISOString().substring(0, 10))
+    .lt('taken_at', todayStr)
     .order('times_surfaced', { ascending: true })
-    .limit(60) as { data: Parameters<typeof toPhoto>[0][] | null }
+    .order('user_starred', { ascending: false })
+    .limit(200)
 
-  let candidates = (data ?? []).filter(r => {
+  if (error || !data) return null
+
+  // Prefer photos within ±21 days of today in any past year
+  const seasonal = (data as Parameters<typeof toPhoto>[0][]).filter(r => {
     const d = new Date(r.taken_at + 'T12:00:00')
     const m = d.getMonth() + 1
     const dy = d.getDate()
-    if (useContrast) return m === targetMonth
-    const diff = Math.abs(m * 31 + dy - (month * 31 + day))
-    return diff <= 14 || diff >= 31 * 12 - 14
+    const dayOfYear = m * 31 + dy
+    const todayOfYear = month * 31 + day
+    const diff = Math.abs(dayOfYear - todayOfYear)
+    // handle year wrap (e.g. Dec 28 ↔ Jan 3)
+    return diff <= 21 || diff >= 31 * 12 - 21
   })
-  if (candidates.length === 0) candidates = data ?? []
-  if (candidates.length === 0) return null
-  return toPhoto(candidates[Math.floor(Math.random() * Math.min(candidates.length, 10))])
+
+  const pool = seasonal.length > 0 ? seasonal : (data as Parameters<typeof toPhoto>[0][])
+  return toPhoto(pool[Math.floor(Math.random() * Math.min(pool.length, 15))])
 }
 
 export async function getPhotosAroundDate(userId: string, windowDays = 4): Promise<InspirationPhoto[]> {
@@ -111,6 +117,27 @@ export async function getDailyInspiration(userId: string): Promise<InspirationPh
   const today = new Date()
   const month = today.getMonth() + 1
   const day = today.getDate()
+
+  // 15% chance: pull from the opposite season for contrast
+  if (Math.random() < 0.15) {
+    const contrastMonth = ((month - 1 + 6) % 12) + 1
+    const { data: contrast } = await supabase
+      .from('inspiration_photos')
+      .select('*')
+      .eq('user_id', userId)
+      .lt('taken_at', today.toISOString().substring(0, 10))
+      .order('times_surfaced', { ascending: true })
+      .limit(60) as { data: Parameters<typeof toPhoto>[0][] | null }
+
+    const pool = (contrast ?? []).filter(r => new Date(r.taken_at + 'T12:00:00').getMonth() + 1 === contrastMonth)
+    if (pool.length > 0) {
+      const pick = pool[Math.floor(Math.random() * Math.min(pool.length, 5))]
+      await db.from('inspiration_photos')
+        .update({ times_surfaced: pick.times_surfaced + 1, last_surfaced_at: new Date().toISOString() })
+        .eq('id', pick.id)
+      return toPhoto(pick)
+    }
+  }
 
   // Priority 1: within ±3 days of today in any past year
   const { data: onThisDay } = await supabase

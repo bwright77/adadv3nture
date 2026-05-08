@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getSeasonalPhoto } from '../lib/inspiration'
+import { useAuth } from '../contexts/AuthContext'
 
 export type TimeOfDay = 'morning' | 'mid-morning' | 'afternoon' | 'evening'
 
@@ -23,23 +24,17 @@ export function useTimeOfDay(): TimeOfDay {
   return tod
 }
 
-const bgCache: Partial<Record<string, string>> = {}
-
-export function useBgPhoto(tod: TimeOfDay, userId?: string): string {
+// Picks a fresh seasonal photo each time-of-day period; differs from the widget photo
+export function useBgPhoto(tod: TimeOfDay): string {
+  const { user } = useAuth()
   const [url, setUrl] = useState<string>('')
 
   useEffect(() => {
-    if (!userId) return
-    const key = `${userId}:${tod}`
-    if (bgCache[key]) { setUrl(bgCache[key]!); return }
-    getSeasonalPhoto(userId)
-      .then(photo => {
-        const picked = photo?.original_url ?? ''
-        bgCache[key] = picked
-        setUrl(picked)
-      })
+    if (!user) return
+    getSeasonalPhoto(user.id)
+      .then(photo => setUrl(photo?.original_url ?? ''))
       .catch(() => setUrl(''))
-  }, [tod, userId])
+  }, [user, tod])
 
   return url
 }
