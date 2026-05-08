@@ -16,9 +16,10 @@ interface MidMorningViewProps {
   activeTod: TimeOfDay
   isOverride: boolean
   onSetOverride: (tod: TimeOfDay | null) => void
+  onOpenCareer?: () => void
 }
 
-export function MidMorningView({ inspirationPhoto, onInspireExpand, activeTod, isOverride, onSetOverride }: MidMorningViewProps) {
+export function MidMorningView({ inspirationPhoto, onInspireExpand, activeTod, isOverride, onSetOverride, onOpenCareer }: MidMorningViewProps) {
   return (
     <>
       <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
@@ -26,7 +27,7 @@ export function MidMorningView({ inspirationPhoto, onInspireExpand, activeTod, i
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
         gap: 10, padding: '0 14px 100px',
       }}>
-        <WWA dark />
+        <WWA dark onOpenCareer={onOpenCareer} />
         <WCalendar dark span={6} />
         <WInbox dark />
         <WMIT dark />

@@ -5,7 +5,7 @@ import { C } from '../../../tokens'
 import { getProjects, type Project } from '../../../lib/projects'
 import { useAuth } from '../../../contexts/AuthContext'
 
-interface WWAProps { dark?: boolean }
+interface WWAProps { dark?: boolean; onOpenCareer?: () => void }
 
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null
@@ -52,7 +52,7 @@ function ProjectRow({ project, dark, border }: { project: Project; dark?: boolea
   )
 }
 
-export function WWA({ dark }: WWAProps) {
+export function WWA({ dark, onOpenCareer }: WWAProps) {
   const { user } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
 
@@ -65,7 +65,7 @@ export function WWA({ dark }: WWAProps) {
   const rest = projects.slice(1)
 
   return (
-    <Glass dark={dark} span={12} pad={14}>
+    <Glass dark={dark} span={12} pad={14} onClick={onOpenCareer} style={onOpenCareer ? { cursor: 'pointer' } : undefined}>
       <CardLabel dark={dark}>Wright adventures · career</CardLabel>
       {projects.length === 0 ? (
         <div className="mono" style={{ fontSize: 'var(--fs-13)', opacity: 0.4, marginTop: 6 }}>

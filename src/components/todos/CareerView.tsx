@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
 import {
-  getProjects, getProjectWithMilestones,
+  getProjects, getProjectWithMilestones, addProject,
   type Project, type ProjectMilestone, type ProjectUpdate, type ProjectContact,
 } from '../../lib/projects'
 import { ProjectDetail } from './ProjectDetail'
@@ -97,12 +97,60 @@ interface DetailState {
   contacts: ProjectContact[]
 }
 
+function AddOpportunityForm({ onSave, onCancel }: { onSave: (p: Project) => void; onCancel: () => void }) {
+  const { user } = useAuth()
+  const [title, setTitle] = useState('')
+  const [deadline, setDeadline] = useState('')
+  const [saving, setSaving] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  useEffect(() => { inputRef.current?.focus() }, [])
+
+  async function handleSave() {
+    if (!user || !title.trim()) return
+    setSaving(true)
+    try {
+      const p = await addProject(user.id, title.trim(), 'career', deadline || null)
+      onSave(p)
+    } catch { setSaving(false) }
+  }
+
+  return (
+    <div style={{ background: '#fff', border: `1.5px solid ${C.rust}`, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.rust, letterSpacing: '0.12em', marginBottom: 10 }}>NEW OPPORTUNITY</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <input
+          ref={inputRef}
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onCancel() }}
+          placeholder="Opportunity / org name"
+          style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', background: '#fff', color: C.dark, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box', outline: 'none' }}
+        />
+        <input
+          type="date"
+          value={deadline}
+          onChange={e => setDeadline(e.target.value)}
+          placeholder="Deadline (optional)"
+          style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', background: '#fff', color: C.dark, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box', outline: 'none' }}
+        />
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 2 }}>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-14)', cursor: 'pointer', padding: '6px 10px' }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving || !title.trim()} style={{ background: C.rust, color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 'var(--fs-14)', fontWeight: 700, cursor: 'pointer', opacity: !title.trim() ? 0.5 : 1 }}>
+            {saving ? 'Saving…' : 'Add'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function CareerView() {
   const { user } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
   const [contactsMap, setContactsMap] = useState<Record<string, ProjectContact[]>>({})
   const [loading, setLoading] = useState(true)
   const [detail, setDetail] = useState<DetailState | null>(null)
+  const [adding, setAdding] = useState(false)
 
   async function load() {
     if (!user) return
@@ -154,9 +202,22 @@ export function CareerView() {
 
   return (
     <div style={{ padding: '0 0 140px' }}>
-      <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40, marginBottom: 10 }}>
-        ◆ ACTIVE OPPORTUNITIES
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40 }}>
+          ◆ ACTIVE OPPORTUNITIES
+        </div>
+        {!adding && (
+          <button onClick={() => setAdding(true)} style={{ background: 'none', border: 'none', color: C.rust, fontSize: 'var(--fs-13)', fontWeight: 700, cursor: 'pointer', padding: '2px 0' }}>
+            + Add
+          </button>
+        )}
       </div>
+      {adding && (
+        <AddOpportunityForm
+          onSave={p => { setProjects(prev => [p, ...prev]); setContactsMap(prev => ({ ...prev, [p.id]: [] })); setAdding(false) }}
+          onCancel={() => setAdding(false)}
+        />
+      )}
       {projects.map(p => (
         <CareerCard
           key={p.id}
@@ -165,7 +226,7 @@ export function CareerView() {
           onOpen={() => handleOpen(p)}
         />
       ))}
-      {projects.length === 0 && (
+      {projects.length === 0 && !adding && (
         <div style={{ textAlign: 'center', padding: '40px 0', color: C.ink40, fontSize: 'var(--fs-15)' }}>
           No active opportunities.
         </div>

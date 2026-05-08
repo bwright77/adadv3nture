@@ -90,11 +90,15 @@ const TABS: { id: TabId; label: string; color: string }[] = [
 ]
 
 
-interface TodosPageProps { bgPhoto?: string }
+interface TodosPageProps { bgPhoto?: string; initialTab?: TabId }
 
-export function TodosPage({ bgPhoto }: TodosPageProps) {
+export function TodosPage({ bgPhoto, initialTab }: TodosPageProps) {
   const { user } = useAuth()
-  const [tab, setTab] = useState<TabId>('training')
+  const [tab, setTab] = useState<TabId>(initialTab ?? 'training')
+
+  useEffect(() => {
+    if (initialTab) setTab(initialTab)
+  }, [initialTab])
   const [cat, setCat] = useState<TodoCategory>('career')
   const [todos, setTodos] = useState<Todo[]>([])
   const [done, setDone] = useState<Todo[]>([])

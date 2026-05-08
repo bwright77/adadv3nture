@@ -62,6 +62,36 @@ export async function getCurrentTrainingWeek(userId: string): Promise<TrainingWe
   return data as TrainingWeek | null
 }
 
+export async function addTrainingGoal(
+  userId: string,
+  eventName: string,
+  eventDate: string,
+  eventType: TrainingEventType,
+  opts?: {
+    location?: string
+    distance_label?: string
+    elevation_label?: string
+    is_anchor?: boolean
+  }
+): Promise<TrainingGoal> {
+  const { data, error } = await db
+    .from('training_goals')
+    .insert({
+      user_id: userId,
+      event_name: eventName,
+      event_date: eventDate,
+      event_type: eventType,
+      location: opts?.location ?? null,
+      distance_label: opts?.distance_label ?? null,
+      elevation_label: opts?.elevation_label ?? null,
+      is_anchor: opts?.is_anchor ?? false,
+    })
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data as TrainingGoal
+}
+
 export async function updateTrainingActuals(
   id: string,
   actuals: Partial<Pick<TrainingWeek, 'actual_run_miles' | 'actual_cycling_miles' | 'actual_strength_sessions'>>

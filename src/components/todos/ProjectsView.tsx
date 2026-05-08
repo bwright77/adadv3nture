@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
 import {
-  getProjects, getProjectWithMilestones,
-  type Project, type ProjectMilestone, type ProjectUpdate, type ProjectContact,
+  getProjects, getProjectWithMilestones, addProject,
+  type Project, type ProjectMilestone, type ProjectUpdate, type ProjectContact, type ProjectCategory,
 } from '../../lib/projects'
 import { ProjectDetail } from './ProjectDetail'
 
@@ -114,11 +114,64 @@ interface DetailState {
   contacts: ProjectContact[]
 }
 
+function AddProjectForm({ onSave, onCancel }: { onSave: (p: Project) => void; onCancel: () => void }) {
+  const { user } = useAuth()
+  const [title, setTitle] = useState('')
+  const [category, setCategory] = useState<ProjectCategory>('software')
+  const [deadline, setDeadline] = useState('')
+  const [saving, setSaving] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  useEffect(() => { inputRef.current?.focus() }, [])
+
+  async function handleSave() {
+    if (!user || !title.trim()) return
+    setSaving(true)
+    try {
+      const p = await addProject(user.id, title.trim(), category, deadline || null)
+      onSave(p)
+    } catch { setSaving(false) }
+  }
+
+  const selectStyle = { border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', background: '#fff', color: C.dark, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' as const, outline: 'none' }
+
+  return (
+    <div style={{ background: '#fff', border: `1.5px solid ${CAT_COLOR[category] ?? C.teal}`, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', color: CAT_COLOR[category] ?? C.teal, letterSpacing: '0.12em', marginBottom: 10 }}>NEW PROJECT</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <input
+          ref={inputRef}
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onCancel() }}
+          placeholder="Project title"
+          style={selectStyle}
+        />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <select style={selectStyle} value={category} onChange={e => setCategory(e.target.value as ProjectCategory)}>
+            <option value="software">Software</option>
+            <option value="art">Art</option>
+            <option value="home">Home</option>
+            <option value="other">Other</option>
+          </select>
+          <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} style={selectStyle} placeholder="Deadline" />
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 2 }}>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-14)', cursor: 'pointer', padding: '6px 10px' }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving || !title.trim()} style={{ background: CAT_COLOR[category] ?? C.teal, color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontSize: 'var(--fs-14)', fontWeight: 700, cursor: 'pointer', opacity: !title.trim() ? 0.5 : 1 }}>
+            {saving ? 'Saving…' : 'Add'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function ProjectsView() {
   const { user } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [detail, setDetail] = useState<DetailState | null>(null)
+  const [adding, setAdding] = useState(false)
 
   async function load() {
     if (!user) return
@@ -163,13 +216,26 @@ export function ProjectsView() {
 
   return (
     <div style={{ padding: '0 0 140px' }}>
-      <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40, marginBottom: 10 }}>
-        ◆ ACTIVE PROJECTS
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40 }}>
+          ◆ ACTIVE PROJECTS
+        </div>
+        {!adding && (
+          <button onClick={() => setAdding(true)} style={{ background: 'none', border: 'none', color: C.teal, fontSize: 'var(--fs-13)', fontWeight: 700, cursor: 'pointer', padding: '2px 0' }}>
+            + Add
+          </button>
+        )}
       </div>
+      {adding && (
+        <AddProjectForm
+          onSave={p => { setProjects(prev => [p, ...prev.filter(x => x.category !== 'career')]); setAdding(false) }}
+          onCancel={() => setAdding(false)}
+        />
+      )}
       {projects.map(p => (
         <ProjectCard key={p.id} project={p} onOpen={() => handleOpen(p)} />
       ))}
-      {projects.length === 0 && (
+      {projects.length === 0 && !adding && (
         <div style={{ textAlign: 'center', padding: '40px 0', color: C.ink40, fontSize: 'var(--fs-15)' }}>
           No active projects.
         </div>

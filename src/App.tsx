@@ -3,6 +3,7 @@ import { useTimeOfDay, useBgPhoto, type TimeOfDay } from './hooks/useTimeOfDay'
 import { useInspiration } from './hooks/useInspiration'
 import type { InspirationPhoto } from './hooks/useInspiration'
 import type { Tab } from './components/ui/TabBar'
+type ListsTab = 'training' | 'career' | 'family' | 'home' | 'projects'
 import { TabBar } from './components/ui/TabBar'
 import { FAB } from './components/ui/FAB'
 import { MorningView } from './components/dashboard/MorningView'
@@ -48,6 +49,12 @@ function Dashboard() {
   })
   const [capture, setCapture] = useState(false)
   const [inspirePhoto, setInspirePhoto] = useState<InspirationPhoto | null>(null)
+  const [listsInitialTab, setListsInitialTab] = useState<ListsTab | undefined>(undefined)
+
+  function openCareer() {
+    setTab('lists')
+    setListsInitialTab('career')
+  }
 
   const isDark = tab === 'home'
 
@@ -78,11 +85,11 @@ function Dashboard() {
         {tab === 'home' && <div style={{ height: 'calc(env(safe-area-inset-top, 16px) + 28px)' }} />}
 
         {tab === 'home' && tod === 'morning'     && <MorningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
-        {tab === 'home' && tod === 'mid-morning' && <MidMorningView  inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
+        {tab === 'home' && tod === 'mid-morning' && <MidMorningView  inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenCareer={openCareer} />}
         {tab === 'home' && tod === 'afternoon'   && <AfternoonView   inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
         {tab === 'home' && tod === 'evening'     && <EveningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
         {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} />}
-        {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} />}
+        {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} initialTab={listsInitialTab} />}
         {tab === 'inbox'  && <InboxPage  bgPhoto={bgPhoto || undefined} />}
         {tab === 'log'    && <LogPage />}
       </div>

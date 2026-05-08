@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
-import { getTrainingGoals, getCurrentTrainingWeek, type TrainingGoal, type TrainingWeek } from '../../lib/training'
+import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
 
 const EVENT_COLOR: Record<string, string> = {
   trail_run:      C.rust,
@@ -131,11 +131,83 @@ function WeekCard({ week }: { week: TrainingWeek }) {
   )
 }
 
+function AddEventForm({ onSave, onCancel }: { onSave: (g: TrainingGoal) => void; onCancel: () => void }) {
+  const { user } = useAuth()
+  const [name, setName] = useState('')
+  const [date, setDate] = useState('')
+  const [type, setType] = useState<TrainingEventType>('trail_run')
+  const [location, setLocation] = useState('')
+  const [distance, setDistance] = useState('')
+  const [elevation, setElevation] = useState('')
+  const [saving, setSaving] = useState(false)
+  const nameRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { nameRef.current?.focus() }, [])
+
+  async function handleSave() {
+    if (!user || !name.trim() || !date) return
+    setSaving(true)
+    try {
+      const g = await addTrainingGoal(user.id, name.trim(), date, type, {
+        location: location.trim() || undefined,
+        distance_label: distance.trim() || undefined,
+        elevation_label: elevation.trim() || undefined,
+      })
+      onSave(g)
+    } catch {
+      setSaving(false)
+    }
+  }
+
+  const inputStyle = {
+    border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px',
+    fontSize: 'var(--fs-14)', background: '#fff', color: C.dark,
+    fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' as const, outline: 'none',
+  }
+
+  return (
+    <div style={{
+      background: '#fff', border: `1.5px solid ${C.teal}`, borderRadius: 14,
+      padding: '14px 16px', marginBottom: 10,
+    }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.teal, letterSpacing: '0.12em', marginBottom: 10 }}>NEW EVENT</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <input ref={nameRef} style={inputStyle} placeholder="Event name" value={name} onChange={e => setName(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Escape') onCancel() }} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <input style={inputStyle} type="date" value={date} onChange={e => setDate(e.target.value)} />
+          <select style={inputStyle} value={type} onChange={e => setType(e.target.value as TrainingEventType)}>
+            <option value="trail_run">Trail Run</option>
+            <option value="cycling_gravel">Gravel Cycling</option>
+            <option value="cycling_road">Road Cycling</option>
+          </select>
+        </div>
+        <input style={inputStyle} placeholder="Location (optional)" value={location} onChange={e => setLocation(e.target.value)} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <input style={inputStyle} placeholder="Distance (e.g. 18.6mi)" value={distance} onChange={e => setDistance(e.target.value)} />
+          <input style={inputStyle} placeholder="Elevation (e.g. 3,200ft)" value={elevation} onChange={e => setElevation(e.target.value)} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 2 }}>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-14)', cursor: 'pointer', padding: '6px 10px' }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving || !name.trim() || !date} style={{
+            background: C.teal, color: '#fff', border: 'none', borderRadius: 8,
+            padding: '6px 16px', fontSize: 'var(--fs-14)', fontWeight: 700, cursor: 'pointer',
+            opacity: (!name.trim() || !date) ? 0.5 : 1,
+          }}>
+            {saving ? 'Saving…' : 'Add Event'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function TrainingView() {
   const { user } = useAuth()
   const [goals, setGoals] = useState<TrainingGoal[]>([])
   const [week, setWeek] = useState<TrainingWeek | null>(null)
   const [loading, setLoading] = useState(true)
+  const [adding, setAdding] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -157,16 +229,30 @@ export function TrainingView() {
     <div style={{ padding: '0 0 140px' }}>
       {week && <WeekCard week={week} />}
 
-      <div className="mono" style={{
-        fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em',
-        color: C.ink40, marginBottom: 10, marginTop: week ? 20 : 0,
-      }}>
-        ◆ TARGET EVENTS
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: week ? 20 : 0 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40 }}>
+          ◆ TARGET EVENTS
+        </div>
+        {!adding && (
+          <button onClick={() => setAdding(true)} style={{
+            background: 'none', border: 'none', color: C.teal, fontSize: 'var(--fs-13)',
+            fontWeight: 700, cursor: 'pointer', padding: '2px 0',
+          }}>
+            + Add Event
+          </button>
+        )}
       </div>
+
+      {adding && (
+        <AddEventForm
+          onSave={g => { setGoals(prev => [...prev, g].sort((a, b) => a.event_date.localeCompare(b.event_date))); setAdding(false) }}
+          onCancel={() => setAdding(false)}
+        />
+      )}
 
       {goals.map(g => <EventCard key={g.id} goal={g} />)}
 
-      {goals.length === 0 && (
+      {goals.length === 0 && !adding && (
         <div style={{ textAlign: 'center', padding: '40px 0', color: C.ink40, fontSize: 'var(--fs-15)' }}>
           No training events set.
         </div>
