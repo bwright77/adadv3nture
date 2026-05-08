@@ -532,7 +532,7 @@ Full-bleed photo, minimal text overlay at bottom. Subtle, warm, real.
 
 Training phases:
 ```
-May 7 → July 1      Run base + Strength + intro cycling
+May 8 → July 1      Run base + Strength + intro cycling
 July 1 → Aug 15     Cycling primary + travel
 Aug 15 → Sept 20    Trail running focus
 Sept 22             48th birthday 🎂
@@ -782,7 +782,7 @@ create table annotations (
   show_on_charts boolean default true,
   created_at timestamptz default now()
 );
--- Seeds: GLP-1 Nov 2024, Anniversary Jun 2025, Boot Camp May 7 2026,
+-- Seeds: GLP-1 Nov 2024, Anniversary Jun 2025, Boot Camp May 8 2026,
 --        Labor Day Sep 1 2026, West Line Winder Sep 26 2026
 
 -- OAUTH TOKENS
@@ -1034,6 +1034,6 @@ adadv3nture/
 
 ---
 
-*Last updated: May 6, 2026 — after a very long and productive planning session*
-*Boot camp starts: May 7, 2026*
+*Last updated: May 8, 2026*
+*Boot camp starts: May 8, 2026 — Total Strength W1D1 today*
 *Built with AI-assisted engineering — Claude Code + Ben Wright*
