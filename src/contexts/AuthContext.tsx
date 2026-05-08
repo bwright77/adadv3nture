@@ -25,6 +25,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      if (session?.user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(supabase.from('users') as any).upsert({
+          id: session.user.id,
+          email: session.user.email ?? '',
+          name: session.user.user_metadata?.full_name ?? null,
+        }, { onConflict: 'id' }).then(() => {})
+      }
     })
 
     return () => subscription.unsubscribe()

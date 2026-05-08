@@ -21,7 +21,7 @@ async function getValidToken(userId: string): Promise<string | null> {
     .select('access_token, expires_at')
     .eq('user_id', userId)
     .eq('provider', 'strava')
-    .single() as { data: { access_token: string; expires_at: string } | null }
+    .maybeSingle() as unknown as { data: { access_token: string; expires_at: string } | null }
 
   if (!data) return null
 
@@ -150,6 +150,6 @@ export async function isStravaConnected(userId: string): Promise<boolean> {
     .select('id')
     .eq('user_id', userId)
     .eq('provider', 'strava')
-    .single()
+    .maybeSingle()
   return !!data
 }
