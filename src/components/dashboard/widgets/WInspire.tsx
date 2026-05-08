@@ -24,7 +24,7 @@ export function WInspire({ dark, photo, onExpand }: WInspireProps) {
         <>
           <div style={{
             position: 'absolute', inset: 0,
-            background: `url(${photo.thumbnail_url}) center/cover`,
+            background: `url(${photo.original_url}) center/cover`,
             borderRadius: 22,
           }} />
           <div style={{
