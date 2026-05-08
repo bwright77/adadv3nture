@@ -15,9 +15,38 @@ enough lately. It tells you what to do today and gets out of the way.
 _Update this at the start of every Claude Code session._
 
 ```
-[ REPLACE WITH TODAY'S SPECIFIC TASK ]
-Example: "Wire up Strava OAuth and persist activities to Supabase"
+NEXT PRIORITY: Strava OAuth — connect, backfill historic activities, display recent on Log tab
 ```
+
+---
+
+## What's Live (as of May 8, 2026)
+
+**Migrations applied:** 001–012  
+**Deployed to:** Vercel (auto-deploy from main branch)
+
+| Area | Status |
+|------|--------|
+| Auth (Supabase email) | ✓ |
+| Widget grid — time-aware (morning/mid/afternoon/evening views) | ✓ |
+| Morning briefing (Anthropic claude-sonnet-4-6, Edge Function) | ✓ |
+| Recovery score + tier (go_hard/moderate/recovery) | ✓ |
+| Program tracker — Total Strength prescription | ✓ |
+| Inbox — capture FAB + swipe triage (left=delete, right=MIT) | ✓ |
+| Todo lists — career/family/home with urgency (fire/deck/rain) | ✓ |
+| Persistent reminders | ✓ |
+| Training tab — FOCO Fondo, Hurricane Ridge, WLW events + weekly targets | ✓ |
+| Projects tab — Bottle Cap Bike + adadv3nture with milestones | ✓ |
+| Inspiration widget — Supabase storage, "on this day", swipe ±4 days | ✓ |
+| Photo backgrounds — seasonal on home screen, hero gradient on secondary pages | ✓ |
+| Weather widget | ✓ |
+| Strava OAuth + activity sync | ✗ |
+| Withings OAuth + body metrics | ✗ |
+| Google Calendar — WCalendar widget with "Connect" OAuth button | ✓ |
+| Apple Health — iOS Shortcut fires at wake-up, posts RHR/HRV/sleep to Edge Function | ✓ |
+| Drinks widget — +/- counter, 7-day avg | ✓ |
+| Trends engine — charts, weekly summaries | ✗ |
+| Daily check-in — mood, MIT portfolio check | ✗ |
 
 ---
 
@@ -785,6 +814,78 @@ create table annotations (
 -- Seeds: GLP-1 Nov 2024, Anniversary Jun 2025, Boot Camp May 8 2026,
 --        Labor Day Sep 1 2026, West Line Winder Sep 26 2026
 
+-- TODOS — actual categories in use
+-- category check: ('body', 'career', 'family', 'home', 'personal')
+-- urgency: 'fire' | 'deck' | 'rain' (added migration 009)
+-- UI tabs: TRAINING (event view), CAREER, FAMILY, HOME, PROJECTS (project view)
+-- body → Training tab, personal → Projects tab (todo lists for career/family/home only)
+
+-- TRAINING GOALS (anchor events — WLW, FOCO Fondo, Hurricane Ridge)
+create table training_goals (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  event_name text not null,
+  event_date date not null,
+  event_type text check (event_type in ('trail_run', 'cycling_road', 'cycling_gravel')),
+  distance_label text,
+  elevation_label text,
+  location text,
+  is_anchor boolean default false,
+  status text default 'active' check (status in ('active', 'complete', 'skipped')),
+  notes text,
+  created_at timestamptz default now()
+);
+
+-- TRAINING WEEKS (target vs actual, phase tracking)
+create table training_weeks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  week_start date not null,
+  phase_label text not null,
+  target_run_miles numeric,
+  target_long_run_miles numeric,
+  target_cycling_miles numeric,
+  target_strength_sessions integer,
+  actual_run_miles numeric,
+  actual_cycling_miles numeric,
+  actual_strength_sessions integer,
+  notes text,
+  created_at timestamptz default now(),
+  unique(user_id, week_start)
+);
+
+-- PROJECTS (Bottle Cap Bike, adadv3nture, etc.)
+create table projects (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  title text not null,
+  description text,
+  category text check (category in ('art', 'software', 'home', 'career', 'other')),
+  deadline_date date,
+  soft_deadline_date date,
+  progress_pct integer default 0 check (progress_pct between 0 and 100),
+  next_action text,
+  status text default 'active' check (status in ('active', 'complete', 'paused')),
+  created_at timestamptz default now()
+);
+
+create table project_milestones (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid references projects(id) on delete cascade,
+  title text not null,
+  done boolean default false,
+  done_at timestamptz,
+  sort_order integer default 0,
+  created_at timestamptz default now()
+);
+
+create table project_updates (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid references projects(id) on delete cascade,
+  note text not null,
+  created_at timestamptz default now()
+);
+
 -- OAUTH TOKENS
 create table oauth_tokens (
   id uuid primary key default gen_random_uuid(),
@@ -867,28 +968,31 @@ Always end with ONE specific next action — not a category, an actual step.
 ## Build Order
 
 ```
-01. Project init — Vite + React 19 + TypeScript + Tailwind + Supabase
-02. Supabase schema — full migration, RLS, seed user + annotations
-03. Auth — Supabase email auth, protected routes
-04. Widget grid shell — responsive grid, time-aware widget selection,
-    base Widget component with size variants (1x1, 2x1, 2x2, full)
-05. Inbox — floating capture button, quick add, morning triage UI
-06. Todo lists — house + truck, drag-drop, weather filter, blocked-by
-07. Personal tasks + persistent reminders (seed unemployment claim)
-08. Strava OAuth — connect, backfill historic, display recent
-09. Withings OAuth — connect, sync metrics, weight trend chart
-10. Daily check-in — drinks +/- counter, mood, MIT portfolio check
-11. Google Calendar — OAuth read-write, today's events
-12. Apple Health webhook — Health Auto Export → Edge Function
-13. Recovery score — compute, display tier + confidence
-14. Program tracker — Total Strength prescription, next workout
-15. Daily plan + thinking prompt — recovery-aware recommendation
-16. Morning briefing — Anthropic API, time-aware, server-side only
-17. Weather — geolocation → OpenWeatherMap, surface right todos
-18. Trends engine — weekly summaries, report card UI, charts
-19. Inspiration widget — photo upload, EXIF parsing, "on this day" surfacing
-20. Historic import — Strava backfill, Peloton CSV, weight CSV
-21. Polish — PWA, mobile, empty states, event countdowns
+✓ 01. Project init — Vite + React 19 + TypeScript + Tailwind + Supabase
+✓ 02. Supabase schema — migrations 001-012, RLS, seed data
+✓ 03. Auth — Supabase (email + Google OAuth via Supabase)
+✓ 04. Widget grid shell — time-aware views (morning/mid/afternoon/evening)
+✓ 05. Inbox — FAB capture, swipe triage (left=delete, right=MIT)
+✓ 06. Todo lists — career/family/home, urgency fire/deck/rain, drag reorder
+✓ 07. Persistent reminders
+✓ 13. Recovery score — compute, display tier + confidence
+✓ 14. Program tracker — Total Strength prescription, next workout
+✓ 15. Daily plan + thinking prompt
+✓ 16. Morning briefing — Anthropic API, Edge Function, server-side only
+✓ 17. Weather — OpenWeatherMap widget
+✓ 19. Inspiration widget — Supabase Storage, "on this day", swipe ±4 days
+  +. Training tab — event cards (FOCO/Hurricane/WLW), weekly targets
+  +. Projects tab — Bottle Cap Bike + adadv3nture, milestones, next action
+  +. Design system — Glass grain, CardLabel dot, WMorningHero, LockStrip
+
+→ 08. Strava OAuth — connect, backfill historic, display recent on Log tab
+  09. Withings OAuth — connect, sync metrics, weight trend chart
+  10. Daily check-in — drinks +/- counter, mood
+✓ 11. Google Calendar — OAuth via "Connect" button in WCalendar widget, reads events
+✓ 12. Apple Health webhook — Edge Function deployed, Health Auto Export → Supabase
+  18. Trends engine — weekly summaries, report card UI, charts
+  20. Historic import — Strava backfill, Peloton CSV, weight CSV
+  21. Polish — mobile empty states, event countdowns
 ```
 
 ---
