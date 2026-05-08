@@ -40,7 +40,7 @@ NEXT PRIORITY: Strava OAuth — connect, backfill historic activities, display r
 | Inspiration widget — Supabase storage, "on this day", swipe ±4 days | ✓ |
 | Photo backgrounds — seasonal on home screen, hero gradient on secondary pages | ✓ |
 | Weather widget | ✓ |
-| Strava OAuth + activity sync | ✗ |
+| Strava OAuth — "Connect to Strava" button, recent workouts in activities table | ✓ |
 | Withings OAuth + body metrics | ✗ |
 | Google Calendar — WCalendar widget with "Connect" OAuth button | ✓ |
 | Apple Health — iOS Shortcut fires at wake-up, posts RHR/HRV/sleep to Edge Function | ✓ |
@@ -985,7 +985,7 @@ Always end with ONE specific next action — not a category, an actual step.
   +. Projects tab — Bottle Cap Bike + adadv3nture, milestones, next action
   +. Design system — Glass grain, CardLabel dot, WMorningHero, LockStrip
 
-→ 08. Strava OAuth — connect, backfill historic, display recent on Log tab
+✓ 08. Strava OAuth — "Connect to Strava" button, pulls recent workouts into activities table
   09. Withings OAuth — connect, sync metrics, weight trend chart
   10. Daily check-in — drinks +/- counter, mood
 ✓ 11. Google Calendar — OAuth via "Connect" button in WCalendar widget, reads events

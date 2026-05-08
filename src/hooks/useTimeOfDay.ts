@@ -17,8 +17,14 @@ export function useTimeOfDay(): TimeOfDay {
 
   useEffect(() => {
     const tick = () => setTod(getTimeOfDay(new Date()))
+    const onVisible = () => { if (document.visibilityState === 'visible') tick() }
+
     const id = setInterval(tick, 60_000)
-    return () => clearInterval(id)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [])
 
   return tod

@@ -197,7 +197,7 @@ export function TodosPage({ bgPhoto }: TodosPageProps) {
       {/* Masthead */}
       <div style={{
         ...(bgPhoto ? { background: `url(${bgPhoto}) center/cover no-repeat` } : { background: C.dark }),
-        padding: '56px 18px 18px', position: 'relative', overflow: 'hidden', minHeight: bgPhoto ? 200 : 'auto',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 56px) 18px 18px', position: 'relative', overflow: 'hidden', minHeight: bgPhoto ? 200 : 'auto',
       }}>
         {bgPhoto && (
           <div style={{

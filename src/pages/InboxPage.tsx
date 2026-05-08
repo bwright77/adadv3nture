@@ -152,7 +152,7 @@ export function InboxPage({ bgPhoto }: InboxPageProps) {
       {/* Dramatic poster header */}
       <div style={{
         ...(bgPhoto ? { background: `url(${bgPhoto}) center/cover no-repeat` } : { background: C.dark }),
-        padding: '56px 18px 0', position: 'relative', overflow: 'hidden', minHeight: bgPhoto ? 220 : 'auto',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 56px) 18px 0', position: 'relative', overflow: 'hidden', minHeight: bgPhoto ? 220 : 'auto',
       }}>
         {bgPhoto && (
           <div style={{

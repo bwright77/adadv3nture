@@ -68,9 +68,8 @@ function Dashboard() {
         position: 'relative', zIndex: 2,
         overflowY: 'auto', overflowX: 'hidden',
         minHeight: '100dvh',
-        paddingTop: 'env(safe-area-inset-top, 16px)',
       }}>
-        <div style={{ height: 44 }} />
+        {tab === 'home' && <div style={{ height: 'calc(env(safe-area-inset-top, 16px) + 28px)' }} />}
 
         {tab === 'home' && tod === 'morning'     && <MorningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
         {tab === 'home' && tod === 'mid-morning' && <MidMorningView  inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
