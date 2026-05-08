@@ -104,9 +104,21 @@ export async function syncActivities(userId: string, daysBack = 90): Promise<num
 
   if (!activities.length) return 0
 
-  const rows = activities.map(a => ({
+  // Fetch existing strava_ids so we only insert new ones
+  const { data: existing } = await supabase
+    .from('activities')
+    .select('strava_id')
+    .eq('user_id', userId)
+    .not('strava_id', 'is', null) as { data: { strava_id: number }[] | null }
+
+  const existingIds = new Set((existing ?? []).map(r => r.strava_id))
+  const newActivities = activities.filter(a => !existingIds.has(a.id))
+
+  if (!newActivities.length) return 0
+
+  const rows = newActivities.map(a => ({
     user_id: userId,
-    source: 'strava' as const,
+    source: 'strava',
     strava_id: a.id,
     activity_type: stravaTypeToLocal(a.sport_type ?? a.type),
     title: a.name,
@@ -123,14 +135,15 @@ export async function syncActivities(userId: string, daysBack = 90): Promise<num
     calories: a.calories ?? null,
   }))
 
-  // Upsert in batches of 100 — cast to bypass recursive type inference issue
+  // Insert in batches of 100
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
   for (let i = 0; i < rows.length; i += 100) {
-    await db.from('activities').upsert(rows.slice(i, i + 100), { onConflict: 'strava_id' })
+    const { error } = await db.from('activities').insert(rows.slice(i, i + 100))
+    if (error) throw new Error(error.message)
   }
 
-  return activities.length
+  return newActivities.length
 }
 
 export async function getRecentActivities(userId: string, limit = 7) {
