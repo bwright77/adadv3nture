@@ -146,7 +146,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          category: 'house' | 'truck'
+          category: 'body' | 'career' | 'family' | 'home' | 'personal'
           title: string
           notes: string | null
           weather_required: 'any' | 'dry' | 'sunny'

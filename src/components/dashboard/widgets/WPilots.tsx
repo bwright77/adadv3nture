@@ -5,11 +5,11 @@ import { C } from '../../../tokens'
 interface WPilotsProps { dark?: boolean }
 
 const PILOTS = [
-  { n: 'BODY',   v: 1,   d: 'today' },
-  { n: 'CAREER', v: 1,   d: 'yesterday' },
-  { n: 'FAMILY', v: 0.5, d: '3d' },
-  { n: 'HOME',   v: 0.2, d: '9d' },
-  { n: "FIN'L",  v: 0.7, d: '2d' },
+  { n: 'BODY',     v: 1,   d: 'today' },
+  { n: 'CAREER',   v: 1,   d: 'yesterday' },
+  { n: 'FAMILY',   v: 0.5, d: '3d' },
+  { n: 'HOME',     v: 0.2, d: '9d' },
+  { n: 'PERSONAL', v: 0.7, d: '2d' },
 ]
 
 export function WPilots({ dark }: WPilotsProps) {
