@@ -9,6 +9,8 @@ html, body, #root {
   padding: 0;
   height: 100%;
   overscroll-behavior: none;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 body {
