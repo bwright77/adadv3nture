@@ -33,12 +33,9 @@ export function LoginPage() {
           <img
             src="/adadv3nture.png"
             alt="adadv3nture"
-            style={{ width: 96, height: 96, objectFit: 'contain', marginBottom: 16 }}
+            style={{ width: 200, mixBlendMode: 'multiply', marginBottom: 8 }}
           />
-          <div className="badge" style={{ fontSize: 28, color: C.dark, letterSpacing: '0.04em' }}>
-            adadv3nture
-          </div>
-          <div style={{ color: C.ink60, fontSize: 13, marginTop: 4 }}>
+          <div style={{ color: C.ink60, fontSize: 13 }}>
             a dad adventure
           </div>
         </div>
