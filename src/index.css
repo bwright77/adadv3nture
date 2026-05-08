@@ -2,6 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   DESIGN TOKENS — CSS custom properties
+   All values in rem so browser zoom and user font prefs work.
+   Base: 16px (browser default). Don't override html font-size.
+   ============================================================ */
+:root {
+  /* Colors */
+  --color-cream:    #F5EDD6;
+  --color-cream-dk: #E8DFC6;
+  --color-rust:     #C4522A;
+  --color-rust-dk:  #8B3A1E;
+  --color-teal:     #5BBCB8;
+  --color-teal-dk:  #2F8783;
+  --color-dark:     #1A1208;
+  --color-paper:    #FBF7EC;
+  --color-sand:     #D4824A;
+  --color-sand-lt:  #E8C99A;
+  --color-ink60:    rgba(26, 18, 8, 0.6);
+  --color-ink40:    rgba(26, 18, 8, 0.4);
+  --color-ink20:    rgba(26, 18, 8, 0.18);
+  /* Alpha variants for overlays */
+  --color-teal-20:  rgba(91, 188, 184, 0.2);
+  --color-rust-10:  rgba(196, 82, 42, 0.1);
+
+  /* Font scale — px equivalents at 16px base shown in comments */
+  --fs-10:  0.625rem;    /*  10px */
+  --fs-11:  0.6875rem;   /*  11px */
+  --fs-12:  0.75rem;     /*  12px */
+  --fs-13:  0.8125rem;   /*  13px */
+  --fs-14:  0.875rem;    /*  14px */
+  --fs-15:  0.9375rem;   /*  15px */
+  --fs-16:  1rem;        /*  16px */
+  --fs-17:  1.0625rem;   /*  17px */
+  --fs-18:  1.125rem;    /*  18px */
+  --fs-22:  1.375rem;    /*  22px */
+  --fs-24:  1.5rem;      /*  24px */
+  --fs-26:  1.625rem;    /*  26px */
+  --fs-56:  3.5rem;      /*  56px */
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body, #root {
@@ -16,10 +59,13 @@ html, body, #root {
 body {
   font-family: 'Sora', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background: #1A1208;
-  color: #1A1208;
+  background: var(--color-dark);
+  color: var(--color-dark);
 }
 
+/* ============================================================
+   TYPOGRAPHY CLASSES
+   ============================================================ */
 .badge {
   font-family: 'Big Shoulders Display', sans-serif;
   font-weight: 800;
@@ -31,6 +77,31 @@ body {
   font-family: 'JetBrains Mono', monospace;
   font-variant-numeric: tabular-nums;
 }
+
+/* Font size utilities */
+.text-10  { font-size: var(--fs-10); }
+.text-11  { font-size: var(--fs-11); }
+.text-12  { font-size: var(--fs-12); }
+.text-13  { font-size: var(--fs-13); }
+.text-14  { font-size: var(--fs-14); }
+.text-15  { font-size: var(--fs-15); }
+.text-16  { font-size: var(--fs-16); }
+.text-17  { font-size: var(--fs-17); }
+.text-18  { font-size: var(--fs-18); }
+.text-22  { font-size: var(--fs-22); }
+.text-24  { font-size: var(--fs-24); }
+.text-26  { font-size: var(--fs-26); }
+.text-56  { font-size: var(--fs-56); }
+
+/* Color utilities */
+.text-rust    { color: var(--color-rust); }
+.text-teal    { color: var(--color-teal); }
+.text-teal-dk { color: var(--color-teal-dk); }
+.text-sand    { color: var(--color-sand); }
+.text-cream   { color: var(--color-cream); }
+.text-dark    { color: var(--color-dark); }
+.text-ink60   { color: var(--color-ink60); }
+.text-ink40   { color: var(--color-ink40); }
 
 /* PWA safe area insets */
 .safe-top    { padding-top:    env(safe-area-inset-top, 16px); }

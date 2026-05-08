@@ -55,7 +55,7 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
     <Glass dark={dark} span={12} pad={16}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <CardLabel dark={dark}>Drinks today{saving ? ' …' : ''}</CardLabel>
-        <span className="mono" style={{ fontSize: 11, opacity: 0.55 }}>ratio · not streak</span>
+        <span className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.55 }}>ratio · not streak</span>
       </div>
 
       {/* Today counter */}
@@ -67,23 +67,23 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
             background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(26,18,8,0.08)',
             color: dark ? C.cream : C.dark,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22, fontWeight: 300,
+            fontSize: 'var(--fs-22)', fontWeight: 300,
           }}
         >−</button>
-        <div className="mono" style={{ fontSize: 56, fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0' }}>{count}</div>
+        <div className="mono" style={{ fontSize: 'var(--fs-56)', fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0' }}>{count}</div>
         <button
           onClick={() => updateCount(today, count + 1)}
           style={{
             width: 44, height: 44, borderRadius: 22, border: 'none', cursor: 'pointer',
             background: C.rust, color: C.cream,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22, fontWeight: 300,
+            fontSize: 'var(--fs-22)', fontWeight: 300,
           }}
         >+</button>
       </div>
 
       {/* 7-day average */}
-      <div className="mono" style={{ fontSize: 12, textAlign: 'center', marginTop: 6, opacity: 0.6 }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-12)', textAlign: 'center', marginTop: 6, opacity: 0.6 }}>
         7d avg {sevenDayAvg}/d · goal ≤ 2.0 · {onTrack ? '✓ on track' : '↑ over goal'}
       </div>
 
@@ -93,24 +93,24 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             {past.map(d => (
               <div key={d.date} style={{ textAlign: 'center', flex: 1 }}>
-                <div className="mono" style={{ fontSize: 10.5, opacity: 0.5, marginBottom: 4 }}>{dayLabel(d.date)}</div>
+                <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.5, marginBottom: 4 }}>{dayLabel(d.date)}</div>
                 {editing === d.date ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                     <button
                       onClick={() => updateCount(d.date, d.count + 1)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, opacity: 0.6, padding: '0 4px' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--fs-12)', opacity: 0.6, padding: '0 4px' }}
                     >▲</button>
                     <div className="mono" style={{
-                      fontSize: 16, fontWeight: 700,
+                      fontSize: 'var(--fs-16)', fontWeight: 700,
                       color: d.count > 2 ? C.rust : d.count > 0 ? C.sand : C.ink40,
                     }}>{d.count}</div>
                     <button
                       onClick={() => updateCount(d.date, d.count - 1)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, opacity: 0.6, padding: '0 4px' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--fs-12)', opacity: 0.6, padding: '0 4px' }}
                     >▼</button>
                     <button
                       onClick={() => setEditing(null)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, opacity: 0.4, marginTop: 2 }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--fs-10)', opacity: 0.4, marginTop: 2 }}
                     >done</button>
                   </div>
                 ) : (
@@ -122,7 +122,7 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
                     }}
                   >
                     <div className="mono" style={{
-                      fontSize: 16, fontWeight: 700,
+                      fontSize: 'var(--fs-16)', fontWeight: 700,
                       color: d.count > 2 ? C.rust : d.count > 0 ? C.sand : C.ink40,
                     }}>{d.count}</div>
                   </button>

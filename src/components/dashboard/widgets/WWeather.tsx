@@ -20,7 +20,7 @@ export function WWeather({ dark }: WWeatherProps) {
     return (
       <Glass dark={dark} span={4} pad={14}>
         <CardLabel dark={dark}>Weather</CardLabel>
-        <div style={{ opacity: 0.4, fontSize: 13, marginTop: 8 }}>Loading…</div>
+        <div style={{ opacity: 0.4, fontSize: 'var(--fs-13)', marginTop: 8 }}>Loading…</div>
       </Glass>
     )
   }
@@ -42,15 +42,15 @@ export function WWeather({ dark }: WWeatherProps) {
     <Glass dark={dark} span={4} pad={14}>
       <CardLabel dark={dark}>{weather.label}</CardLabel>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-        <span style={{ fontSize: 15 }}>{icon}</span>
-        <span className="mono" style={{ fontSize: 26, fontWeight: 700, fontFeatureSettings: '"zero" 0' }}>{weather.tempF}°</span>
-        <span style={{ fontSize: 12, opacity: 0.6 }}>↑{weather.highF} ↓{weather.lowF}</span>
+        <span style={{ fontSize: 'var(--fs-15)' }}>{icon}</span>
+        <span className="mono" style={{ fontSize: 'var(--fs-26)', fontWeight: 700, fontFeatureSettings: '"zero" 0' }}>{weather.tempF}°</span>
+        <span style={{ fontSize: 'var(--fs-12)', opacity: 0.6 }}>↑{weather.highF} ↓{weather.lowF}</span>
       </div>
-      <div style={{ fontSize: 13, opacity: 0.7, marginTop: 2, textTransform: 'capitalize' }}>
+      <div style={{ fontSize: 'var(--fs-13)', opacity: 0.7, marginTop: 2, textTransform: 'capitalize' }}>
         {weather.description}{weather.windMph > 10 ? ` · ${weather.windMph}mph wind` : ''}
       </div>
-      <div className="mono" style={{ fontSize: 11, marginTop: 8, color: pmColor }}>{pmLabel}</div>
-      <div className="mono" style={{ fontSize: 11, marginTop: 3, opacity: 0.55 }}>{workoutLine}</div>
+      <div className="mono" style={{ fontSize: 'var(--fs-11)', marginTop: 8, color: pmColor }}>{pmLabel}</div>
+      <div className="mono" style={{ fontSize: 'var(--fs-11)', marginTop: 3, opacity: 0.55 }}>{workoutLine}</div>
     </Glass>
   )
 }

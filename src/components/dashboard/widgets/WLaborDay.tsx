@@ -16,14 +16,14 @@ export function WLaborDay({ dark }: WLaborDayProps) {
   return (
     <Glass dark={dark} span={6} pad={14}>
       <CardLabel dark={dark}>Labor day · Sept 1</CardLabel>
-      <div className="mono" style={{ fontSize: 26, fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0', color: urgentColor }}>
-        {weeks}<span style={{ fontSize: 13, opacity: 0.5 }}>wk</span>
-        <span style={{ fontSize: 15, opacity: 0.45, marginLeft: 4 }}>{days}d</span>
+      <div className="mono" style={{ fontSize: 'var(--fs-26)', fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0', color: urgentColor }}>
+        {weeks}<span style={{ fontSize: 'var(--fs-13)', opacity: 0.5 }}>wk</span>
+        <span style={{ fontSize: 'var(--fs-15)', opacity: 0.45, marginLeft: 4 }}>{days}d</span>
       </div>
-      <div className="badge" style={{ fontSize: 12, marginTop: 4, color: urgentColor ?? (dark ? C.cream : C.dark) }}>
+      <div className="badge" style={{ fontSize: 'var(--fs-12)', marginTop: 4, color: urgentColor ?? (dark ? C.cream : C.dark) }}>
         WA income or get a job
       </div>
-      <div className="mono" style={{ fontSize: 11.5, color: C.rust, marginTop: 5 }}>● PFB call pending → Jenn</div>
+      <div className="mono" style={{ fontSize: 'var(--fs-12)', color: C.rust, marginTop: 5 }}>● PFB call pending → Jenn</div>
     </Glass>
   )
 }

@@ -16,19 +16,19 @@ export function WBriefing({ dark = true, text, loading }: WBriefingProps) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <CardLabel dark={dark}>Morning brief</CardLabel>
         {text && (
-          <span className="mono" style={{ fontSize: 12, color: dark ? 'rgba(245,237,214,0.5)' : C.ink40 }}>
+          <span className="mono" style={{ fontSize: 'var(--fs-12)', color: dark ? 'rgba(245,237,214,0.5)' : C.ink40 }}>
             claude · {wordCount}w
           </span>
         )}
       </div>
 
       {loading ? (
-        <div style={{ opacity: 0.4, fontSize: 15, marginTop: 8 }}>Generating your briefing…</div>
+        <div style={{ opacity: 0.4, fontSize: 'var(--fs-15)', marginTop: 8 }}>Generating your briefing…</div>
       ) : !text ? (
-        <div style={{ opacity: 0.4, fontSize: 15, marginTop: 8 }}>No briefing today.</div>
+        <div style={{ opacity: 0.4, fontSize: 'var(--fs-15)', marginTop: 8 }}>No briefing today.</div>
       ) : (
         <div style={{
-          fontSize: 16, lineHeight: 1.55,
+          fontSize: 'var(--fs-16)', lineHeight: 1.55,
           color: dark ? C.cream : C.dark,
           marginTop: 6,
         }}>

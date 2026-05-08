@@ -33,8 +33,8 @@ export function WPilots({ dark }: WPilotsProps) {
                 />
               </svg>
             </div>
-            <div className="badge" style={{ fontSize: 11, marginTop: 2 }}>{l.n}</div>
-            <div className="mono" style={{ fontSize: 10, opacity: 0.55 }}>{l.d}</div>
+            <div className="badge" style={{ fontSize: 'var(--fs-11)', marginTop: 2 }}>{l.n}</div>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.55 }}>{l.d}</div>
           </div>
         ))}
       </div>

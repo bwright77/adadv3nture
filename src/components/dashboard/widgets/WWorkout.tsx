@@ -51,7 +51,7 @@ function ProgramProgress({ program, dark, onDone, advancing }: {
         }} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, alignItems: 'center' }}>
-        <div className="mono" style={{ fontSize: 11, opacity: 0.6 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.6 }}>
           W{week} of {totalWeeks} · D{day} of 4 · {Math.round(progress * 100)}% done
         </div>
         <button
@@ -59,7 +59,7 @@ function ProgramProgress({ program, dark, onDone, advancing }: {
           disabled={advancing}
           style={{
             background: C.teal, color: C.dark, border: 'none', cursor: 'pointer',
-            padding: '4px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+            padding: '4px 10px', borderRadius: 8, fontSize: 'var(--fs-12)', fontWeight: 700,
           }}
         >
           {advancing ? '…' : 'Done ✓'}
@@ -102,7 +102,7 @@ export function WWorkout({ dark }: WWorkoutProps) {
     return (
       <Glass dark={dark} span={7} pad={14}>
         <CardLabel dark={dark}>Workout</CardLabel>
-        <div style={{ opacity: 0.4, fontSize: 14, marginTop: 8 }}>Loading…</div>
+        <div style={{ opacity: 0.4, fontSize: 'var(--fs-14)', marginTop: 8 }}>Loading…</div>
       </Glass>
     )
   }
@@ -113,10 +113,10 @@ export function WWorkout({ dark }: WWorkoutProps) {
     return (
       <Glass dark={dark} span={7} pad={14}>
         <CardLabel dark={dark}>Today · done ✓</CardLabel>
-        <div className="badge" style={{ fontSize: 17, lineHeight: 1.1, marginTop: 2 }}>
+        <div className="badge" style={{ fontSize: 'var(--fs-17)', lineHeight: 1.1, marginTop: 2 }}>
           {todayAct.title?.toUpperCase() ?? todayAct.activity_type.toUpperCase()}
         </div>
-        <div className="mono" style={{ display: 'flex', gap: 12, marginTop: 10, fontSize: 13, flexWrap: 'wrap' }}>
+        <div className="mono" style={{ display: 'flex', gap: 12, marginTop: 10, fontSize: 'var(--fs-13)', flexWrap: 'wrap' }}>
           {todayAct.duration_seconds && <span>{formatDuration(todayAct.duration_seconds)}</span>}
           {todayAct.distance_miles && (
             <>
@@ -148,7 +148,7 @@ export function WWorkout({ dark }: WWorkoutProps) {
   return (
     <Glass dark={dark} span={7} pad={14}>
       <CardLabel dark={dark}>Today · prescribed</CardLabel>
-      <div className="badge" style={{ fontSize: 17, lineHeight: 1.1, marginTop: 2 }}>
+      <div className="badge" style={{ fontSize: 'var(--fs-17)', lineHeight: 1.1, marginTop: 2 }}>
         <span>{parts[0]}</span>
         {parts[1] && <span style={{ color: C.teal }}> · {parts[1]}</span>}
         {parts[2] && <span> · {parts[2]}</span>}

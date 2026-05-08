@@ -34,7 +34,7 @@ export function Ring({ pct, color = C.rust, size = 56, sw = 5, label, dark }: Ri
         <div className="mono" style={{
           position: 'absolute', inset: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 15, fontWeight: 700,
+          fontSize: 'var(--fs-15)', fontWeight: 700,
         }}>
           {label}
         </div>

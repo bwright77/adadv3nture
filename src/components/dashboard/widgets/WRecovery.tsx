@@ -44,13 +44,13 @@ export function WRecovery({ dark }: WRecoveryProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
         <Ring pct={score} color={result ? color : C.ink20} label={result ? String(score) : '—'} dark={dark} size={54} />
         <div>
-          <div className="badge" style={{ fontSize: 15, color: result ? color : C.ink40 }}>
+          <div className="badge" style={{ fontSize: 'var(--fs-15)', color: result ? color : C.ink40 }}>
             {TIER_LABEL[tier]}
           </div>
-          <div className="mono" style={{ fontSize: 11.5, opacity: 0.6, marginTop: 2 }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.6, marginTop: 2 }}>
             {rhr ? `RHR ${rhr}` : 'no RHR'} · {sleep != null ? `sleep ${Math.round(sleep * 10) / 10}h` : 'no sleep'}
           </div>
-          <div className="mono" style={{ fontSize: 11.5, opacity: 0.6 }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.6 }}>
             conf · {conf}
           </div>
         </div>

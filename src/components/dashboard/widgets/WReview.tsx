@@ -82,10 +82,10 @@ export function WReview({ dark }: WReviewProps) {
               display: 'flex', justifyContent: 'space-between', padding: '8px 0',
               borderBottom: `0.5px dashed ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(26,18,8,0.12)'}`,
             }}>
-              <span className="badge" style={{ fontSize: 13, color: dark ? C.cream : C.dark }}>
+              <span className="badge" style={{ fontSize: 'var(--fs-13)', color: dark ? C.cream : C.dark }}>
                 {row.label}
               </span>
-              <span className="mono" style={{ fontSize: 12, opacity: 0.7 }}>{bodyText}</span>
+              <span className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.7 }}>{bodyText}</span>
             </div>
           )
         }
@@ -105,7 +105,7 @@ export function WReview({ dark }: WReviewProps) {
               onClick={() => isEditing ? setEditing(null) : openEdit(row.category!)}
             >
               <span className="badge" style={{
-                fontSize: 13,
+                fontSize: 'var(--fs-13)',
                 color: isEmpty
                   ? (dark ? 'rgba(245,237,214,0.4)' : C.ink40)
                   : (dark ? C.cream : C.dark),
@@ -113,14 +113,14 @@ export function WReview({ dark }: WReviewProps) {
                 {row.label}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="mono" style={{ fontSize: 12, opacity: 0.7 }}>
+                <span className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.7 }}>
                   {note ? note : done ? '✓' : '—'}
                 </span>
                 {done && (
                   <span style={{
                     width: 14, height: 14, borderRadius: '50%',
-                    background: C.teal + '33', color: C.teal,
-                    fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'var(--color-teal-20)', color: C.teal,
+                    fontSize: 'var(--fs-10)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>✓</span>
                 )}
               </div>
@@ -136,7 +136,7 @@ export function WReview({ dark }: WReviewProps) {
                   placeholder="What did you do? (optional note)"
                   rows={2}
                   style={{
-                    width: '100%', fontSize: 13, lineHeight: 1.4, padding: '6px 8px',
+                    width: '100%', fontSize: 'var(--fs-13)', lineHeight: 1.4, padding: '6px 8px',
                     borderRadius: 8,
                     border: `1px solid ${dark ? 'rgba(255,255,255,0.2)' : C.ink20}`,
                     background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(26,18,8,0.04)',
@@ -151,7 +151,7 @@ export function WReview({ dark }: WReviewProps) {
                     style={{
                       flex: 1, padding: '5px 0', borderRadius: 8,
                       background: C.teal, color: C.dark,
-                      border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                      border: 'none', cursor: 'pointer', fontSize: 'var(--fs-12)', fontWeight: 700,
                     }}
                   >
                     {saving ? '…' : '✓ Done'}
@@ -163,7 +163,7 @@ export function WReview({ dark }: WReviewProps) {
                       flex: 1, padding: '5px 0', borderRadius: 8,
                       background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(26,18,8,0.08)',
                       color: dark ? C.cream : C.dark,
-                      border: 'none', cursor: 'pointer', fontSize: 12,
+                      border: 'none', cursor: 'pointer', fontSize: 'var(--fs-12)',
                     }}
                   >
                     Log note only
@@ -173,7 +173,7 @@ export function WReview({ dark }: WReviewProps) {
                     style={{
                       padding: '5px 10px', borderRadius: 8,
                       background: 'none', border: 'none', cursor: 'pointer',
-                      fontSize: 12, opacity: 0.4, color: dark ? C.cream : C.dark,
+                      fontSize: 'var(--fs-12)', opacity: 0.4, color: dark ? C.cream : C.dark,
                     }}
                   >
                     cancel

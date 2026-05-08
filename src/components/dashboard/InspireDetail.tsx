@@ -21,20 +21,20 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
       <div style={{ position: 'relative', zIndex: 10 }}>
         <div style={{ padding: '56px 18px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.cream }}>
           <button onClick={onClose} style={{
-            fontSize: 22, fontWeight: 300, background: 'none', border: 'none', cursor: 'pointer', color: C.cream,
+            fontSize: 'var(--fs-22)', fontWeight: 300, background: 'none', border: 'none', cursor: 'pointer', color: C.cream,
           }}>×</button>
-          <span className="badge" style={{ fontSize: 12, letterSpacing: '0.2em' }}>
+          <span className="badge" style={{ fontSize: 'var(--fs-12)', letterSpacing: '0.2em' }}>
             ON THIS DAY · {yearsAgo}Y AGO
           </span>
-          <span style={{ fontSize: 18, opacity: 0.5 }}>↗</span>
+          <span style={{ fontSize: 'var(--fs-18)', opacity: 0.5 }}>↗</span>
         </div>
       </div>
 
       <div style={{ position: 'absolute', bottom: 38, left: 0, right: 0, padding: '0 22px', color: C.cream, zIndex: 10 }}>
-        <div className="badge" style={{ fontSize: 24, lineHeight: 1.05 }}>
+        <div className="badge" style={{ fontSize: 'var(--fs-24)', lineHeight: 1.05 }}>
           {photo.takenAt.toUpperCase()}
         </div>
-        <div className="mono" style={{ fontSize: 14, opacity: 0.85, marginTop: 6 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-14)', opacity: 0.85, marginTop: 6 }}>
           {photo.year} · the adventure
         </div>
       </div>

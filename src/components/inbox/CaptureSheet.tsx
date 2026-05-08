@@ -107,7 +107,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <CardLabel>Brain dump · zero friction</CardLabel>
           <button onClick={onClose} style={{
-            fontSize: 18, color: C.ink60, background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+            fontSize: 'var(--fs-18)', color: C.ink60, background: 'none', border: 'none', cursor: 'pointer', padding: 4,
           }}>×</button>
         </div>
 
@@ -118,7 +118,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
           onKeyDown={handleKeyDown}
           placeholder="capture anything — routes later, works at 11pm half-asleep"
           style={{
-            flex: 1, fontSize: 16,
+            flex: 1, fontSize: 'var(--fs-16)',
             color: text ? C.dark : C.ink40,
             lineHeight: 1.5, background: 'none', border: 'none', outline: 'none',
             resize: 'none', fontFamily: 'Sora, system-ui, sans-serif',
@@ -128,7 +128,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
         {/* Interim speech preview */}
         {interim && (
           <div style={{
-            fontSize: 17, color: C.ink40, fontStyle: 'italic',
+            fontSize: 'var(--fs-17)', color: C.ink40, fontStyle: 'italic',
             lineHeight: 1.4, marginBottom: 6, paddingBottom: 6,
             borderBottom: `0.5px dashed ${C.ink20}`,
           }}>
@@ -147,7 +147,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
                 cursor: 'pointer', flexShrink: 0,
                 background: listening ? C.rust : C.ink20,
                 color: listening ? C.cream : C.ink60,
-                fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 'var(--fs-18)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'background 0.15s',
                 boxShadow: listening ? `0 0 0 4px ${C.rust}44` : 'none',
               }}
@@ -155,7 +155,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
               🎙
             </button>
           )}
-          <div style={{ flex: 1, fontSize: 13, color: C.ink60 }}>
+          <div style={{ flex: 1, fontSize: 'var(--fs-13)', color: C.ink60 }}>
             {listening ? 'listening…' : hasSpeech ? 'hold mic to speak' : '⌘↵ to save'}
           </div>
           <button
@@ -163,7 +163,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
             disabled={saving || !text.trim()}
             style={{
               background: text.trim() ? C.rust : C.ink20,
-              color: C.cream, fontSize: 15,
+              color: C.cream, fontSize: 'var(--fs-15)',
               padding: '10px 18px', borderRadius: 22, fontWeight: 600,
               border: 'none', cursor: text.trim() ? 'pointer' : 'default',
               transition: 'background 0.15s',
@@ -177,7 +177,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
           <div style={{ marginTop: 16, paddingTop: 14, borderTop: `0.5px dashed ${C.ink20}` }}>
             <CardLabel>{recent.length} in inbox</CardLabel>
             {recent.map(item => (
-              <div key={item.id} className="mono" style={{ fontSize: 12, padding: '4px 0', color: C.ink60 }}>
+              <div key={item.id} className="mono" style={{ fontSize: 'var(--fs-12)', padding: '4px 0', color: C.ink60 }}>
                 · {item.content}
               </div>
             ))}

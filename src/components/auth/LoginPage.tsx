@@ -35,7 +35,7 @@ export function LoginPage() {
             alt="adadv3nture"
             style={{ maxWidth: '100%', marginBottom: 8 }}
           />
-          <div style={{ color: C.ink60, fontSize: 15 }}>
+          <div style={{ color: C.ink60, fontSize: 'var(--fs-15)' }}>
             a dad adventure
           </div>
         </div>
@@ -56,7 +56,7 @@ export function LoginPage() {
                 border: `1.5px solid ${C.ink20}`,
                 background: 'white',
                 color: C.dark,
-                fontSize: 17,
+                fontSize: 'var(--fs-17)',
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
@@ -77,7 +77,7 @@ export function LoginPage() {
                 border: `1.5px solid ${C.ink20}`,
                 background: 'white',
                 color: C.dark,
-                fontSize: 17,
+                fontSize: 'var(--fs-17)',
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
@@ -91,7 +91,7 @@ export function LoginPage() {
               borderRadius: 10,
               padding: '10px 14px',
               color: C.rust,
-              fontSize: 15,
+              fontSize: 'var(--fs-15)',
               marginBottom: 16,
             }}>
               {error}
@@ -107,7 +107,7 @@ export function LoginPage() {
               borderRadius: 12,
               background: loading ? C.sand : C.rust,
               color: C.cream,
-              fontSize: 17,
+              fontSize: 'var(--fs-17)',
               fontWeight: 700,
               letterSpacing: '0.04em',
               border: 'none',
@@ -121,7 +121,7 @@ export function LoginPage() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '20px 0' }}>
           <div style={{ flex: 1, height: 1, background: C.ink20 }} />
-          <span style={{ fontSize: 13, color: C.ink40, letterSpacing: '0.08em' }}>OR</span>
+          <span style={{ fontSize: 'var(--fs-13)', color: C.ink40, letterSpacing: '0.08em' }}>OR</span>
           <div style={{ flex: 1, height: 1, background: C.ink20 }} />
         </div>
 
@@ -134,7 +134,7 @@ export function LoginPage() {
             borderRadius: 12,
             background: 'white',
             color: C.dark,
-            fontSize: 16,
+            fontSize: 'var(--fs-16)',
             fontWeight: 600,
             border: `1.5px solid ${C.ink20}`,
             cursor: 'pointer',

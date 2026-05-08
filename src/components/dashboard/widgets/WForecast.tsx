@@ -30,28 +30,28 @@ function DayCol({ day, dark }: { day: DayForecast; dark?: boolean }) {
         : 'transparent',
     }}>
       <div className="mono" style={{
-        fontSize: 10, letterSpacing: '0.05em',
+        fontSize: 'var(--fs-10)', letterSpacing: '0.05em',
         color: accent ?? (dark ? 'rgba(245,237,214,0.5)' : 'rgba(26,18,8,0.45)'),
         fontWeight: isTomorrow ? 700 : 400,
       }}>
         {day.label.toUpperCase()}
       </div>
-      <div style={{ fontSize: 16, lineHeight: 1 }}>{conditionIcon(day)}</div>
+      <div style={{ fontSize: 'var(--fs-16)', lineHeight: 1 }}>{conditionIcon(day)}</div>
       <div className="mono" style={{
-        fontSize: 14, fontWeight: 700,
+        fontSize: 'var(--fs-14)', fontWeight: 700,
         color: accent ?? (dark ? C.cream : C.dark),
       }}>
         {day.highF}°
       </div>
       <div className="mono" style={{
-        fontSize: 12,
+        fontSize: 'var(--fs-12)',
         color: dark ? 'rgba(245,237,214,0.45)' : 'rgba(26,18,8,0.4)',
       }}>
         {day.lowF}°
       </div>
       {day.precipPct > 15 && (
         <div className="mono" style={{
-          fontSize: 10,
+          fontSize: 'var(--fs-10)',
           color: dark ? 'rgba(91,188,184,0.8)' : C.teal,
           marginTop: 1,
         }}>
@@ -69,7 +69,7 @@ export function WForecast({ dark }: WForecastProps) {
     return (
       <Glass dark={dark} span={6} style={{ height: 148 }} pad={14}>
         <CardLabel dark={dark}>Forecast</CardLabel>
-        <div style={{ opacity: 0.4, fontSize: 13, marginTop: 8 }}>Loading…</div>
+        <div style={{ opacity: 0.4, fontSize: 'var(--fs-13)', marginTop: 8 }}>Loading…</div>
       </Glass>
     )
   }
@@ -84,7 +84,7 @@ export function WForecast({ dark }: WForecastProps) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
         <CardLabel dark={dark}>Forecast</CardLabel>
         {tomorrow && (
-          <div className="mono" style={{ fontSize: 10, opacity: 0.55 }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.55 }}>
             tmrw: {tomorrowRunOk ? 'run ✓' : 'run ✗'} · {tomorrowBikeOk ? 'bike ✓' : 'bike ✗'}
           </div>
         )}

@@ -14,7 +14,7 @@ export function FAB({ onClick }: FABProps) {
         background: C.rust,
         boxShadow: '0 8px 24px -4px rgba(196,82,42,0.6)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: C.cream, fontSize: 26, fontWeight: 300,
+        color: C.cream, fontSize: 'var(--fs-26)', fontWeight: 300,
         border: 'none', cursor: 'pointer',
       }}
     >
