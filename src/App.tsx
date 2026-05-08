@@ -3,6 +3,7 @@ import { useTimeOfDay, useBgPhoto } from './hooks/useTimeOfDay'
 import { useInspiration } from './hooks/useInspiration'
 import type { InspirationPhoto } from './hooks/useInspiration'
 import type { Tab } from './components/ui/TabBar'
+import { useAuth } from './contexts/AuthContext'
 import { TabBar } from './components/ui/TabBar'
 import { FAB } from './components/ui/FAB'
 import { MorningView } from './components/dashboard/MorningView'
@@ -26,8 +27,9 @@ const VEIL: Record<string, string> = {
 }
 
 function Dashboard() {
+  const { user } = useAuth()
   const tod = useTimeOfDay()
-  const bgPhoto = useBgPhoto(tod)
+  const bgPhoto = useBgPhoto(tod, user?.id)
   const todayPhoto = useInspiration()
   const [tab, setTab] = useState<Tab>(() => {
     const params = new URLSearchParams(window.location.search)
@@ -76,9 +78,9 @@ function Dashboard() {
         {tab === 'home' && tod === 'mid-morning' && <MidMorningView  inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
         {tab === 'home' && tod === 'afternoon'   && <AfternoonView   inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
         {tab === 'home' && tod === 'evening'     && <EveningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
-        {tab === 'trends' && <TrendsPage />}
-        {tab === 'lists'  && <TodosPage />}
-        {tab === 'inbox'  && <InboxPage />}
+        {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} />}
+        {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} />}
+        {tab === 'inbox'  && <InboxPage  bgPhoto={bgPhoto || undefined} />}
         {tab === 'log'    && <LogPage />}
       </div>
 

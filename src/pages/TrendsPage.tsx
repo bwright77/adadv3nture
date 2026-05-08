@@ -13,7 +13,9 @@ function weekNum(): string {
 
 const DIRECTION_LABEL: Record<string, string> = { up: '↑', down: '↓', flat: '→' }
 
-export function TrendsPage() {
+interface TrendsPageProps { bgPhoto?: string }
+
+export function TrendsPage({ bgPhoto }: TrendsPageProps) {
   const { user } = useAuth()
   const [data, setData] = useState<TrendData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -34,8 +36,24 @@ export function TrendsPage() {
     <div style={{ position: 'relative', zIndex: 10, background: C.paper }}>
 
       {/* Masthead — dark top, newspaper-editorial feel */}
-      <div style={{ background: C.dark, padding: '56px 18px 0' }}>
-        <div style={{ color: C.cream }}>
+      <div style={{
+        ...(bgPhoto ? { background: `url(${bgPhoto}) center/cover no-repeat` } : { background: C.dark }),
+        padding: '56px 18px 0', position: 'relative', overflow: 'hidden', minHeight: bgPhoto ? 220 : 'auto',
+      }}>
+        {bgPhoto && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(180deg, rgba(26,18,8,0.72) 0%, rgba(26,18,8,0.55) 45%, rgba(26,18,8,0.90) 78%, #FBF7EC 100%)',
+          }} />
+        )}
+        {!bgPhoto && (
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence baseFrequency='0.85' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.10 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")`,
+            opacity: 0.7, mixBlendMode: 'multiply',
+          }} />
+        )}
+        <div style={{ position: 'relative', zIndex: 1, color: C.cream }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.25em', opacity: 0.85 }}>◆ THE FIELD LEDGER</span>
             <span className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.2em', opacity: 0.7 }}>{weekNum()}</span>

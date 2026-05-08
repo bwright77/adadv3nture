@@ -1,5 +1,8 @@
+import { useState, useEffect, useRef } from 'react'
 import { C } from '../../tokens'
 import type { InspirationPhoto } from '../../hooks/useInspiration'
+import { getPhotosAroundDate } from '../../lib/inspiration'
+import { useAuth } from '../../contexts/AuthContext'
 
 interface InspireDetailProps {
   photo: InspirationPhoto
@@ -7,16 +10,59 @@ interface InspireDetailProps {
 }
 
 export function InspireDetail({ photo, onClose }: InspireDetailProps) {
-  const yearsAgo = new Date().getFullYear() - photo.year
-  const subtitle = [photo.location, photo.activity_type].filter(Boolean).join(' · ')
-  const takenDate = photo.takenAt
-  const monthDay = takenDate.slice(0, 5).replace('-', '·')
+  const { user } = useAuth()
+  const [photos, setPhotos] = useState<InspirationPhoto[]>([photo])
+  const [idx, setIdx] = useState(0)
+  const [dx, setDx] = useState(0)
+  const [dragging, setDragging] = useState(false)
+  const startX = useRef(0)
+  const THRESHOLD = 72
+
+  useEffect(() => {
+    if (!user) return
+    getPhotosAroundDate(user.id, 4).then(list => {
+      if (list.length === 0) return
+      const i = list.findIndex(p => p.id === photo.id)
+      setPhotos(list)
+      setIdx(i >= 0 ? i : 0)
+    }).catch(() => null)
+  }, [user, photo.id])
+
+  const current = photos[idx] ?? photo
+  const yearsAgo = new Date().getFullYear() - current.year
+  const subtitle = [current.location, current.activity_type].filter(Boolean).join(' · ')
+  const monthDay = current.takenAt.slice(0, 5).replace('-', '·')
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    startX.current = e.clientX
+    setDragging(true)
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  function onPointerMove(e: React.PointerEvent) {
+    if (!dragging) return
+    setDx(e.clientX - startX.current)
+  }
+  function onPointerUp() {
+    if (dx < -THRESHOLD && idx < photos.length - 1) setIdx(i => i + 1)
+    else if (dx > THRESHOLD && idx > 0) setIdx(i => i - 1)
+    setDx(0)
+    setDragging(false)
+  }
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 60,
-      background: `url(${photo.original_url}) center/cover no-repeat`,
-    }}>
+    <div
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={() => { setDx(0); setDragging(false) }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 60,
+        background: `url(${current.original_url}) center/cover no-repeat`,
+        transform: `translateX(${dx}px)`,
+        transition: dragging ? 'none' : 'transform 0.22s ease, background-image 0s',
+        touchAction: 'pan-y', userSelect: 'none',
+      }}
+    >
       {/* Gradient overlay */}
       <div style={{
         position: 'absolute', inset: 0,
@@ -50,13 +96,16 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
       {/* Top chrome */}
       <div style={{ position: 'relative', zIndex: 10 }}>
         <div style={{ padding: '56px 22px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: C.cream }}>
-          <button onClick={onClose} style={{
-            width: 36, height: 36, borderRadius: 18,
-            background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)',
-            border: 'none', cursor: 'pointer', color: C.cream,
-            fontSize: 'var(--fs-18)', fontWeight: 300,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>×</button>
+          <button
+            onPointerDown={e => e.stopPropagation()}
+            onClick={onClose}
+            style={{
+              width: 36, height: 36, borderRadius: 18,
+              background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)',
+              border: 'none', cursor: 'pointer', color: C.cream,
+              fontSize: 'var(--fs-18)', fontWeight: 300,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>×</button>
           <div style={{ textAlign: 'center' }}>
             <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.25em', opacity: 0.95 }}>◆ ON THIS DAY</div>
             <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.65, letterSpacing: '0.18em', marginTop: 2 }}>
@@ -80,14 +129,14 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
         boxShadow: '0 6px 18px rgba(0,0,0,0.4)',
       }}>
         <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.rust, fontWeight: 700, letterSpacing: '0.2em' }}>
-          FRAME · {photo.year}
+          FRAME · {current.year}
         </div>
         <div className="badge" style={{ fontSize: 'var(--fs-13)', color: C.dark, marginTop: 2 }}>
-          {monthDay}·{photo.year.toString().slice(2)}
+          {monthDay}·{current.year.toString().slice(2)}
         </div>
-        {photo.location && (
+        {current.location && (
           <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink60, letterSpacing: '0.1em' }}>
-            {photo.location}
+            {current.location}
           </div>
         )}
       </div>
@@ -102,37 +151,51 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
             {subtitle.toUpperCase()}
           </div>
         )}
-        {photo.caption ? (
+        {current.caption ? (
           <div className="badge" style={{
             fontSize: 'var(--fs-56)', lineHeight: 0.88, marginTop: 4,
             letterSpacing: '-0.01em', textShadow: '0 2px 16px rgba(0,0,0,0.5)',
           }}>
-            {photo.caption.split(' ').slice(0, 3).join(' ').toUpperCase()}.
+            {current.caption.split(' ').slice(0, 3).join(' ').toUpperCase()}.
           </div>
         ) : (
           <div className="badge" style={{
             fontSize: 'var(--fs-22)', lineHeight: 1, marginTop: 4,
             letterSpacing: '0.02em',
           }}>
-            {photo.takenAt.toUpperCase()}
+            {current.takenAt.toUpperCase()}
           </div>
         )}
 
         <div style={{ height: 1, background: 'linear-gradient(90deg, rgba(245,237,214,0.6), rgba(245,237,214,0))', margin: '12px 0' }} />
 
-        {photo.caption && (
+        {current.caption && (
           <div style={{ fontSize: 'var(--fs-14)', lineHeight: 1.5, fontStyle: 'italic', maxWidth: 320, opacity: 0.92 }}>
-            "{photo.caption}"
+            "{current.caption}"
           </div>
         )}
 
         <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.55, marginTop: 8, letterSpacing: '0.15em' }}>
-          — FIELD NOTE · {photo.year}
+          — FIELD NOTE · {current.year}
         </div>
 
-        {/* Swipe hint */}
-        <div className="mono" style={{ fontSize: 'var(--fs-10)', marginTop: 14, opacity: 0.5, textAlign: 'center', letterSpacing: '0.15em' }}>
-          ← SWIPE · NEXT MEMORY →
+        {/* Photo position indicator + swipe hint */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
+          <div style={{ display: 'flex', gap: 5 }}>
+            {photos.slice(Math.max(0, idx - 3), Math.min(photos.length, idx + 4)).map((_, i) => {
+              const actualIdx = Math.max(0, idx - 3) + i
+              return (
+                <div key={actualIdx} style={{
+                  width: actualIdx === idx ? 16 : 5, height: 5, borderRadius: 3,
+                  background: actualIdx === idx ? C.cream : 'rgba(245,237,214,0.35)',
+                  transition: 'width 0.2s',
+                }} />
+              )
+            })}
+          </div>
+          <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.5, letterSpacing: '0.15em' }}>
+            {photos.length > 1 ? `${idx + 1} / ${photos.length} MEMORIES` : 'SWIPE FOR MORE →'}
+          </div>
         </div>
       </div>
     </div>

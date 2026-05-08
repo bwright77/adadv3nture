@@ -18,7 +18,9 @@ const CATEGORIES: { id: TodoCategory; label: string; color: string }[] = [
   { id: 'personal', label: 'Personal', color: '#7B9E87' },
 ]
 
-export function TodosPage() {
+interface TodosPageProps { bgPhoto?: string }
+
+export function TodosPage({ bgPhoto }: TodosPageProps) {
   const { user } = useAuth()
   const [cat, setCat] = useState<TodoCategory>('body')
   const [todos, setTodos] = useState<Todo[]>([])
@@ -106,8 +108,17 @@ export function TodosPage() {
     <div style={{ position: 'relative', zIndex: 10, overflowX: 'hidden', background: C.paper, minHeight: '100%' }}>
 
       {/* Masthead */}
-      <div style={{ background: C.dark, padding: '56px 18px 18px', position: 'relative' }}>
-        <div style={{ color: C.cream }}>
+      <div style={{
+        ...(bgPhoto ? { background: `url(${bgPhoto}) center/cover no-repeat` } : { background: C.dark }),
+        padding: '56px 18px 18px', position: 'relative', overflow: 'hidden', minHeight: bgPhoto ? 200 : 'auto',
+      }}>
+        {bgPhoto && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(180deg, rgba(26,18,8,0.72) 0%, rgba(26,18,8,0.55) 45%, rgba(26,18,8,0.90) 78%, #FBF7EC 100%)',
+          }} />
+        )}
+        <div style={{ position: 'relative', zIndex: 1, color: C.cream }}>
           <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.25em', opacity: 0.7 }}>◆ THE PORTFOLIO</div>
           <div className="badge" style={{ fontSize: 'var(--fs-56)', lineHeight: 0.88, marginTop: 6, letterSpacing: '0.005em' }}>LISTS.</div>
           <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.6, marginTop: 6, letterSpacing: '0.1em' }}>
@@ -116,8 +127,9 @@ export function TodosPage() {
         </div>
       </div>
 
-      {/* Gradient bridge */}
-      <div style={{ height: 20, background: `linear-gradient(180deg, ${C.dark} 0%, ${C.paper} 100%)` }} />
+      {!bgPhoto && (
+        <div style={{ height: 20, background: `linear-gradient(180deg, ${C.dark} 0%, ${C.paper} 100%)` }} />
+      )}
 
       <div style={{ padding: '0 14px' }}>
 

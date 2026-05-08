@@ -55,6 +55,58 @@ function toPhoto(row: {
   }
 }
 
+export async function getSeasonalPhoto(userId: string): Promise<InspirationPhoto | null> {
+  const today = new Date()
+  const month = today.getMonth() + 1
+  const day = today.getDate()
+  const useContrast = Math.random() < 0.15
+  const targetMonth = useContrast ? ((month - 1 + 6) % 12) + 1 : month
+
+  const { data } = await supabase
+    .from('inspiration_photos')
+    .select('*')
+    .eq('user_id', userId)
+    .lt('taken_at', today.toISOString().substring(0, 10))
+    .order('times_surfaced', { ascending: true })
+    .limit(60) as { data: Parameters<typeof toPhoto>[0][] | null }
+
+  let candidates = (data ?? []).filter(r => {
+    const d = new Date(r.taken_at + 'T12:00:00')
+    const m = d.getMonth() + 1
+    const dy = d.getDate()
+    if (useContrast) return m === targetMonth
+    const diff = Math.abs(m * 31 + dy - (month * 31 + day))
+    return diff <= 14 || diff >= 31 * 12 - 14
+  })
+  if (candidates.length === 0) candidates = data ?? []
+  if (candidates.length === 0) return null
+  return toPhoto(candidates[Math.floor(Math.random() * Math.min(candidates.length, 10))])
+}
+
+export async function getPhotosAroundDate(userId: string, windowDays = 4): Promise<InspirationPhoto[]> {
+  const today = new Date()
+  const month = today.getMonth() + 1
+  const day = today.getDate()
+
+  const { data } = await supabase
+    .from('inspiration_photos')
+    .select('*')
+    .eq('user_id', userId)
+    .lt('taken_at', today.toISOString().substring(0, 10))
+    .order('taken_at', { ascending: false })
+    .limit(200) as { data: Parameters<typeof toPhoto>[0][] | null }
+
+  return (data ?? [])
+    .filter(r => {
+      const d = new Date(r.taken_at + 'T12:00:00')
+      const m = d.getMonth() + 1
+      const dy = d.getDate()
+      const diff = Math.abs(m * 31 + dy - (month * 31 + day))
+      return diff <= windowDays || diff >= 31 * 12 - windowDays
+    })
+    .map(toPhoto)
+}
+
 export async function getDailyInspiration(userId: string): Promise<InspirationPhoto | null> {
   const today = new Date()
   const month = today.getMonth() + 1
