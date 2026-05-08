@@ -3,7 +3,7 @@ import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
-import { getTodayPlan, updateReviewRow, type DailyPlan, type ReviewCategory } from '../../../lib/daily-plan'
+import { getTodayPlan, updateReviewRow, getReviewHistory, type DailyPlan, type ReviewCategory, type PilotLights } from '../../../lib/daily-plan'
 import { getRecentActivities } from '../../../lib/strava'
 import type { Database } from '../../../types/database'
 
@@ -26,6 +26,13 @@ const ROWS: RowConfig[] = [
   { label: 'PERSONAL', category: 'personal',          doneKey: 'personal_done',          noteKey: 'personal_note' },
 ]
 
+const CAT_TO_PILOT: Record<string, keyof PilotLights> = {
+  financial: 'financial',
+  family_creative: 'family_creative',
+  home: 'home',
+  personal: 'personal',
+}
+
 export function WReview({ dark }: WReviewProps) {
   const { user } = useAuth()
   const [plan, setPlan] = useState<DailyPlan | null>(null)
@@ -33,6 +40,7 @@ export function WReview({ dark }: WReviewProps) {
   const [editing, setEditing] = useState<ReviewCategory | null>(null)
   const [draftNote, setDraftNote] = useState('')
   const [saving, setSaving] = useState(false)
+  const [pilotLights, setPilotLights] = useState<PilotLights | null>(null)
 
   const today = new Date().toISOString().substring(0, 10)
 
@@ -41,9 +49,11 @@ export function WReview({ dark }: WReviewProps) {
     Promise.all([
       getTodayPlan(user.id),
       getRecentActivities(user.id, 3),
-    ]).then(([p, acts]) => {
+      getReviewHistory(user.id),
+    ]).then(([p, acts, history]) => {
       setPlan(p as DailyPlan | null)
       setTodayAct((acts as Activity[]).find(a => a.activity_date === today) ?? null)
+      setPilotLights(history.pilotLights)
     }).catch(() => null)
   }, [user])
 
@@ -92,6 +102,9 @@ export function WReview({ dark }: WReviewProps) {
 
         const isEditing = editing === row.category
         const isEmpty = !note && !done
+        const pilotKey = row.category ? CAT_TO_PILOT[row.category] : null
+        const staleDays = pilotKey && pilotLights ? pilotLights[pilotKey] : 0
+        const isDark3 = staleDays >= 3
 
         return (
           <div key={i} style={{
@@ -104,14 +117,24 @@ export function WReview({ dark }: WReviewProps) {
               style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', cursor: 'pointer' }}
               onClick={() => isEditing ? setEditing(null) : openEdit(row.category!)}
             >
-              <span className="badge" style={{
-                fontSize: 'var(--fs-13)',
-                color: isEmpty
-                  ? (dark ? 'rgba(245,237,214,0.4)' : C.ink40)
-                  : (dark ? C.cream : C.dark),
-              }}>
-                {row.label}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span className="badge" style={{
+                  fontSize: 'var(--fs-13)',
+                  color: isEmpty
+                    ? (dark ? 'rgba(245,237,214,0.4)' : C.ink40)
+                    : (dark ? C.cream : C.dark),
+                }}>
+                  {row.label}
+                </span>
+                {staleDays >= 2 && !done && (
+                  <span className="mono" style={{
+                    fontSize: 'var(--fs-10)', letterSpacing: '0.08em',
+                    color: isDark3 ? C.rust : (dark ? 'rgba(245,237,214,0.45)' : C.ink40),
+                  }}>
+                    {staleDays}d
+                  </span>
+                )}
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.7 }}>
                   {note ? note : done ? '✓' : '—'}

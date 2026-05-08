@@ -4,6 +4,7 @@ import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getProgram, type ProgramState } from '../../../lib/program-tracker'
+import { getReviewHistory, type PilotLights } from '../../../lib/daily-plan'
 import { useWeather } from '../../../hooks/useWeather'
 
 interface WTomorrowProps { dark?: boolean }
@@ -24,11 +25,13 @@ function nextMorningDate() {
 export function WTomorrow({ dark }: WTomorrowProps) {
   const { user } = useAuth()
   const [program, setProgram] = useState<ProgramState | null>(null)
+  const [pilotLights, setPilotLights] = useState<PilotLights | null>(null)
   const { weather } = useWeather()
 
   useEffect(() => {
     if (!user) return
     getProgram(user.id).then(setProgram).catch(() => null)
+    getReviewHistory(user.id).then(h => setPilotLights(h.pilotLights)).catch(() => null)
   }, [user])
 
   const tmrw = nextMorningDate()
@@ -45,6 +48,17 @@ export function WTomorrow({ dark }: WTomorrowProps) {
   // Next strength session title (what's queued for tomorrow)
   const strengthTitle = program?.next_workout_title ?? null
   const parts = strengthTitle ? strengthTitle.split('·').map(p => p.trim()) : []
+
+  // Portfolio focus — top 2 most neglected categories
+  const PILOT_LABELS: Record<keyof PilotLights, string> = {
+    family_creative: 'FAMILY', home: 'HOME', financial: 'CAREER', personal: 'PERSONAL',
+  }
+  const neglected = pilotLights
+    ? (Object.entries(pilotLights) as [keyof PilotLights, number][])
+        .filter(([, days]) => days >= 2)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 2)
+    : []
 
   return (
     <Glass dark={dark} span={12} pad={14}>
@@ -78,6 +92,22 @@ export function WTomorrow({ dark }: WTomorrowProps) {
                 · {parts[2]}
               </span>
             )}
+          </div>
+        )}
+
+        {/* Portfolio focus */}
+        {neglected.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <span className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.5, letterSpacing: '0.1em' }}>FOCUS</span>
+            {neglected.map(([cat, days]) => (
+              <span key={cat} className="mono" style={{
+                fontSize: 'var(--fs-10)', letterSpacing: '0.08em',
+                color: days >= 4 ? C.rust : C.sand,
+                fontWeight: 700,
+              }}>
+                {PILOT_LABELS[cat]} <span style={{ opacity: 0.6 }}>{days}d</span>
+              </span>
+            ))}
           </div>
         )}
 

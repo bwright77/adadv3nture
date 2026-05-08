@@ -51,6 +51,83 @@ export async function getTodayPlan(userId: string): Promise<DailyPlan | null> {
   return data
 }
 
+export interface PilotLights {
+  family_creative: number
+  home: number
+  financial: number
+  personal: number
+}
+
+export interface ReviewHistory {
+  yesterday: {
+    family_creative_done: boolean
+    home_done: boolean
+    financial_done: boolean
+    personal_done: boolean
+    family_creative_note: string | null
+    home_note: string | null
+    financial_note: string | null
+    personal_note: string | null
+  } | null
+  pilotLights: PilotLights
+  completionRate7d: number
+}
+
+type ReviewRow = {
+  plan_date: string
+  family_creative_done: boolean
+  home_done: boolean
+  financial_done: boolean
+  personal_done: boolean
+  family_creative_note: string | null
+  home_note: string | null
+  financial_note: string | null
+  personal_note: string | null
+}
+
+const REVIEW_CATS = ['family_creative', 'home', 'financial', 'personal'] as const
+type ReviewCat = typeof REVIEW_CATS[number]
+
+export async function getReviewHistory(userId: string): Promise<ReviewHistory> {
+  const today = new Date().toISOString().substring(0, 10)
+  const { data } = await supabase
+    .from('daily_plans')
+    .select('plan_date, family_creative_done, home_done, financial_done, personal_done, family_creative_note, home_note, financial_note, personal_note')
+    .eq('user_id', userId)
+    .lt('plan_date', today)
+    .order('plan_date', { ascending: false })
+    .limit(14)
+
+  const rows = (data ?? []) as ReviewRow[]
+
+  // Days since last done per category (0 = done yesterday)
+  const pilotLights = {} as PilotLights
+  for (const cat of REVIEW_CATS) {
+    let days = 0
+    for (const row of rows) {
+      if (row[`${cat}_done` as keyof ReviewRow]) break
+      days++
+    }
+    pilotLights[cat] = days
+  }
+
+  // 7-day completion rate across all four categories
+  const last7 = rows.slice(0, 7)
+  let total = 0, done = 0
+  for (const row of last7) {
+    for (const cat of REVIEW_CATS) {
+      total++
+      if (row[`${cat}_done` as keyof ReviewRow]) done++
+    }
+  }
+
+  return {
+    yesterday: rows[0] ?? null,
+    pilotLights,
+    completionRate7d: total > 0 ? done / total : 0,
+  }
+}
+
 export async function saveThinkingAnswer(userId: string, answer: string): Promise<void> {
   const today = new Date().toISOString().substring(0, 10)
   await db.from('daily_plans').upsert(

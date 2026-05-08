@@ -17,6 +17,12 @@ About Ben:
 - External accountability works better than abstract goals for Ben
 - "Why bother" creeps in when progress stalls — counter with specific action
 
+Portfolio categories: BODY (workout, non-negotiable), CAREER (WA block, non-negotiable),
+FAMILY/CREATIVE, HOME, PERSONAL. Pilot lights = days since each was last completed.
+When a category goes dark (3+ days), name it specifically — not "you've been neglecting family"
+but "Chase and Ada haven't had intentional time in 4 days."
+MIT completion rate is the meta-metric — reference it when it's moving meaningfully.
+
 Tone: Direct. Warm. Specific. Never generic. Never wellness-app cheerful.
 Reference real numbers. Flag uncertainty honestly. Max 150 words for the briefing.
 Always end with ONE specific next action — not a category, an actual step.
@@ -78,7 +84,7 @@ Deno.serve(async (req: Request) => {
 
     // Gather context in parallel
     const yesterday = prevDate(today, 1)
-    const [recoveryRes, programRes, inboxRes, weightRes] = await Promise.all([
+    const [recoveryRes, programRes, inboxRes, weightRes, reviewRes] = await Promise.all([
       admin.from('recovery_signals')
         .select('signal_date, rhr, sleep_duration_hours, drinks_consumed, recovery_score, recovery_tier')
         .eq('user_id', user.id)
@@ -100,6 +106,12 @@ Deno.serve(async (req: Request) => {
         .order('measured_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
+      admin.from('daily_plans')
+        .select('plan_date, family_creative_done, home_done, financial_done, personal_done, family_creative_note, home_note, financial_note, personal_note')
+        .eq('user_id', user.id)
+        .lt('plan_date', today)
+        .order('plan_date', { ascending: false })
+        .limit(14),
     ])
 
     const todaySignal = recoveryRes.data?.find((r: { signal_date: string }) => r.signal_date === today) as {
@@ -126,6 +138,53 @@ Deno.serve(async (req: Request) => {
     const inboxCount = inboxRes.count ?? 0
     const weight = (weightRes.data as { weight_lbs: number | null } | null)?.weight_lbs
 
+    // Compute pilot lights from review history
+    type ReviewRow = {
+      plan_date: string
+      family_creative_done: boolean; home_done: boolean
+      financial_done: boolean; personal_done: boolean
+      family_creative_note: string | null; home_note: string | null
+      financial_note: string | null; personal_note: string | null
+    }
+    const reviewRows = (reviewRes.data ?? []) as ReviewRow[]
+    const reviewCats = ['family_creative', 'home', 'financial', 'personal'] as const
+    const catLabels: Record<string, string> = {
+      family_creative: 'FAMILY/CREATIVE', home: 'HOME', financial: 'CAREER/FINANCIAL', personal: 'PERSONAL',
+    }
+    const pilotLights: Record<string, number> = {}
+    for (const cat of reviewCats) {
+      let days = 0
+      for (const row of reviewRows) {
+        if (row[`${cat}_done` as keyof ReviewRow]) break
+        days++
+      }
+      pilotLights[cat] = days
+    }
+
+    const yReview = reviewRows[0]
+    const yesterdayReviewLines = yReview
+      ? reviewCats.map(cat => {
+          const done = yReview[`${cat}_done` as keyof ReviewRow]
+          const note = yReview[`${cat}_note` as keyof ReviewRow] as string | null
+          return `  ${catLabels[cat]}: ${done ? `✓${note ? ` (${note})` : ''}` : '—'}`
+        }).join('\n')
+      : '  No review data for yesterday'
+
+    const pilotLightLines = reviewCats
+      .map(cat => `  ${catLabels[cat]}: ${pilotLights[cat] === 0 ? 'done yesterday' : `${pilotLights[cat]}d since last done`}`)
+      .join('\n')
+
+    // Rolling 7d completion rate
+    const last7 = reviewRows.slice(0, 7)
+    let reviewTotal = 0, reviewDone = 0
+    for (const row of last7) {
+      for (const cat of reviewCats) {
+        reviewTotal++
+        if (row[`${cat}_done` as keyof ReviewRow]) reviewDone++
+      }
+    }
+    const completionRate = reviewTotal > 0 ? Math.round((reviewDone / reviewTotal) * 100) : null
+
     const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
 
     const contextMsg = `Today is ${dayName}, ${today}.
@@ -141,7 +200,14 @@ WORKOUT:
 - Progress: W${program?.current_week ?? 1} of ${program?.total_weeks ?? 4} (${(program?.current_week ?? 1) - 1} weeks complete)
 
 INBOX: ${inboxCount} unprocessed items
-WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178)`
+WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178)
+
+YESTERDAY'S PORTFOLIO REVIEW:
+${yesterdayReviewLines}
+
+PILOT LIGHTS (days since each category last completed):
+${pilotLightLines}
+${completionRate !== null ? `7-day MIT completion rate: ${completionRate}%` : ''}`
 
     // Call Anthropic
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
