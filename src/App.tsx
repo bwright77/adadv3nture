@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useTimeOfDay, BG_PHOTOS } from './hooks/useTimeOfDay'
+import { useTimeOfDay, useBgPhoto } from './hooks/useTimeOfDay'
 import { useInspiration } from './hooks/useInspiration'
 import type { InspirationPhoto } from './hooks/useInspiration'
 import type { Tab } from './components/ui/TabBar'
@@ -26,6 +26,7 @@ const VEIL: Record<string, string> = {
 
 function Dashboard() {
   const tod = useTimeOfDay()
+  const bgPhoto = useBgPhoto(tod)
   const todayPhoto = useInspiration()
   const [tab, setTab] = useState<Tab>(() => {
     // After Strava OAuth redirect, land on log tab
@@ -40,7 +41,6 @@ function Dashboard() {
   const [inspirePhoto, setInspirePhoto] = useState<InspirationPhoto | null>(null)
 
   const isDark = tab === 'home'
-  const bgPhoto = BG_PHOTOS[tod]
 
   return (
     <div style={{ position: 'relative', minHeight: '100dvh', background: C.dark, overflowX: 'hidden' }}>
