@@ -167,7 +167,8 @@ export function TodosPage() {
             key={c.id}
             onClick={() => { setCat(c.id); setShowDone(false) }}
             style={{
-              flex: 1,
+              flex: '1 1 0%',
+              minWidth: 0,
               padding: '7px 4px',
               borderRadius: 10,
               border: 'none',
@@ -176,6 +177,7 @@ export function TodosPage() {
               fontWeight: 700,
               fontFamily: 'Sora, system-ui, sans-serif',
               letterSpacing: '0.03em',
+              overflow: 'hidden',
               background: cat === c.id ? c.color : C.ink20,
               color: cat === c.id ? '#fff' : C.ink60,
               transition: 'background 0.15s, color 0.15s',
