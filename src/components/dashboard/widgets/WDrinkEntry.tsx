@@ -102,7 +102,7 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
                     >▲</button>
                     <div className="mono" style={{
                       fontSize: 'var(--fs-16)', fontWeight: 700,
-                      color: d.count > 2 ? C.rust : d.count > 0 ? C.sand : C.ink40,
+                      color: d.count > 2 ? C.rust : d.count === 2 ? C.sand : C.teal,
                     }}>{d.count}</div>
                     <button
                       onClick={() => updateCount(d.date, d.count - 1)}
@@ -123,7 +123,7 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
                   >
                     <div className="mono" style={{
                       fontSize: 'var(--fs-16)', fontWeight: 700,
-                      color: d.count > 2 ? C.rust : d.count > 0 ? C.sand : C.ink40,
+                      color: d.count > 2 ? C.rust : d.count === 2 ? C.sand : C.teal,
                     }}>{d.count}</div>
                   </button>
                 )}
