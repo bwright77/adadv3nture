@@ -12,6 +12,7 @@ import { EveningView } from './components/dashboard/EveningView'
 import { InboxPage } from './pages/InboxPage'
 import { TrendsPage } from './pages/TrendsPage'
 import { LogPage } from './pages/LogPage'
+import { TodosPage } from './pages/TodosPage'
 import { CaptureSheet } from './components/inbox/CaptureSheet'
 import { InspireDetail } from './components/dashboard/InspireDetail'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
@@ -74,6 +75,7 @@ function Dashboard() {
         {tab === 'home' && tod === 'afternoon'   && <AfternoonView   inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
         {tab === 'home' && tod === 'evening'     && <EveningView     inspirationPhoto={todayPhoto} onInspireExpand={setInspirePhoto} />}
         {tab === 'trends' && <TrendsPage />}
+        {tab === 'lists'  && <TodosPage />}
         {tab === 'inbox'  && <InboxPage />}
         {tab === 'log'    && <LogPage />}
       </div>

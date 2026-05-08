@@ -1,6 +1,6 @@
 import { C } from '../../tokens'
 
-export type Tab = 'home' | 'trends' | 'inbox' | 'log'
+export type Tab = 'home' | 'trends' | 'inbox' | 'log' | 'lists'
 
 interface TabBarProps {
   active: Tab
@@ -11,6 +11,7 @@ interface TabBarProps {
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'home',   label: 'Today',  icon: '◐' },
   { id: 'trends', label: 'Trends', icon: '▤' },
+  { id: 'lists',  label: 'Lists',  icon: '☐' },
   { id: 'inbox',  label: 'Inbox',  icon: '✦' },
   { id: 'log',    label: 'Log',    icon: '≡' },
 ]
