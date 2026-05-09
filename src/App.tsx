@@ -51,6 +51,11 @@ function Dashboard() {
     setListsInitialTab('career')
   }
 
+  function openListTab(subTab: ListsTab) {
+    setTab('lists')
+    setListsInitialTab(subTab)
+  }
+
   const isDark = tab === 'home'
 
   return (
@@ -82,7 +87,7 @@ function Dashboard() {
         {tab === 'home' && tod === 'morning'     && <MorningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
         {tab === 'home' && tod === 'mid-morning' && <MidMorningView  activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenCareer={openCareer} />}
         {tab === 'home' && tod === 'afternoon'   && <AfternoonView   activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
-        {tab === 'home' && tod === 'evening'     && <EveningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
+        {tab === 'home' && tod === 'evening'     && <EveningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenListTab={openListTab} />}
         {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} />}
         {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} initialTab={listsInitialTab} />}
         {tab === 'inbox'  && <InboxPage  bgPhoto={bgPhoto || undefined} />}

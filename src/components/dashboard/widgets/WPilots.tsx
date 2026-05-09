@@ -2,23 +2,36 @@ import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 
-interface WPilotsProps { dark?: boolean }
+type ListTab = 'training' | 'career' | 'family' | 'home' | 'projects'
 
-const PILOTS = [
-  { n: 'BODY',     v: 1,   d: 'today' },
-  { n: 'CAREER',   v: 1,   d: 'yesterday' },
-  { n: 'FAMILY',   v: 0.5, d: '3d' },
-  { n: 'HOME',     v: 0.2, d: '9d' },
-  { n: 'PROJECTS', v: 0.7, d: '2d' },
+interface WPilotsProps {
+  dark?: boolean
+  onNavigate?: (tab: ListTab) => void
+}
+
+const PILOTS: { n: string; v: number; d: string; tab: ListTab }[] = [
+  { n: 'BODY',     v: 1,   d: 'today',     tab: 'training' },
+  { n: 'CAREER',   v: 1,   d: 'yesterday', tab: 'career' },
+  { n: 'FAMILY',   v: 0.5, d: '3d',        tab: 'family' },
+  { n: 'HOME',     v: 0.2, d: '9d',        tab: 'home' },
+  { n: 'PROJECTS', v: 0.7, d: '2d',        tab: 'projects' },
 ]
 
-export function WPilots({ dark }: WPilotsProps) {
+export function WPilots({ dark, onNavigate }: WPilotsProps) {
   return (
     <Glass dark={dark} span={12} pad={14}>
       <CardLabel dark={dark}>Pilot lights · keep them all lit</CardLabel>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
         {PILOTS.map(l => (
-          <div key={l.n} style={{ textAlign: 'center', flex: 1 }}>
+          <button
+            key={l.n}
+            onClick={() => onNavigate?.(l.tab)}
+            style={{
+              textAlign: 'center', flex: 1, background: 'none', border: 'none',
+              cursor: onNavigate ? 'pointer' : 'default', padding: '4px 0',
+              fontFamily: 'inherit',
+            }}
+          >
             <div style={{ width: 22, height: 28, margin: '0 auto', position: 'relative' }}>
               <svg viewBox="0 0 24 32" width="22" height="28">
                 <path
@@ -33,9 +46,9 @@ export function WPilots({ dark }: WPilotsProps) {
                 />
               </svg>
             </div>
-            <div className="badge" style={{ fontSize: 'var(--fs-11)', marginTop: 2 }}>{l.n}</div>
-            <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.55 }}>{l.d}</div>
-          </div>
+            <div className="badge" style={{ fontSize: 'var(--fs-11)', marginTop: 2, color: dark ? C.cream : C.dark }}>{l.n}</div>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.55, color: dark ? C.cream : C.dark }}>{l.d}</div>
+          </button>
         ))}
       </div>
     </Glass>

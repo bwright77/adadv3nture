@@ -92,6 +92,17 @@ export async function addTrainingGoal(
   return data as TrainingGoal
 }
 
+export async function updateTrainingGoalNotes(id: string, notes: string): Promise<TrainingGoal> {
+  const { data, error } = await db
+    .from('training_goals')
+    .update({ notes: notes.trim() || null })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data as TrainingGoal
+}
+
 export async function updateTrainingActuals(
   id: string,
   actuals: Partial<Pick<TrainingWeek, 'actual_run_miles' | 'actual_cycling_miles' | 'actual_strength_sessions'>>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
-import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
+import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, updateTrainingGoalNotes, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
 
 const EVENT_COLOR: Record<string, string> = {
   trail_run:      C.rust,
@@ -23,16 +23,21 @@ function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
 }
 
-function EventCard({ goal }: { goal: TrainingGoal }) {
+function EventCard({ goal, onOpen }: { goal: TrainingGoal; onOpen: () => void }) {
   const days = daysUntil(goal.event_date)
   const color = EVENT_COLOR[goal.event_type] ?? C.rust
   const done = days < 0
 
   return (
-    <div style={{
-      position: 'relative', marginBottom: 10,
-      opacity: done ? 0.45 : 1,
-    }}>
+    <button
+      onClick={onOpen}
+      style={{
+        display: 'block', width: '100%', textAlign: 'left',
+        position: 'relative', marginBottom: 10,
+        opacity: done ? 0.45 : 1,
+        background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', cursor: 'pointer',
+      }}
+    >
       <div style={{
         position: 'absolute', left: 0, top: 0, bottom: 0, width: goal.is_anchor ? 5 : 4,
         background: goal.is_anchor ? `linear-gradient(180deg, ${color}, ${color}99)` : color,
@@ -83,6 +88,97 @@ function EventCard({ goal }: { goal: TrainingGoal }) {
             )}
           </div>
         </div>
+      </div>
+    </button>
+  )
+}
+
+function EventDetail({ goal, onClose, onUpdate }: {
+  goal: TrainingGoal
+  onClose: () => void
+  onUpdate: (g: TrainingGoal) => void
+}) {
+  const [notes, setNotes] = useState(goal.notes ?? '')
+  const [saving, setSaving] = useState(false)
+  const days = daysUntil(goal.event_date)
+  const color = EVENT_COLOR[goal.event_type] ?? C.rust
+
+  async function save() {
+    setSaving(true)
+    try {
+      const updated = await updateTrainingGoalNotes(goal.id, notes)
+      onUpdate(updated)
+      onClose()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const meta: [string, string][] = [
+    ['DATE', formatDate(goal.event_date)],
+    ['COUNTDOWN', days < 0 ? 'COMPLETE' : `${days}d · ${Math.floor(days / 7)}wk`],
+    ...(goal.distance_label ? [['DISTANCE', goal.distance_label] as [string, string]] : []),
+    ...(goal.elevation_label ? [['ELEVATION', goal.elevation_label] as [string, string]] : []),
+    ...(goal.location ? [['LOCATION', goal.location] as [string, string]] : []),
+  ]
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: C.paper, overflowY: 'auto' }}>
+      <div style={{
+        background: color,
+        padding: 'calc(env(safe-area-inset-top, 0px) + 56px) 18px 24px',
+        position: 'relative',
+      }}>
+        <button onClick={onClose} style={{
+          position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: 16,
+          background: 'rgba(255,255,255,0.22)', border: 'none', borderRadius: 20,
+          padding: '5px 14px', color: '#fff', fontSize: 'var(--fs-13)', cursor: 'pointer',
+        }}>← Back</button>
+        <div className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(255,255,255,0.75)', letterSpacing: '0.15em', marginBottom: 4 }}>
+          {EVENT_LABEL[goal.event_type]}{goal.is_anchor ? ' · ◆ ANCHOR' : ''}
+        </div>
+        <div className="badge" style={{ fontSize: 'var(--fs-28)', color: '#fff', lineHeight: 1.1 }}>
+          {goal.event_name}
+        </div>
+      </div>
+
+      <div style={{ padding: '20px 18px 100px' }}>
+        <div style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', marginBottom: 16, border: `0.5px solid ${C.ink20}` }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px' }}>
+            {meta.map(([label, val]) => (
+              <div key={label}>
+                <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em', marginBottom: 2 }}>{label}</div>
+                <div style={{ fontSize: 'var(--fs-15)', fontWeight: 600, color: C.dark }}>{val}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em', marginBottom: 8 }}>NOTES</div>
+        <textarea
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          placeholder="Race strategy, goals, gear notes…"
+          rows={5}
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            border: `1px solid ${C.ink20}`, borderRadius: 10, padding: '10px 12px',
+            fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark,
+            resize: 'none', outline: 'none', background: '#fff',
+          }}
+        />
+        <button
+          onClick={save}
+          disabled={saving || notes === (goal.notes ?? '')}
+          style={{
+            marginTop: 10, background: color, color: '#fff', border: 'none',
+            borderRadius: 10, padding: '10px 24px', fontSize: 'var(--fs-14)',
+            fontWeight: 700, cursor: 'pointer',
+            opacity: (saving || notes === (goal.notes ?? '')) ? 0.5 : 1,
+          }}
+        >
+          {saving ? 'Saving…' : 'Save notes'}
+        </button>
       </div>
     </div>
   )
@@ -174,18 +270,18 @@ function AddEventForm({ onSave, onCancel }: { onSave: (g: TrainingGoal) => void;
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <input ref={nameRef} style={inputStyle} placeholder="Event name" value={name} onChange={e => setName(e.target.value)}
           onKeyDown={e => { if (e.key === 'Escape') onCancel() }} />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <input style={inputStyle} type="date" value={date} onChange={e => setDate(e.target.value)} />
-          <select style={inputStyle} value={type} onChange={e => setType(e.target.value as TrainingEventType)}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, minWidth: 0 }}>
+          <input style={{ ...inputStyle, minWidth: 0 }} type="date" value={date} onChange={e => setDate(e.target.value)} />
+          <select style={{ ...inputStyle, minWidth: 0 }} value={type} onChange={e => setType(e.target.value as TrainingEventType)}>
             <option value="trail_run">Trail Run</option>
             <option value="cycling_gravel">Gravel Cycling</option>
             <option value="cycling_road">Road Cycling</option>
           </select>
         </div>
         <input style={inputStyle} placeholder="Location (optional)" value={location} onChange={e => setLocation(e.target.value)} />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <input style={inputStyle} placeholder="Distance (e.g. 18.6mi)" value={distance} onChange={e => setDistance(e.target.value)} />
-          <input style={inputStyle} placeholder="Elevation (e.g. 3,200ft)" value={elevation} onChange={e => setElevation(e.target.value)} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, minWidth: 0 }}>
+          <input style={{ ...inputStyle, minWidth: 0 }} placeholder="Distance (e.g. 18.6mi)" value={distance} onChange={e => setDistance(e.target.value)} />
+          <input style={{ ...inputStyle, minWidth: 0 }} placeholder="Elevation (e.g. 3,200ft)" value={elevation} onChange={e => setElevation(e.target.value)} />
         </div>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 2 }}>
           <button onClick={onCancel} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-14)', cursor: 'pointer', padding: '6px 10px' }}>Cancel</button>
@@ -208,6 +304,7 @@ export function TrainingView() {
   const [week, setWeek] = useState<TrainingWeek | null>(null)
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -221,12 +318,22 @@ export function TrainingView() {
     }).catch(() => null).finally(() => setLoading(false))
   }, [user])
 
+  const selectedGoal = goals.find(g => g.id === selectedId) ?? null
+
   if (loading) {
     return <div style={{ padding: 40, textAlign: 'center', color: C.ink40, fontSize: 'var(--fs-15)' }}>Loading…</div>
   }
 
   return (
     <div style={{ padding: '0 0 140px' }}>
+      {selectedGoal && (
+        <EventDetail
+          goal={selectedGoal}
+          onClose={() => setSelectedId(null)}
+          onUpdate={updated => setGoals(prev => prev.map(g => g.id === updated.id ? updated : g))}
+        />
+      )}
+
       {week && <WeekCard week={week} />}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: week ? 20 : 0 }}>
@@ -250,7 +357,7 @@ export function TrainingView() {
         />
       )}
 
-      {goals.map(g => <EventCard key={g.id} goal={g} />)}
+      {goals.map(g => <EventCard key={g.id} goal={g} onOpen={() => setSelectedId(g.id)} />)}
 
       {goals.length === 0 && !adding && (
         <div style={{ textAlign: 'center', padding: '40px 0', color: C.ink40, fontSize: 'var(--fs-15)' }}>

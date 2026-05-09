@@ -8,13 +8,16 @@ import { WForecast } from './widgets/WForecast'
 import { WPilots } from './widgets/WPilots'
 import type { TimeOfDay } from '../../hooks/useTimeOfDay'
 
+type ListTab = 'training' | 'career' | 'family' | 'home' | 'projects'
+
 interface EveningViewProps {
   activeTod: TimeOfDay
   isOverride: boolean
   onSetOverride: (tod: TimeOfDay | null) => void
+  onOpenListTab?: (tab: ListTab) => void
 }
 
-export function EveningView({ activeTod, isOverride, onSetOverride }: EveningViewProps) {
+export function EveningView({ activeTod, isOverride, onSetOverride, onOpenListTab }: EveningViewProps) {
   return (
     <>
       <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
@@ -28,7 +31,7 @@ export function EveningView({ activeTod, isOverride, onSetOverride }: EveningVie
         <WCalendar dark span={12} />
         <WInspire dark />
         <WForecast dark />
-        <WPilots dark />
+        <WPilots dark onNavigate={onOpenListTab} />
       </div>
     </>
   )

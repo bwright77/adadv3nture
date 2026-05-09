@@ -3,6 +3,8 @@ import { Glass } from '../../ui/Glass'
 import { C } from '../../../tokens'
 import { supabase } from '../../../lib/supabase'
 import { useAuth } from '../../../contexts/AuthContext'
+import { InspireDetail } from '../InspireDetail'
+import type { InspirationPhoto } from '../../../hooks/useInspiration'
 
 const BUCKET = 'inspiration-photos'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,7 +23,6 @@ interface Photo {
 
 interface WInspireProps {
   dark?: boolean
-  onExpand?: () => void
 }
 
 function publicUrl(path: string): string {
@@ -29,9 +30,27 @@ function publicUrl(path: string): string {
   return data.publicUrl
 }
 
-export function WInspire({ dark, onExpand }: WInspireProps) {
+function toInspirationPhoto(p: Photo): InspirationPhoto {
+  const d = new Date(p.taken_at + 'T12:00:00')
+  return {
+    id: p.id,
+    taken_at: p.taken_at,
+    year: d.getFullYear(),
+    location: p.location,
+    activity_type: p.activity_type,
+    caption: p.caption,
+    thumbnail_url: publicUrl(p.thumbnail_path ?? p.storage_path),
+    original_url: publicUrl(p.storage_path),
+    user_starred: false,
+    times_surfaced: p.times_surfaced,
+    takenAt: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+  }
+}
+
+export function WInspire({ dark }: WInspireProps) {
   const { user } = useAuth()
   const [photo, setPhoto] = useState<Photo | null>(null)
+  const [showDetail, setShowDetail] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -99,12 +118,16 @@ export function WInspire({ dark, onExpand }: WInspireProps) {
   const subtitle = [photo.location, photo.activity_type].filter(Boolean).join(' · ')
 
   return (
+    <>
+    {showDetail && photo && (
+      <InspireDetail photo={toInspirationPhoto(photo)} onClose={() => setShowDetail(false)} />
+    )}
     <Glass
       dark={dark}
       span={6}
       pad={0}
-      style={{ height: 148, padding: 0, cursor: onExpand ? 'pointer' : undefined }}
-      onClick={onExpand}
+      style={{ height: 148, padding: 0, cursor: 'pointer' }}
+      onClick={() => photo && setShowDetail(true)}
     >
       <div style={{
         position: 'absolute', inset: 0,
@@ -140,5 +163,6 @@ export function WInspire({ dark, onExpand }: WInspireProps) {
         </div>
       </div>
     </Glass>
+    </>
   )
 }
