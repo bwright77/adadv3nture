@@ -129,10 +129,10 @@ export interface Database {
           family_creative_note: string | null
           home_done: boolean
           home_note: string | null
-          financial_done: boolean
-          financial_note: string | null
-          personal_done: boolean
-          personal_note: string | null
+          career_done: boolean
+          career_note: string | null
+          projects_done: boolean
+          projects_note: string | null
           drinks_today: number
           mood_score: number | null
           morning_briefing: string | null
@@ -146,7 +146,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          category: 'body' | 'career' | 'family' | 'home' | 'personal'
+          category: 'body' | 'career' | 'family' | 'home' | 'projects'
           title: string
           notes: string | null
           weather_required: 'any' | 'dry' | 'sunny'

@@ -21,7 +21,7 @@ function categoryFromContent(content: string): { label: string; color: string } 
   if (/wa|wright adventures?|jenn|pfb|gsema|proposal|invoice/.test(lower)) return { label: 'WRIGHT', color: C.dark }
   if (/house|gate|fence|yard|roof|plumb/.test(lower)) return { label: 'HOUSE', color: '#8B7355' }
   if (/deadline|due|urgent|asap/.test(lower)) return { label: 'DEADLINE', color: C.rustDk }
-  return { label: 'PERSONAL', color: C.tealDk }
+  return { label: 'PROJECTS', color: C.tealDk }
 }
 
 interface InboxPageProps { bgPhoto?: string }

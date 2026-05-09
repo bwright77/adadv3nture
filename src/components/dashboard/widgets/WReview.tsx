@@ -20,17 +20,17 @@ interface RowConfig {
 
 const ROWS: RowConfig[] = [
   { label: 'BODY',     category: null,               doneKey: null,                     noteKey: null },
-  { label: 'CAREER',   category: 'financial',         doneKey: 'financial_done',         noteKey: 'financial_note' },
+  { label: 'CAREER',   category: 'career',            doneKey: 'career_done',            noteKey: 'career_note' },
   { label: 'FAMILY',   category: 'family_creative',   doneKey: 'family_creative_done',   noteKey: 'family_creative_note' },
   { label: 'HOME',     category: 'home',              doneKey: 'home_done',              noteKey: 'home_note' },
-  { label: 'PERSONAL', category: 'personal',          doneKey: 'personal_done',          noteKey: 'personal_note' },
+  { label: 'PROJECTS', category: 'projects',          doneKey: 'projects_done',          noteKey: 'projects_note' },
 ]
 
 const CAT_TO_PILOT: Record<string, keyof PilotLights> = {
-  financial: 'financial',
+  career: 'career',
   family_creative: 'family_creative',
   home: 'home',
-  personal: 'personal',
+  projects: 'projects',
 }
 
 export function WReview({ dark }: WReviewProps) {

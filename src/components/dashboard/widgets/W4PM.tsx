@@ -26,9 +26,9 @@ export function W4PM({ dark }: W4PMProps) {
     // Load home category todos (covers house + truck)
     Promise.all([
       getTodos(user.id, 'home'),
-      getTodos(user.id, 'personal'),
-    ]).then(([home, personal]) => {
-      setTodos([...home, ...personal])
+      getTodos(user.id, 'projects'),
+    ]).then(([home, projects]) => {
+      setTodos([...home, ...projects])
     }).catch(() => null).finally(() => setLoading(false))
   }, [user])
 

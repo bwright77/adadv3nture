@@ -2,7 +2,7 @@ import { supabase } from './supabase'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any
 
-export type TodoCategory = 'body' | 'career' | 'family' | 'home' | 'personal'
+export type TodoCategory = 'body' | 'career' | 'family' | 'home' | 'projects'
 export type TodoEffort = 'quick' | 'half_day' | 'full_day' | 'multi_day'
 export type TodoStatus = 'todo' | 'in_progress' | 'done'
 export type TodoUrgency = 'fire' | 'deck' | 'rain'

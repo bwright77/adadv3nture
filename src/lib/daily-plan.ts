@@ -14,13 +14,13 @@ export interface DailyPlan {
   family_creative_note: string | null
   home_done: boolean
   home_note: string | null
-  financial_done: boolean
-  financial_note: string | null
-  personal_done: boolean
-  personal_note: string | null
+  career_done: boolean
+  career_note: string | null
+  projects_done: boolean
+  projects_note: string | null
 }
 
-export type ReviewCategory = 'family_creative' | 'home' | 'financial' | 'personal'
+export type ReviewCategory = 'family_creative' | 'home' | 'career' | 'projects'
 
 export async function updateReviewRow(
   userId: string,
@@ -44,7 +44,7 @@ export async function getTodayPlan(userId: string): Promise<DailyPlan | null> {
   const today = new Date().toISOString().substring(0, 10)
   const { data } = await supabase
     .from('daily_plans')
-    .select('id, plan_date, morning_briefing, briefing_generated_at, thinking_prompt, thinking_prompt_answer, drinks_today, family_creative_done, family_creative_note, home_done, home_note, financial_done, financial_note, personal_done, personal_note')
+    .select('id, plan_date, morning_briefing, briefing_generated_at, thinking_prompt, thinking_prompt_answer, drinks_today, family_creative_done, family_creative_note, home_done, home_note, career_done, career_note, projects_done, projects_note')
     .eq('user_id', userId)
     .eq('plan_date', today)
     .maybeSingle() as unknown as { data: DailyPlan | null }
@@ -54,20 +54,20 @@ export async function getTodayPlan(userId: string): Promise<DailyPlan | null> {
 export interface PilotLights {
   family_creative: number
   home: number
-  financial: number
-  personal: number
+  career: number
+  projects: number
 }
 
 export interface ReviewHistory {
   yesterday: {
     family_creative_done: boolean
     home_done: boolean
-    financial_done: boolean
-    personal_done: boolean
+    career_done: boolean
+    projects_done: boolean
     family_creative_note: string | null
     home_note: string | null
-    financial_note: string | null
-    personal_note: string | null
+    career_note: string | null
+    projects_note: string | null
   } | null
   pilotLights: PilotLights
   completionRate7d: number
@@ -77,21 +77,21 @@ type ReviewRow = {
   plan_date: string
   family_creative_done: boolean
   home_done: boolean
-  financial_done: boolean
-  personal_done: boolean
+  career_done: boolean
+  projects_done: boolean
   family_creative_note: string | null
   home_note: string | null
-  financial_note: string | null
-  personal_note: string | null
+  career_note: string | null
+  projects_note: string | null
 }
 
-const REVIEW_CATS = ['family_creative', 'home', 'financial', 'personal'] as const
+const REVIEW_CATS = ['family_creative', 'home', 'career', 'projects'] as const
 
 export async function getReviewHistory(userId: string): Promise<ReviewHistory> {
   const today = new Date().toISOString().substring(0, 10)
   const { data } = await supabase
     .from('daily_plans')
-    .select('plan_date, family_creative_done, home_done, financial_done, personal_done, family_creative_note, home_note, financial_note, personal_note')
+    .select('plan_date, family_creative_done, home_done, career_done, projects_done, family_creative_note, home_note, career_note, projects_note')
     .eq('user_id', userId)
     .lt('plan_date', today)
     .order('plan_date', { ascending: false })

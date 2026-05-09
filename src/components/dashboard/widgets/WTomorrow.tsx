@@ -51,7 +51,7 @@ export function WTomorrow({ dark }: WTomorrowProps) {
 
   // Portfolio focus — top 2 most neglected categories
   const PILOT_LABELS: Record<keyof PilotLights, string> = {
-    family_creative: 'FAMILY', home: 'HOME', financial: 'CAREER', personal: 'PERSONAL',
+    family_creative: 'FAMILY', home: 'HOME', career: 'CAREER', projects: 'PROJECTS',
   }
   const neglected = pilotLights
     ? (Object.entries(pilotLights) as [keyof PilotLights, number][])

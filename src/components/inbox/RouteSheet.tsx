@@ -56,7 +56,7 @@ export function RouteSheet({ item, onDone, onClose }: RouteSheetProps) {
         const sortOrder = 9999
         await addMilestone(proj.id, item.content.trim(), sortOrder)
       } else if (dest === 'reminder') {
-        await addReminder(user.id, item.content.trim(), 'personal', 'medium')
+        await addReminder(user.id, item.content.trim(), 'projects', 'medium')
       } else {
         await addTodo(user.id, dest as TodoCategory, item.content.trim(), urgency)
       }
