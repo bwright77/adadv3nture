@@ -1,12 +1,12 @@
 # adadv3nture
 
-> "a dad adventure" — three kids, a life in motion, built to last.
+> "a dad adventure" — mission control for my life.
 
-Personal health and productivity OS for Ben Wright. Unified fitness tracking,
-intelligent workout prescription, weather-aware task management, time-aware
-daily briefing, MIT framework, and a brain-dump inbox — all in one place.
-The app knows what time it is, what the data says, and what hasn't been fed
-enough lately. It tells you what to do today and gets out of the way.
+I'm building a career, raising three kids, keeping a house running, training for a 30K in September, and staying connected to the things that are just mine.
+
+**adadv3nture** is how I use software to do all of it better. One place where career, family, home, body, and personal projects all live together. Every morning it surfaces my Most Important Tasks across all five — not what's loudest, not what's overdue, but what actually moves the needle today.
+
+Strava. Apple Health. Google Calendar. Weather. Recovery. MITs. All of it, one place. The control center for my life.
 
 ---
 
@@ -232,24 +232,25 @@ const USER_CONTEXT = {
 **Two non-negotiables (tracked but never compete for MIT slots):**
 - **BODY** → 7:40am workout. Always happens. Always logged.
 - **CAREER** → Mid-morning block. Wright Adventures daily. Non-negotiable.
-  Labor Day is fish-or-cut-bait: WA income or get a real job.
+  Labor Day is build-or-get-a-job: WA income or find a real job.
 
-**Five rotating categories (generate the daily MITs):**
+**Four rotating categories (generate the daily MITs):**
 
 | Category | What it covers | Natural slot |
 |----------|---------------|--------------|
-| FAMILY/CREATIVE | Kids, intentional presence, art, making things | 4pm — often combined |
+| FAMILY | Kids, intentional presence, art, making things | 4pm — often combined with projects |
 | HOME | House projects, truck, ranch | 4pm — weather dependent |
-| FINANCIAL | Specific tasks (Ben is good with money — specific blockers only) | Mid-morning |
-| PERSONAL | Relationships, errands that matter, inbox items | Anytime |
-| MIND | Rest, gaming, reading, sports — PROTECTED, never a MIT | Evening only |
+| CAREER | Work, proposals, finances, Wright Adventures pipeline | Mid-morning |
+| PROJECTS | Personal projects, relationships, errands that matter | Anytime |
+
+**DB mapping:** `family_creative_done/note` → FAMILY, `home_done/note` → HOME, `career_done/note` → CAREER, `projects_done/note` → PROJECTS
 
 **MIT generation logic:**
 - Score categories by neglect + deadline pressure
 - Surface top 2-3 MITs from highest-scoring categories
 - Never more than 2 from same category
 - Persistent reminders surface before rotating MITs
-- MIND is never assigned as MIT — protected restoration time
+- Evening is protected — never colonize it with MITs
 
 **Thinking prompt:**
 One specific unresolved question generated from yesterday's MIT completion data.

@@ -44,7 +44,7 @@ AI-generated daily briefing via Anthropic claude-sonnet-4-6 (server-side Edge Fu
 Composite score from RHR delta, sleep duration, drinks yesterday, and days since rest. Tiers: **Go Hard** (>80), **Moderate** (60–80), **Recovery** (<60). Confidence rating based on how many signals are available.
 
 ### MIT Framework
-Five life portfolio categories — Family/Creative, Home, Financial, Personal, Mind. MITs surface from the highest-neglected categories. Mind is protected, never assigned. Persistent reminders surface daily until done.
+Four rotating categories — Family, Home, Career, Projects. MITs surface from the highest-neglected categories. Evening is protected, never colonized. Persistent reminders surface daily until done.
 
 ### Inbox
 Brain dump capture with floating action button on every screen. Zero categorization at capture. Morning triage routes items to: todo lists, MITs, reminders, project milestones, or delete.
