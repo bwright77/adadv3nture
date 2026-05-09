@@ -6,16 +6,8 @@ import { useAuth } from '../../../contexts/AuthContext'
 
 const BUCKET = 'inspiration-photos'
 
-interface Photo {
-  id: string
-  taken_at: string
-  location: string | null
-  activity_type: string | null
-  caption: string | null
-  thumbnail_path: string | null
-  storage_path: string
-  times_surfaced: number
-}
+import type { Database } from '../../../types/database'
+type Photo = Database['public']['Tables']['inspiration_photos']['Row']
 
 interface WInspireProps {
   dark?: boolean
@@ -39,38 +31,39 @@ export function WInspire({ dark, onExpand }: WInspireProps) {
     const day = today.getDate()
     const todayStr = today.toISOString().substring(0, 10)
 
-    supabase
-      .from('inspiration_photos')
-      .select('id, taken_at, location, activity_type, caption, thumbnail_path, storage_path, times_surfaced')
-      .eq('user_id', user.id)
-      .lt('taken_at', todayStr)
-      .order('times_surfaced', { ascending: true })
-      .limit(200)
-      .then(({ data }) => {
-        if (!data || data.length === 0) return
+    Promise.resolve(
+      supabase
+        .from('inspiration_photos')
+        .select('*')
+        .eq('user_id', user.id)
+        .lt('taken_at', todayStr)
+        .order('times_surfaced', { ascending: true })
+        .limit(200)
+    ).then(({ data }) => {
+      if (!data || data.length === 0) return
 
-        // Priority 1: ±3 days of today in any past year
-        const onThisDay = data.filter(r => {
-          const d = new Date(r.taken_at + 'T12:00:00')
-          return d.getMonth() + 1 === month && Math.abs(d.getDate() - day) <= 3
-        })
-
-        // Priority 2: same month
-        const sameMonth = data.filter(r =>
-          new Date(r.taken_at + 'T12:00:00').getMonth() + 1 === month
-        )
-
-        const pool = onThisDay.length > 0 ? onThisDay : sameMonth.length > 0 ? sameMonth : data
-        const pick = pool[Math.floor(Math.random() * Math.min(pool.length, 5))]
-        setPhoto(pick as Photo)
-
-        // Fire-and-forget times_surfaced increment
-        supabase.from('inspiration_photos')
-          .update({ times_surfaced: (pick as Photo).times_surfaced + 1, last_surfaced_at: new Date().toISOString() })
-          .eq('id', (pick as Photo).id)
-          .then(() => {}).catch(() => {})
+      // Priority 1: ±3 days of today in any past year
+      const onThisDay = data.filter(r => {
+        const d = new Date(r.taken_at + 'T12:00:00')
+        return d.getMonth() + 1 === month && Math.abs(d.getDate() - day) <= 3
       })
-      .catch(() => null)
+
+      // Priority 2: same month
+      const sameMonth = data.filter(r =>
+        new Date(r.taken_at + 'T12:00:00').getMonth() + 1 === month
+      )
+
+      const pool = onThisDay.length > 0 ? onThisDay : sameMonth.length > 0 ? sameMonth : data
+      const pick = pool[Math.floor(Math.random() * Math.min(pool.length, 5))]
+      setPhoto(pick)
+
+      // Fire-and-forget times_surfaced increment
+      Promise.resolve(
+        supabase.from('inspiration_photos')
+          .update({ times_surfaced: pick.times_surfaced + 1, last_surfaced_at: new Date().toISOString() })
+          .eq('id', pick.id)
+      ).then(() => {}).catch(() => {})
+    }).catch(() => null)
   }, [user])
 
   if (!photo) {
