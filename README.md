@@ -6,7 +6,7 @@ I'm building a career, raising three kids, keeping a house running, training for
 
 **adadv3nture** is how I use software to do all of it better. One place where career, family, home, body, and personal projects all live together. Every morning it surfaces my Most Important Tasks across all five — not what's loudest, not what's overdue, but what actually moves the needle today.
 
-Strava. Apple Health. Google Calendar. Weather. Recovery. MITs. All of it, one place. The control center for my entire life.
+Strava. Apple Health. Google Calendar. Weather. Recovery. MITs. All of it, one place. The control center for my life.
 
 ---
 
