@@ -5,9 +5,19 @@ import { supabase } from '../../../lib/supabase'
 import { useAuth } from '../../../contexts/AuthContext'
 
 const BUCKET = 'inspiration-photos'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any
 
-import type { Database } from '../../../types/database'
-type Photo = Database['public']['Tables']['inspiration_photos']['Row']
+interface Photo {
+  id: string
+  taken_at: string
+  location: string | null
+  activity_type: string | null
+  caption: string | null
+  thumbnail_path: string | null
+  storage_path: string
+  times_surfaced: number
+}
 
 interface WInspireProps {
   dark?: boolean
@@ -31,14 +41,13 @@ export function WInspire({ dark, onExpand }: WInspireProps) {
     const day = today.getDate()
     const todayStr = today.toISOString().substring(0, 10)
 
-    Promise.resolve(
-      supabase
-        .from('inspiration_photos')
-        .select('*')
-        .eq('user_id', user.id)
-        .lt('taken_at', todayStr)
-        .order('times_surfaced', { ascending: true })
-        .limit(200)
+    ;(db
+      .from('inspiration_photos')
+      .select('id, taken_at, location, activity_type, caption, thumbnail_path, storage_path, times_surfaced')
+      .eq('user_id', user.id)
+      .lt('taken_at', todayStr)
+      .order('times_surfaced', { ascending: true })
+      .limit(200) as Promise<{ data: Photo[] | null }>
     ).then(({ data }) => {
       if (!data || data.length === 0) return
 
@@ -58,11 +67,10 @@ export function WInspire({ dark, onExpand }: WInspireProps) {
       setPhoto(pick)
 
       // Fire-and-forget times_surfaced increment
-      Promise.resolve(
-        supabase.from('inspiration_photos')
-          .update({ times_surfaced: pick.times_surfaced + 1, last_surfaced_at: new Date().toISOString() })
-          .eq('id', pick.id)
-      ).then(() => {}).catch(() => {})
+      db.from('inspiration_photos')
+        .update({ times_surfaced: pick.times_surfaced + 1, last_surfaced_at: new Date().toISOString() })
+        .eq('id', pick.id)
+        .then(() => {}).catch(() => {})
     }).catch(() => null)
   }, [user])
 
