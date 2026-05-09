@@ -1,12 +1,12 @@
 # adadv3nture
 
-> "a dad adventure" — mission control for a life in motion.
+> "a dad adventure" — mission control for my life.
 
-Three kids. A startup on the clock. A 30K trail race in September. A body that's been through some things and is coming back anyway.
+I'm building a career, raising three kids, keeping a house running, training for a 30K in September, and staying connected to the things that are just mine.
 
-**adadv3nture** is a personal OS built for one person who doesn't have time to wonder what he should be doing next. It pulls from every signal — recovery, sleep, drinks, steps, weather, calendar, training load, what's been neglected — and surfaces one honest answer: *here's what today looks like, here's what matters, go.*
+**adadv3nture** is how I use software to do all of it better. One place where career, family, home, body, and personal projects all live together. Every morning it surfaces my Most Important Tasks across all five — not what's loudest, not what's overdue, but what actually moves the needle today.
 
-No productivity theater. No streaks. Just the data, the plan, and the door.
+Strava. Apple Health. Google Calendar. Weather. Recovery. MITs. All of it, one place. The control center for my entire life.
 
 ---
 
