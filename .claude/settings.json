@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://asxlvpjijkhdcvrwnruj.supabase.co/storage/v1/object/public/inspiration-photos/thumbnails/20240123-IMG_3780_jpg.jpg\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://asxlvpjijkhdcvrwnruj.supabase.co/storage/v1/object/public/inspiration-photos/originals/20240123-IMG_3780_jpg.jpg\")",
+      "Bash(node -e ' *)"
+    ]
+  }
+}
