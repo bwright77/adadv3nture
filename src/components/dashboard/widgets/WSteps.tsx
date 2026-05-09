@@ -23,7 +23,7 @@ export function WSteps({ dark }: WStepsProps) {
     getLast7DaysSteps(user.id).then(setDays).catch(() => null)
   }, [user])
 
-  const latest = days.findLast(d => d.count !== null) ?? null
+  const latest = [...days].reverse().find((d: { date: string; count: number | null }) => d.count !== null) ?? null
   const yesterday = latest?.count ?? null
   const sparkData = days.map(d => d.count ?? 0)
   const hasData = days.some(d => d.count !== null)

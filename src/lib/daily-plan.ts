@@ -86,7 +86,6 @@ type ReviewRow = {
 }
 
 const REVIEW_CATS = ['family_creative', 'home', 'financial', 'personal'] as const
-type ReviewCat = typeof REVIEW_CATS[number]
 
 export async function getReviewHistory(userId: string): Promise<ReviewHistory> {
   const today = new Date().toISOString().substring(0, 10)
