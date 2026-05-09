@@ -2,13 +2,11 @@
 
 > "a dad adventure" — mission control for a life in motion.
 
-Three kids. A 1988 FJ62 that needs 250,000 more miles. A startup on the clock. A 30K trail race in September. A body that's been through some things and is coming back anyway.
+Three kids. A startup on the clock. A 30K trail race in September. A body that's been through some things and is coming back anyway.
 
-**adadv3nture** is a personal OS built for one person who doesn't have time to wonder what he should be doing next. It pulls from every signal — recovery, sleep, drinks, steps, weather, calendar, training load, what's been neglected for nine days — and surfaces a single honest answer: *here's what today looks like, here's what matters, go.*
+**adadv3nture** is a personal OS built for one person who doesn't have time to wonder what he should be doing next. It pulls from every signal — recovery, sleep, drinks, steps, weather, calendar, training load, what's been neglected — and surfaces one honest answer: *here's what today looks like, here's what matters, go.*
 
-No productivity theater. No streaks to protect. No dashboard that makes you feel busy while you avoid the hard thing. Just the data, the plan, and the door.
-
-Built at 5,318 feet. Running on coffee and conviction.
+No productivity theater. No streaks. Just the data, the plan, and the door.
 
 ---
 
