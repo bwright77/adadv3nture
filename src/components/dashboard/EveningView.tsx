@@ -6,18 +6,15 @@ import { WCalendar } from './widgets/WCalendar'
 import { WInspire } from './widgets/WInspire'
 import { WForecast } from './widgets/WForecast'
 import { WPilots } from './widgets/WPilots'
-import type { InspirationPhoto } from '../../hooks/useInspiration'
 import type { TimeOfDay } from '../../hooks/useTimeOfDay'
 
 interface EveningViewProps {
-  inspirationPhoto: InspirationPhoto | null
-  onInspireExpand?: (photo: InspirationPhoto) => void
   activeTod: TimeOfDay
   isOverride: boolean
   onSetOverride: (tod: TimeOfDay | null) => void
 }
 
-export function EveningView({ inspirationPhoto, onInspireExpand, activeTod, isOverride, onSetOverride }: EveningViewProps) {
+export function EveningView({ activeTod, isOverride, onSetOverride }: EveningViewProps) {
   return (
     <>
       <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
@@ -29,11 +26,7 @@ export function EveningView({ inspirationPhoto, onInspireExpand, activeTod, isOv
         <WDrinkEntry dark />
         <WTomorrow dark />
         <WCalendar dark span={12} />
-        <WInspire
-          dark
-          photo={inspirationPhoto}
-          onExpand={() => inspirationPhoto && onInspireExpand?.(inspirationPhoto)}
-        />
+        <WInspire dark />
         <WForecast dark />
         <WPilots dark />
       </div>

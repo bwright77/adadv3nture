@@ -7,20 +7,16 @@ import { WSteps } from './widgets/WSteps'
 import { WWeather } from './widgets/WWeather'
 import { WInspire } from './widgets/WInspire'
 import { WCalendar } from './widgets/WCalendar'
-import type { InspirationPhoto } from '../../hooks/useInspiration'
-
 import type { TimeOfDay } from '../../hooks/useTimeOfDay'
 
 interface MidMorningViewProps {
-  inspirationPhoto: InspirationPhoto | null
-  onInspireExpand?: (photo: InspirationPhoto) => void
   activeTod: TimeOfDay
   isOverride: boolean
   onSetOverride: (tod: TimeOfDay | null) => void
   onOpenCareer?: () => void
 }
 
-export function MidMorningView({ inspirationPhoto, onInspireExpand, activeTod, isOverride, onSetOverride, onOpenCareer }: MidMorningViewProps) {
+export function MidMorningView({ activeTod, isOverride, onSetOverride, onOpenCareer }: MidMorningViewProps) {
   return (
     <>
       <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
@@ -35,11 +31,7 @@ export function MidMorningView({ inspirationPhoto, onInspireExpand, activeTod, i
         <WDrinks dark />
         <WSteps dark />
         <WWeather dark />
-        <WInspire
-          dark
-          photo={inspirationPhoto}
-          onExpand={() => inspirationPhoto && onInspireExpand?.(inspirationPhoto)}
-        />
+        <WInspire dark />
       </div>
     </>
   )

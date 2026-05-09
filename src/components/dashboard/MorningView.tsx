@@ -14,13 +14,9 @@ import { WCalendar } from './widgets/WCalendar'
 import { useAuth } from '../../contexts/AuthContext'
 import { loadRecovery } from '../../lib/recovery'
 import { supabase } from '../../lib/supabase'
-import type { InspirationPhoto } from '../../hooks/useInspiration'
-
 import type { TimeOfDay } from '../../hooks/useTimeOfDay'
 
 interface MorningViewProps {
-  inspirationPhoto: InspirationPhoto | null
-  onInspireExpand?: (photo: InspirationPhoto) => void
   activeTod: TimeOfDay
   isOverride: boolean
   onSetOverride: (tod: TimeOfDay | null) => void
@@ -66,7 +62,7 @@ function LockStrip({ userId }: { userId: string | undefined }) {
   )
 }
 
-export function MorningView({ inspirationPhoto, onInspireExpand, activeTod, isOverride, onSetOverride }: MorningViewProps) {
+export function MorningView({ activeTod, isOverride, onSetOverride }: MorningViewProps) {
   const { user } = useAuth()
   const [briefingData, setBriefingData] = useState<BriefingData | null>(null)
   const [briefingLoading, setBriefingLoading] = useState(true)
@@ -97,11 +93,7 @@ export function MorningView({ inspirationPhoto, onInspireExpand, activeTod, isOv
         <WSteps dark />
         <WCalendar dark span={12} />
         <WMIT dark />
-        <WInspire
-          dark
-          photo={inspirationPhoto}
-          onExpand={() => inspirationPhoto && onInspireExpand?.(inspirationPhoto)}
-        />
+        <WInspire dark />
         <WForecast dark />
         <WLaborDay dark />
       </div>
