@@ -33,7 +33,7 @@ export function Glass({ children, dark = false, span = 6, pad = 16, style, onCli
         backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.18 0'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>")`,
         opacity: 0.35, mixBlendMode: 'multiply',
       }} />
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ position: 'relative', zIndex: 1, height: '100%' }}>
         {children}
       </div>
     </div>
