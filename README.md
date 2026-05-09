@@ -35,7 +35,7 @@ iOS-style widget grid built from composable Glass cards:
 | Pilot Lights | Days since last activity per life category |
 | Day Review | Evening check-in for each life portfolio category |
 | Tomorrow | Next day workout + weather + focus areas |
-| Labor Day | Countdown to fish-or-cut-bait date for Wright Adventures |
+| Wright Adventures Countdown | Weeks + days to Sept 1 · "Time to build." |
 
 ### Morning Briefing
 AI-generated daily briefing via Anthropic claude-sonnet-4-6 (server-side Edge Function only). Pulls recovery signals, yesterday's portfolio review, and pilot light staleness. Direct, warm, specific — never generic wellness-app copy.
