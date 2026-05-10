@@ -117,7 +117,7 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
               style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', cursor: 'pointer' }}
               onClick={() => isEditing ? setEditing(null) : openEdit(row.category!)}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                 <span className="badge" style={{
                   fontSize: 'var(--fs-13)',
                   color: isEmpty
@@ -135,8 +135,11 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
                   </span>
                 )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.7 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                <span className="mono" style={{
+                  fontSize: 'var(--fs-12)', opacity: 0.7,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
                   {note ? note : done ? '✓' : '—'}
                 </span>
                 {done && (
