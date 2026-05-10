@@ -91,7 +91,7 @@ function Dashboard() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: C.paper }} />
       )}
 
-      <div style={{ position: 'relative', zIndex: 2, overflowY: 'auto', overflowX: 'hidden', minHeight: '100dvh' }}>
+      <div style={{ position: 'relative', zIndex: 2, overflowY: 'auto', overflowX: 'hidden', minHeight: '100dvh', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)' }}>
         {tab === 'home' && <div style={{ height: 'calc(env(safe-area-inset-top, 16px) + 28px)' }} />}
 
         {/* Weekday views */}

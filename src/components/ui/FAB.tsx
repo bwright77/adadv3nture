@@ -9,7 +9,7 @@ export function FAB({ onClick }: FABProps) {
     <button
       onClick={onClick}
       style={{
-        position: 'fixed', right: 18, bottom: 100, zIndex: 40,
+        position: 'fixed', right: 18, bottom: 'calc(env(safe-area-inset-bottom, 0px) + 76px)', zIndex: 40,
         width: 56, height: 56, borderRadius: 28,
         background: C.rust,
         boxShadow: '0 8px 24px -4px rgba(196,82,42,0.6)',

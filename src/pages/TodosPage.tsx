@@ -340,7 +340,7 @@ export function TodosPage({ bgPhoto, initialTab }: TodosPageProps) {
 
         {/* List */}
         {!isTodoTab ? null :
-        <div style={{ paddingBottom: 140 }}>
+        <div>
           {loading ? (
             <div style={{ textAlign: 'center', padding: 40, color: C.ink40, fontSize: 'var(--fs-15)' }}>
               Loading…
