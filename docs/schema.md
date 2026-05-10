@@ -1,6 +1,6 @@
 # Database Schema
 
-**Migrations applied:** 001–018 (run `npx supabase db push` to apply new ones — no Docker needed)
+**Migrations applied:** 001–022 (run `npx supabase db push` to apply new ones — no Docker needed)
 
 ```sql
 -- USERS
@@ -101,6 +101,61 @@ create table program_tracker (
   created_at timestamptz default now()
 );
 
+-- HIKES (50 Hikes with Kids: Colorado — Gorton & Tillack)
+create table hikes_50 (
+  id                   uuid primary key default gen_random_uuid(),
+  user_id              uuid references users(id) on delete cascade,
+  book_number          integer not null,
+  name                 text not null,
+  region               text,
+  hub                  text,
+  distance_mi          numeric(4,2),
+  difficulty           text check (difficulty in ('easy','moderate','challenging')),
+  elevation_gain_ft    integer,
+  highlights           text,
+  drive_minutes_denver integer,
+  best_months          text[],
+  alltrails_url        text,
+  trailhead_lat        numeric(9,6),
+  trailhead_lng        numeric(9,6),
+  done                 boolean default false,
+  date_done            date,
+  strava_activity_id   bigint,
+  family_rating        integer check (family_rating between 1 and 5),
+  notes                text,
+  created_at           timestamptz default now(),
+  unique(user_id, book_number)
+);
+
+-- WEEKEND PLANS (one row per day — manual entry via WAdventureToday / PlanDaySheet)
+create table weekend_plans (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid references users(id) on delete cascade,
+  plan_date      date not null,
+  activity_type  text,           -- 'run' | 'ride' | 'ski' | 'hike' | 'family' | 'project' | 'other'
+  title          text,
+  location       text,
+  departure_time time,
+  notes          text,
+  created_at     timestamptz default now(),
+  unique(user_id, plan_date)
+);
+
+-- WEEKEND SPOTS (curated family/adventure destinations for WFamilyDay + WAdventureToday)
+create table weekend_spots (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid references users(id) on delete cascade,
+  name          text not null,
+  type          text not null check (type in ('trail', 'park', 'ski', 'bike', 'family', 'run')),
+  location      text,
+  latitude      float,
+  longitude     float,
+  age_min       integer default 0,
+  drive_minutes integer,
+  notes         text,
+  created_at    timestamptz default now()
+);
+
 -- DAILY PLANS
 create table daily_plans (
   id uuid primary key default gen_random_uuid(),
@@ -129,6 +184,10 @@ create table daily_plans (
   mood_score integer check (mood_score between 1 and 5),
   morning_briefing text,
   briefing_generated_at timestamptz,
+  -- weekend briefing variant (migration 021)
+  weekend_briefing text,
+  weekend_thinking_prompt text,
+  weekend_briefing_generated_at timestamptz,
   created_at timestamptz default now(),
   unique(user_id, plan_date)
 );

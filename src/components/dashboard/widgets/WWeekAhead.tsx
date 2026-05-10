@@ -3,7 +3,6 @@ import { Glass } from '../../ui/Glass'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getTodayEvents, type CalendarEvent } from '../../../lib/google-calendar'
-import { getTodos, type Todo } from '../../../lib/todos'
 import { getCurrentTrainingWeek, type TrainingWeek } from '../../../lib/training'
 
 interface Props { dark?: boolean }
@@ -40,7 +39,6 @@ function Divider({ dark }: { dark?: boolean }) {
 export function WWeekAhead({ dark }: Props) {
   const { user } = useAuth()
   const [events, setEvents] = useState<CalendarEvent[]>([])
-  const [todos, setTodos] = useState<Todo[]>([])
   const [trainingWeek, setTrainingWeek] = useState<TrainingWeek | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -48,19 +46,15 @@ export function WWeekAhead({ dark }: Props) {
     if (!user) return
     Promise.allSettled([
       getTodayEvents(user.id, nextMondayOffset()),
-      getTodos(user.id, 'career'),
       getCurrentTrainingWeek(user.id),
-    ]).then(([eventsRes, todosRes, weekRes]) => {
+    ]).then(([eventsRes, weekRes]) => {
       setEvents(eventsRes.status === 'fulfilled' ? eventsRes.value : [])
-      const rawTodos = todosRes.status === 'fulfilled' ? todosRes.value : []
-      setTodos(rawTodos.sort((a, b) => URGENCY_ORDER[a.urgency] - URGENCY_ORDER[b.urgency]).slice(0, 4))
       setTrainingWeek(weekRes.status === 'fulfilled' ? weekRes.value : null)
       setLoading(false)
     })
   }, [user])
 
   const subColor = dark ? 'rgba(245,237,214,0.55)' : C.ink60
-  const URGENCY_ICON: Record<string, string> = { fire: '🔥', deck: '●', rain: '○' }
 
   const mondayDate = (() => {
     const d = new Date()

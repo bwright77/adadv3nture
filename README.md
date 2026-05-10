@@ -17,7 +17,19 @@ Strava. Apple Health. Google Calendar. Weather. Recovery. MITs. All of it, one p
 ## Features
 
 ### Time-Aware Dashboard
-The home screen surfaces different widgets based on time of day — same data, different hero. Four modes: **Morning** (7:35–9:30am), **Mid-Morning** (9:30am–2:30pm), **Afternoon** (2:30–6pm), **Evening** (6pm+). Time-of-day can be manually overridden from the header.
+The home screen surfaces different widgets based on time of day — same data, different hero. **Weekday** has four modes: Morning (7:35–9:30am), Mid-Morning (9:30am–2:30pm), Afternoon (2:30–6pm), Evening (6pm+). **Weekend** has four modes: Dawn (6–9am), The Day (9am–5pm), Saturday Evening, Sunday Evening. Block can be manually overridden from the header picker.
+
+### Weekend Mode
+Fully separate widget composition for Saturday and Sunday — same Glass card system, different content hierarchy. Weekdays optimize; weekends expand.
+
+| View | Key Widgets |
+|------|-------------|
+| Dawn | Morning briefing (weekend voice), workout, conditions, family day, 50 Hikes |
+| The Day | Adventure today, long effort tracker, project session, 50 Hikes |
+| Saturday Evening | Day review, drinks, calendar, inspiration |
+| Sunday Evening | Week ahead (Mon calendar + Run Club + training targets), review, tomorrow |
+
+Weekend morning briefing uses a distinct system prompt — "What's the move today?" instead of MIT neglect-scoring. Pulls live Denver weather server-side.
 
 ### Widget Grid
 iOS-style widget grid built from composable Glass cards:
@@ -31,8 +43,9 @@ iOS-style widget grid built from composable Glass cards:
 | Steps | Yesterday's step count + 7-day sparkline |
 | Drinks | Today's count + 7-day average, ratio not streak |
 | Weather | Current conditions + today's high/low |
-| Calendar | Today's events from Google Calendar |
 | Forecast | 5-day forecast with activity recommendations |
+| Conditions | Denver road + Howard trail conditions side-by-side |
+| Calendar | Today's events from Google Calendar |
 | MITs | Most Important Tasks with checkbox triage |
 | Inbox | Unprocessed capture count + quick entry |
 | On This Day | Adventure photo from this date in past years |
@@ -40,9 +53,15 @@ iOS-style widget grid built from composable Glass cards:
 | Day Review | Evening check-in for each life portfolio category |
 | Tomorrow | Next day workout + weather + focus areas |
 | Wright Adventures Countdown | Weeks + days to Sept 1 · "Time to build." |
+| Adventure Today | Weekend hero — plan the day, lock in departure time |
+| Long Effort | This week's big outdoor effort + WLW countdown |
+| Family Day | Chase / Ada / Sylvia cards + age-appropriate spot suggestions |
+| Project Session | Lowest-progress project + next milestone + hours before dinner |
+| Week Ahead | Monday calendar, Run Club reminder, training targets |
+| 50 Hikes | Progress tracker + seasonal suggestion + log completions |
 
 ### Morning Briefing
-AI-generated daily briefing via Anthropic claude-sonnet-4-6 (server-side Edge Function only). Pulls recovery signals, yesterday's portfolio review, and pilot light staleness. Direct, warm, specific — never generic wellness-app copy.
+AI-generated daily briefing via Anthropic claude-sonnet-4-6 (server-side Edge Function only). Weekday: pulls recovery signals, portfolio review, pilot light staleness — ends with one specific next action. Weekend: "What's the move?" voice — weather, family, recovery, no career urgency.
 
 ### Recovery Score
 Composite score from RHR delta, sleep duration, drinks yesterday, and days since rest. Tiers: **Go Hard** (>80), **Moderate** (60–80), **Recovery** (<60). Confidence rating based on how many signals are available.
@@ -60,7 +79,10 @@ Career, Family, and Home lists with three urgency levels: **Fire** (urgent), **O
 Event cards for target races (FOCO Fondo, Ride the Hurricane, West Line Winder 30K). Weekly target vs actual tracking. Strava OAuth integration syncs recent activities.
 
 ### Projects
-Active projects (Bottle Cap Bike, adadv3nture) with milestones, progress percentage, next action, and update log.
+Active projects with milestones, progress percentage, next action, and update log. Weekend surfaces the lowest-progress active project for deep session work.
+
+### 50 Hikes with Kids
+Tracks progress through *50 Hikes with Kids: Colorado* (Gorton & Tillack). Surfaces a seasonal suggestion each weekend morning — prioritizes current-month hikes within 90 minutes of Denver. Tap to log completion with family star rating.
 
 ### Inspiration Widget
 Adventure photos from Supabase Storage surfaced by date proximity — "5 years ago today." Tap to expand into full-screen swipe gallery. Reminds you who you are when "why bother" creeps in.
@@ -85,7 +107,7 @@ Adventure photos from Supabase Storage surfaced by date proximity — "5 years a
 
 ### Key Patterns
 
-**Time-aware views** — `useTimeOfDay` drives which view component renders. `useBgPhoto` picks a seasonal photo for the background each period. Time-of-day override clears automatically when the real block transitions.
+**Time-aware views** — `useTimeOfDay` (weekday) and `useDayType` / `getWeekendBlock` (weekend) drive which view component renders. Both share `MORNING_START_MINS = 6 * 60` so the before-dawn boundary stays consistent. Block overrides clear automatically when the real block transitions.
 
 **Glass card system** — All widgets are `<Glass>` cards with a grain texture overlay, backdrop blur, and consistent border radius. Full-height inner wrapper ensures absolutely-positioned children (like photo widgets) fill the card.
 
@@ -99,13 +121,16 @@ Adventure photos from Supabase Storage surfaced by date proximity — "5 years a
 - `activities` — unified Strava + manual workouts
 - `recovery_signals` — daily RHR, sleep, drinks, steps from Apple Health
 - `program_tracker` — current strength program position
-- `daily_plans` — day review, MIT completion, morning briefing cache
+- `daily_plans` — day review, MIT completion, weekday + weekend briefing cache
 - `todos` — career/family/home with urgency
 - `inbox_items` — capture queue
 - `inspiration_photos` — adventure photos with Supabase Storage
 - `training_goals` + `training_weeks` — event targets and weekly actuals
 - `projects` + `project_milestones` — active projects
 - `oauth_tokens` — Strava, Google OAuth tokens
+- `hikes_50` — 50 Hikes with Kids tracker (done, rating, notes per hike)
+- `weekend_plans` — one-row-per-day adventure planning
+- `weekend_spots` — curated family/adventure destinations
 
 ---
 

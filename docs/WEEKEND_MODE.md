@@ -33,6 +33,9 @@ New sibling hook to `useTimeOfDay`. Returns `'weekday' | 'weekend'` with overrid
 export type DayType = 'weekday' | 'weekend'
 export type WeekendBlock = 'weekend-dawn' | 'weekend-day' | 'weekend-evening-sat' | 'weekend-evening-sun'
 
+// Shared with useTimeOfDay — both treat before-6am as "still last night"
+import { MORNING_START_MINS } from './useTimeOfDay' // = 6 * 60
+
 function getDayType(date: Date): DayType {
   const dow = date.getDay()
   return (dow === 0 || dow === 6) ? 'weekend' : 'weekday'
@@ -40,14 +43,26 @@ function getDayType(date: Date): DayType {
 
 function getWeekendBlock(date: Date): WeekendBlock {
   const mins = date.getHours() * 60 + date.getMinutes()
-  const isSunday = date.getDay() === 0
+  const dow = date.getDay()
+  // Before 6am on Sunday = still Saturday evening (matches weekday morning threshold)
+  if (dow === 0 && mins < MORNING_START_MINS) return 'weekend-evening-sat'
   if (mins < 9 * 60) return 'weekend-dawn'
   if (mins < 17 * 60) return 'weekend-day'
-  return isSunday ? 'weekend-evening-sun' : 'weekend-evening-sat'
+  return dow === 0 ? 'weekend-evening-sun' : 'weekend-evening-sat'
 }
+
+// Full 4-block internal order — used for routing
+export const WEEKEND_BLOCK_ORDER: WeekendBlock[] = [
+  'weekend-dawn', 'weekend-day', 'weekend-evening-sat', 'weekend-evening-sun',
+]
+
+// 3-item picker exposed to user — Sat/Sun evening distinction is internal routing, not a user choice
+export const WEEKEND_PICKER_ORDER: WeekendBlock[] = [
+  'weekend-dawn', 'weekend-day', 'weekend-evening-sat',
+]
 ```
 
-Override exposed in Header — same UX as the existing `tod` override. Manual override persists until the block naturally transitions. `dayTypeOverride` also supported (e.g. traveling on Wednesday, want weekend mode).
+Override exposed in Header — same UX as the existing `tod` override. Manual override persists until the block naturally transitions. The picker shows 3 pills (Dawn, The Day, Evening). Both evening blocks highlight the same "EVENING" pill. When Sunday is active, picking "Evening" still routes to `WeekendSundayEveningView` (see App.tsx routing below).
 
 ### Routing in `App.tsx`
 
@@ -61,6 +76,16 @@ Override exposed in Header — same UX as the existing `tod` override. Manual ov
 {tab === 'home' && dayType === 'weekend' && wb === 'weekend-day'         && <WeekendDayView ... />}
 {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sat' && <WeekendEveningView ... />}
 {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sun' && <WeekendSundayEveningView ... />}
+```
+
+`wb` is resolved from `wbOverride ?? realWb`, with one smart exception: if the user picks "Evening" (stored as `weekend-evening-sat`) while the real block is `weekend-evening-sun`, we preserve the Sunday routing:
+
+```typescript
+const wb = (() => {
+  if (!wbOverride) return realWb
+  if (wbOverride === 'weekend-evening-sat' && realWb === 'weekend-evening-sun') return 'weekend-evening-sun'
+  return wbOverride
+})()
 ```
 
 ### View files
@@ -144,41 +169,46 @@ Implemented as a parallel `WEEKEND_BRIEFING_SYSTEM_PROMPT` in the Edge Function.
 
 ## Database
 
-One new table to support weekend planning:
+Three new tables added for weekend mode (migrations 020–022):
 
 ```sql
+-- migration 020: weekend day planning (one row per day)
 create table weekend_plans (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references users(id) on delete cascade,
   plan_date date not null,
   activity_type text,           -- 'run' | 'ride' | 'ski' | 'hike' | 'family' | 'project' | 'other'
-  title text,                   -- "Mt. Falcon loop" / "Bottle Cap session" / "A-Basin with kids"
+  title text,
   location text,
   departure_time time,
   notes text,
   created_at timestamptz default now(),
   unique(user_id, plan_date)
 );
-```
 
-V1: manual entry via FAB + Inbox triage (no new UI needed — capture "Saturday: Mt. Falcon 9am" and triage routes it here). V2: pull from Strava planned routes / calendar events.
+-- migration 021: weekend briefing columns on daily_plans
+alter table daily_plans
+  add column if not exists weekend_briefing text,
+  add column if not exists weekend_thinking_prompt text,
+  add column if not exists weekend_briefing_generated_at timestamptz;
 
-Also extend `weekend_spots` later:
-
-```sql
+-- migration 022: curated family/adventure spots for WFamilyDay + WAdventureToday
 create table weekend_spots (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references users(id) on delete cascade,
-  name text not null,
-  type text,                    -- 'trail' | 'park' | 'ski' | 'bike' | 'family'
-  location text,
-  latitude float,
-  longitude float,
-  age_appropriate_min int,      -- min kid age
-  drive_minutes int,
-  notes text
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid references users(id) on delete cascade,
+  name         text not null,
+  type         text not null check (type in ('trail', 'park', 'ski', 'bike', 'family', 'run')),
+  location     text,
+  latitude     float,
+  longitude    float,
+  age_min      integer default 0,     -- min kid age (0 = all ages)
+  drive_minutes integer,
+  notes        text,
+  created_at   timestamptz default now()
 );
 ```
+
+14 spots seeded via `scripts/seed-weekend-spots.js` — Wash Park, South Platte Trail, Cherry Creek SP, Chatfield SP, Denver Zoo, Denver Museum of Nature, Red Rocks Trail, Bear Creek Trail, Lair o' the Bear, Mount Falcon, Chautauqua Park, Castlewood Canyon, Howard/Arkansas River, Mount Princeton Hot Springs.
 
 ---
 
@@ -198,19 +228,19 @@ export const WEEKEND_BLOCKS: Record<WeekendBlock, { label: string; sub: string; 
 ## Build Order
 
 ```
-1. useDayType() hook + dayTypeOverride plumbing in Header
-2. Stub four WeekendView components — existing widgets minus wrong ones
-3. weekend_plans table + WAdventureToday hero
-4. Weekend morning briefing prompt variant (day_type param in Edge Function)
-5. WConditions multi-location weather
-6. WLongEffort (pulls from training_goals + recovery)
-7. WFamilyDay
-8. WProjectSession
-9. WWeekAhead (Sunday evening only)
-10. weekend_spots table + curate initial list
+✓ 1. useDayType() hook + weekend block picker in Header
+✓ 2. Stub four WeekendView components — existing widgets minus wrong ones
+✓ 3. weekend_plans table (020) + WAdventureToday hero + PlanDaySheet
+✓ 4. Weekend morning briefing prompt variant (day_type param in Edge Function)
+✓ 5. WConditions — Denver road + Howard trail conditions side-by-side
+✓ 6. WLongEffort — big outdoor effort tracker with WLW countdown
+✓ 7. WFamilyDay — Chase/Ada/Sylvia cards + age-appropriate spot suggestions
+✓ 8. WProjectSession — lowest-progress non-career project, hours before dinner
+✓ 9. WWeekAhead — Monday calendar, Run Club, training targets, career look-ahead
+✓ 10. weekend_spots table (022) + 14 spots seeded
 ```
 
-Steps 1–2 ship together: they prove routing works and remove the friction of wrong weekday widgets, even before a single new weekend widget exists. Each subsequent step is an isolated PR.
+All 10 steps complete. Weekend mode is live.
 
 ---
 

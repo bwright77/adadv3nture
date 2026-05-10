@@ -40,7 +40,13 @@ function Dashboard() {
 
   const { dayType, weekendBlock: realWb } = useDayType()
   const [wbOverride, setWbOverride] = useState<WeekendBlock | null>(null)
-  const wb = wbOverride ?? realWb
+  // 'weekend-evening-sat' is the picker's stand-in for both evening blocks;
+  // on Sunday, resolve it to the Sunday view rather than Saturday's
+  const wb = (() => {
+    if (!wbOverride) return realWb
+    if (wbOverride === 'weekend-evening-sat' && realWb === 'weekend-evening-sun') return 'weekend-evening-sun'
+    return wbOverride
+  })()
   useEffect(() => { setWbOverride(null) }, [realWb])
 
   const activeVeilKey = dayType === 'weekend' ? wb : tod

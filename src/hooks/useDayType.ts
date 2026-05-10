@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { MORNING_START_MINS } from './useTimeOfDay'
 
 export type DayType = 'weekday' | 'weekend'
 export type WeekendBlock = 'weekend-dawn' | 'weekend-day' | 'weekend-evening-sat' | 'weekend-evening-sun'
@@ -14,6 +15,11 @@ export const WEEKEND_BLOCK_ORDER: WeekendBlock[] = [
   'weekend-dawn', 'weekend-day', 'weekend-evening-sat', 'weekend-evening-sun',
 ]
 
+// 3-item picker: Sat/Sun evening distinction is internal routing, not a user choice
+export const WEEKEND_PICKER_ORDER: WeekendBlock[] = [
+  'weekend-dawn', 'weekend-day', 'weekend-evening-sat',
+]
+
 export function getDayType(date: Date): DayType {
   const dow = date.getDay()
   return (dow === 0 || dow === 6) ? 'weekend' : 'weekday'
@@ -21,10 +27,12 @@ export function getDayType(date: Date): DayType {
 
 export function getWeekendBlock(date: Date): WeekendBlock {
   const mins = date.getHours() * 60 + date.getMinutes()
-  const isSunday = date.getDay() === 0
+  const dow = date.getDay() // 0=Sun, 6=Sat
+  // Before morning threshold on Sunday = still Saturday evening
+  if (dow === 0 && mins < MORNING_START_MINS) return 'weekend-evening-sat'
   if (mins < 9 * 60) return 'weekend-dawn'
   if (mins < 17 * 60) return 'weekend-day'
-  return isSunday ? 'weekend-evening-sun' : 'weekend-evening-sat'
+  return dow === 0 ? 'weekend-evening-sun' : 'weekend-evening-sat'
 }
 
 export function useDayType(): { dayType: DayType; weekendBlock: WeekendBlock } {

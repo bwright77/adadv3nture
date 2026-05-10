@@ -11,9 +11,11 @@ export const TOD_BLOCKS: Record<TimeOfDay, { label: string; sub: string; time: s
   'evening':     { label: 'EVENING',     sub: 'LOG · TOMORROW · EVENING IS YOURS',  time: '6PM+'       },
 }
 
+export const MORNING_START_MINS = 6 * 60
+
 function getTimeOfDay(date: Date): TimeOfDay {
   const mins = date.getHours() * 60 + date.getMinutes()
-  if (mins >= 6 * 60 && mins < 9 * 60 + 30) return 'morning'
+  if (mins >= MORNING_START_MINS && mins < 9 * 60 + 30) return 'morning'
   if (mins >= 9 * 60 + 30 && mins < 14 * 60 + 30) return 'mid-morning'
   if (mins >= 14 * 60 + 30 && mins < 18 * 60) return 'afternoon'
   return 'evening'

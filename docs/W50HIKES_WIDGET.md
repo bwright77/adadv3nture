@@ -21,7 +21,7 @@
 ### Migration
 
 ```sql
--- supabase/migrations/013_50hikes.sql
+-- supabase/migrations/019_50hikes.sql
 
 create table hikes_50 (
   id                  uuid primary key default gen_random_uuid(),
@@ -293,7 +293,7 @@ Runs client-side from full fetch. No Edge Function needed.
 ## File Checklist for Claude Code
 
 ```
-supabase/migrations/013_50hikes.sql               ← schema + RLS
+supabase/migrations/019_50hikes.sql               ← schema + RLS
 supabase/seed/hikes_50_colorado.csv               ← all 50 rows, ready to import
 src/hooks/use50Hikes.ts                            ← data fetch + suggestion logic
 src/components/dashboard/widgets/W50Hikes.tsx      ← widget (collapsed + expanded)

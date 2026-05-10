@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { C } from '../../tokens'
 import { TOD_BLOCKS, type TimeOfDay } from '../../hooks/useTimeOfDay'
-import { WEEKEND_BLOCKS, WEEKEND_BLOCK_ORDER, type WeekendBlock } from '../../hooks/useDayType'
+import { WEEKEND_BLOCKS, WEEKEND_PICKER_ORDER, type WeekendBlock } from '../../hooks/useDayType'
 
 const TOD_ORDER: TimeOfDay[] = ['morning', 'mid-morning', 'afternoon', 'evening']
 
@@ -76,10 +76,13 @@ export function Header({
   }
 
   const pickerItems = isWeekend
-    ? WEEKEND_BLOCK_ORDER.map(wb => ({ key: wb, ...WEEKEND_BLOCKS[wb] }))
+    ? WEEKEND_PICKER_ORDER.map(wb => ({ key: wb, ...WEEKEND_BLOCKS[wb] }))
     : TOD_ORDER.map(tod => ({ key: tod, ...TOD_BLOCKS[tod] }))
 
-  const activeKey = isWeekend ? weekendBlock! : activeTod
+  // Both evening blocks map to the same picker pill
+  const activeKey = isWeekend
+    ? (weekendBlock === 'weekend-evening-sun' ? 'weekend-evening-sat' : weekendBlock!)
+    : activeTod
 
   return (
     <div style={{ padding: '10px 20px 14px', color: dark ? C.cream : C.dark }}>

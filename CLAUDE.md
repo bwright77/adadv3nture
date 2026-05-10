@@ -19,9 +19,9 @@ NEXT PRIORITY: Withings OAuth — connect, sync body metrics, weight trend
 
 ---
 
-## What's Live (as of May 9, 2026)
+## What's Live (as of May 10, 2026)
 
-**Migrations applied:** 001–018 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main)
+**Migrations applied:** 001–022 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main)
 
 | Area | Status |
 |------|--------|
@@ -43,6 +43,8 @@ NEXT PRIORITY: Withings OAuth — connect, sync body metrics, weight trend
 | Google Calendar — WCalendar widget, "Connect" OAuth button | ✓ |
 | Apple Health — iOS Shortcut → Edge Function → recovery_signals | ✓ |
 | Drinks widget — +/- counter, 7-day avg | ✓ |
+| Weekend Mode — 4 views (Dawn/Day/Sat Eve/Sun Eve), weekend briefing variant | ✓ |
+| 50 Hikes with Kids tracker — seasonal suggestion, log, expanded list | ✓ |
 | Withings OAuth + body metrics | ✗ |
 | Trends engine — charts, weekly summaries | ✗ |
 | Daily check-in — mood, MIT portfolio check | ✗ |
@@ -100,7 +102,7 @@ NEXT PRIORITY: Withings OAuth — connect, sync body metrics, weight trend
 
 ```
 ✓ 01. Project init — Vite + React 19 + TypeScript + Tailwind + Supabase
-✓ 02. Schema — migrations 001-018, RLS, seed data
+✓ 02. Schema — migrations 001-022, RLS, seed data
 ✓ 03. Auth — email + Google OAuth
 ✓ 04. Widget grid — time-aware views
 ✓ 05. Inbox — FAB, swipe triage
@@ -116,6 +118,7 @@ NEXT PRIORITY: Withings OAuth — connect, sync body metrics, weight trend
 ✓ 17. Weather widget
 ✓ 19. Inspiration widget — storage, on this day, swipe
   +. Training tab, Projects tab, Career tab, design system
+✓ WM. Weekend Mode — 4 views, 8 widgets, briefing variant, 50 Hikes tracker
 
   09. Withings OAuth — connect, sync metrics, weight trend  ← NEXT
   10. Daily check-in — drinks +/- counter, mood
@@ -141,4 +144,4 @@ NEXT PRIORITY: Withings OAuth — connect, sync body metrics, weight trend
 
 ---
 
-*Last updated: May 9, 2026*
+*Last updated: May 10, 2026*
