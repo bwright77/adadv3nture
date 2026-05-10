@@ -25,7 +25,6 @@ function nextMondayOffset(): number {
   return 1
 }
 
-const URGENCY_ORDER: Record<string, number> = { fire: 0, deck: 1, rain: 2 }
 
 function Divider({ dark }: { dark?: boolean }) {
   return (
@@ -138,23 +137,6 @@ export function WWeekAhead({ dark }: Props) {
             </>
           )}
 
-          {/* Career priorities */}
-          {todos.length > 0 && (
-            <>
-              <Divider dark={dark} />
-              <div className="mono" style={{ fontSize: 9, letterSpacing: '0.1em', opacity: 0.4, marginBottom: 8 }}>
-                CAREER PRIORITIES
-              </div>
-              {todos.map(t => (
-                <div key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                  <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>{URGENCY_ICON[t.urgency]}</span>
-                  <span className="badge" style={{ fontSize: 'var(--fs-13)', color: dark ? C.cream : C.dark }}>
-                    {t.title}
-                  </span>
-                </div>
-              ))}
-            </>
-          )}
         </>
       )}
     </Glass>

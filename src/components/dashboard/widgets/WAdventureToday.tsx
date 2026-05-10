@@ -13,12 +13,6 @@ const TYPE_ICON: Record<AdventureType | 'other', string> = {
   family: '👨‍👩‍👧', project: '🔧', other: '✦',
 }
 
-const TIER_GATE: Record<string, string> = {
-  go_hard: 'Send the big objective',
-  moderate: 'Steady effort — scale back if needed',
-  recovery: 'Recovery day — keep it gentle',
-  unknown: '',
-}
 
 function formatTime(t: string | null): string {
   if (!t) return ''
