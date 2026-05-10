@@ -67,7 +67,7 @@ export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }:
   useEffect(() => {
     if (!user) return
     setBriefingLoading(true)
-    supabase.functions.invoke<BriefingData>('morning-briefing')
+    supabase.functions.invoke<BriefingData>('morning-briefing', { body: { day_type: 'weekend' } })
       .then(({ data, error }) => { if (!error && data) setBriefingData(data) })
       .finally(() => setBriefingLoading(false))
   }, [user])
