@@ -5,6 +5,7 @@ import { WInspire } from './widgets/WInspire'
 import { WWeather } from './widgets/WWeather'
 import { WMIT } from './widgets/WMIT'
 import { WDrinks } from './widgets/WDrinks'
+import { WSteps } from './widgets/WSteps'
 import { WCalendar } from './widgets/WCalendar'
 import type { TimeOfDay } from '../../hooks/useTimeOfDay'
 
@@ -24,11 +25,12 @@ export function AfternoonView({ activeTod, isOverride, onSetOverride }: Afternoo
       }}>
         <W4PM dark />
         <WKids dark />
-        <WInspire dark />
+        <WInspire dark span={8} />
         <WWeather dark />
         <WCalendar dark span={12} />
         <WMIT dark />
         <WDrinks dark />
+        <WSteps dark />
       </div>
     </>
   )

@@ -93,7 +93,7 @@ export function MorningView({ activeTod, isOverride, onSetOverride }: MorningVie
         <WSteps dark />
         <WCalendar dark span={12} />
         <WMIT dark />
-        <WInspire dark />
+        <WInspire dark span={8} />
         <WForecast dark />
         <WLaborDay dark />
       </div>

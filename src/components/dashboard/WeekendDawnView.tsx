@@ -3,14 +3,12 @@ import { Header } from '../ui/Header'
 import { WMorningHero } from './widgets/WMorningHero'
 import { WWorkout } from './widgets/WWorkout'
 import { WThinkingPrompt } from './widgets/WThinkingPrompt'
-import { WWeather } from './widgets/WWeather'
 import { WDrinks } from './widgets/WDrinks'
 import { WSteps } from './widgets/WSteps'
 import { WInspire } from './widgets/WInspire'
-import { WForecast } from './widgets/WForecast'
 import { WCalendar } from './widgets/WCalendar'
 import { W50Hikes } from './widgets/W50Hikes'
-import { WConditions } from './widgets/WConditions'
+import { WWeatherFull } from './widgets/WWeatherFull'
 import { WAdventureToday } from './widgets/WAdventureToday'
 import { WFamilyDay } from './widgets/WFamilyDay'
 import { useAuth } from '../../contexts/AuthContext'
@@ -93,13 +91,11 @@ export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }:
         <WMorningHero dark briefingText={briefingData?.briefing ?? null} briefingLoading={briefingLoading} />
         <WWorkout dark />
         <WThinkingPrompt dark prompt={briefingData?.thinking_prompt ?? null} loading={briefingLoading} />
-        <WWeather dark />
-        <WDrinks dark />
-        <WSteps dark />
+        <WDrinks dark span={6} />
+        <WSteps dark span={6} />
         <WCalendar dark span={12} />
-        <WInspire dark />
-        <WForecast dark />
-        <WConditions dark />
+        <WInspire dark span={12} />
+        <WWeatherFull dark />
         <WFamilyDay dark />
         <WAdventureToday dark />
         <W50Hikes dark />

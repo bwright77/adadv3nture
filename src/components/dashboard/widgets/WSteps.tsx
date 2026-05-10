@@ -8,13 +8,13 @@ import { getLast7DaysSteps } from '../../../lib/recovery'
 
 const GOAL = 10_000
 
-interface WStepsProps { dark?: boolean }
+interface WStepsProps { dark?: boolean; span?: number }
 
 function formatSteps(n: number): string {
   return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n)
 }
 
-export function WSteps({ dark }: WStepsProps) {
+export function WSteps({ dark, span = 4 }: WStepsProps) {
   const { user } = useAuth()
   const [days, setDays] = useState<{ date: string; count: number | null }[]>([])
 
@@ -37,7 +37,7 @@ export function WSteps({ dark }: WStepsProps) {
     : null
 
   return (
-    <Glass dark={dark} span={4} pad={14}>
+    <Glass dark={dark} span={span} pad={14}>
       <CardLabel dark={dark}>Steps · yday</CardLabel>
       <div className="mono" style={{ fontSize: 'var(--fs-26)', fontWeight: 700, lineHeight: 1, color }}>
         {yesterday !== null ? formatSteps(yesterday) : '—'}

@@ -6,9 +6,9 @@ import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getLast7Days } from '../../../lib/drinks'
 
-interface WDrinksProps { dark?: boolean }
+interface WDrinksProps { dark?: boolean; span?: number }
 
-export function WDrinks({ dark }: WDrinksProps) {
+export function WDrinks({ dark, span = 4 }: WDrinksProps) {
   const { user } = useAuth()
   const [data, setData] = useState<number[]>([])
 
@@ -23,7 +23,7 @@ export function WDrinks({ dark }: WDrinksProps) {
   const onTrack = data.length ? parseFloat(avg) <= 2.0 : true
 
   return (
-    <Glass dark={dark} span={4} pad={14}>
+    <Glass dark={dark} span={span} pad={14}>
       <CardLabel dark={dark}>Drinks · 7d</CardLabel>
       <div className="mono" style={{ fontSize: 'var(--fs-26)', fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0' }}>
         {avg}<span style={{ fontSize: 'var(--fs-13)', opacity: 0.5 }}>/d</span>

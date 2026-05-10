@@ -23,6 +23,7 @@ interface Photo {
 
 interface WInspireProps {
   dark?: boolean
+  span?: number
 }
 
 function publicUrl(path: string): string {
@@ -47,7 +48,7 @@ function toInspirationPhoto(p: Photo): InspirationPhoto {
   }
 }
 
-export function WInspire({ dark }: WInspireProps) {
+export function WInspire({ dark, span = 6 }: WInspireProps) {
   const { user } = useAuth()
   const [photo, setPhoto] = useState<Photo | null>(null)
   const [showDetail, setShowDetail] = useState(false)
@@ -95,7 +96,7 @@ export function WInspire({ dark }: WInspireProps) {
 
   if (!photo) {
     return (
-      <Glass dark={dark} span={6} pad={0} style={{ height: 148, padding: 0 }}>
+      <Glass dark={dark} span={span} pad={0} style={{ height: 148, padding: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', flexDirection: 'column',
@@ -124,7 +125,7 @@ export function WInspire({ dark }: WInspireProps) {
     )}
     <Glass
       dark={dark}
-      span={6}
+      span={span}
       pad={0}
       style={{ height: 148, padding: 0, cursor: 'pointer' }}
       onClick={() => photo && setShowDetail(true)}

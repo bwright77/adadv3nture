@@ -50,10 +50,16 @@
 html, body, #root {
   margin: 0;
   padding: 0;
-  height: 100%;
+  min-height: 100dvh;
   overscroll-behavior: none;
   overflow-x: hidden;
   max-width: 100%;
+}
+
+/* Backstop: paint html dark so the home-indicator strip on iOS PWA
+   never shows as a white gap below the fixed TabBar. */
+html {
+  background: var(--color-dark);
 }
 
 body {

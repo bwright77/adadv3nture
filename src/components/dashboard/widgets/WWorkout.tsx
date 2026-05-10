@@ -9,7 +9,7 @@ import type { Database } from '../../../types/database'
 
 type Activity = Database['public']['Tables']['activities']['Row']
 
-interface WWorkoutProps { dark?: boolean }
+interface WWorkoutProps { dark?: boolean; span?: number }
 
 function formatDuration(s: number | null): string {
   if (!s) return '—'
@@ -69,7 +69,7 @@ function ProgramProgress({ program, dark, onDone, advancing }: {
   )
 }
 
-export function WWorkout({ dark }: WWorkoutProps) {
+export function WWorkout({ dark, span = 7 }: WWorkoutProps) {
   const { user } = useAuth()
   const today = new Date().toISOString().substring(0, 10)
   const [todayAct, setTodayAct] = useState<Activity | null | undefined>(undefined)
@@ -100,7 +100,7 @@ export function WWorkout({ dark }: WWorkoutProps) {
 
   if (todayAct === undefined) {
     return (
-      <Glass dark={dark} span={7} pad={14}>
+      <Glass dark={dark} span={span} pad={14}>
         <CardLabel dark={dark}>Workout</CardLabel>
         <div style={{ opacity: 0.4, fontSize: 'var(--fs-14)', marginTop: 8 }}>Loading…</div>
       </Glass>
@@ -111,7 +111,7 @@ export function WWorkout({ dark }: WWorkoutProps) {
   if (todayAct) {
     const isStrength = ['strength', 'workout', 'weight_training'].includes(todayAct.activity_type)
     return (
-      <Glass dark={dark} span={7} pad={14}>
+      <Glass dark={dark} span={span} pad={14}>
         <CardLabel dark={dark}>Today · done ✓</CardLabel>
         <div className="badge" style={{ fontSize: 'var(--fs-17)', lineHeight: 1.1, marginTop: 2 }}>
           {todayAct.title?.toUpperCase() ?? todayAct.activity_type.toUpperCase()}
@@ -146,7 +146,7 @@ export function WWorkout({ dark }: WWorkoutProps) {
   const parts = title.split('·').map((p: string) => p.trim())
 
   return (
-    <Glass dark={dark} span={7} pad={14}>
+    <Glass dark={dark} span={span} pad={14}>
       <CardLabel dark={dark}>Today · prescribed</CardLabel>
       <div className="badge" style={{ fontSize: 'var(--fs-17)', lineHeight: 1.1, marginTop: 2 }}>
         <span>{parts[0]}</span>

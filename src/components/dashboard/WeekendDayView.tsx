@@ -3,12 +3,10 @@ import { WCalendar } from './widgets/WCalendar'
 import { WInbox } from './widgets/WInbox'
 import { WDrinks } from './widgets/WDrinks'
 import { WSteps } from './widgets/WSteps'
-import { WWeather } from './widgets/WWeather'
 import { WInspire } from './widgets/WInspire'
 import { WWorkout } from './widgets/WWorkout'
-import { WForecast } from './widgets/WForecast'
 import { W50Hikes } from './widgets/W50Hikes'
-import { WConditions } from './widgets/WConditions'
+import { WWeatherFull } from './widgets/WWeatherFull'
 import { WAdventureToday } from './widgets/WAdventureToday'
 import { WLongEffort } from './widgets/WLongEffort'
 import { WProjectSession } from './widgets/WProjectSession'
@@ -37,17 +35,15 @@ export function WeekendDayView({ weekendBlock, isOverride, onSetWeekendBlock }: 
       />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, padding: '0 14px 100px' }}>
         <WAdventureToday dark />
-        <WWorkout dark />
+        <WWorkout dark span={12} />
         <WCalendar dark span={12} />
-        <WInbox dark />
-        <WDrinks dark />
-        <WSteps dark />
-        <WWeather dark />
-        <WInspire dark />
+        <WInbox dark span={12} />
+        <WDrinks dark span={6} />
+        <WSteps dark span={6} />
         <WLongEffort dark />
         <WProjectSession dark />
-        <WConditions dark />
-        <WForecast dark />
+        <WWeatherFull dark />
+        <WInspire dark span={12} />
         <W50Hikes dark />
       </div>
     </>
