@@ -145,12 +145,7 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
               {yearsAgo} YEAR{yearsAgo !== 1 ? 'S' : ''} AGO
             </div>
           </div>
-          <div style={{
-            width: 36, height: 36, borderRadius: 18,
-            background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 'var(--fs-14)', color: C.cream, opacity: 0.6,
-          }}>↗</div>
+          <div style={{ width: 36 }} />
         </div>
       </div>
 
