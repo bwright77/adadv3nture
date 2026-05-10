@@ -3,9 +3,11 @@ import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
-import { getProgram, type ProgramState } from '../../../lib/program-tracker'
-import { getReviewHistory, type PilotLights } from '../../../lib/daily-plan'
+import { getAllPrograms, type ProgramState } from '../../../lib/program-tracker'
+import { getCurrentTrainingWeek, type TrainingWeek } from '../../../lib/training'
+import { loadRecovery } from '../../../lib/recovery'
 import { useWeather } from '../../../hooks/useWeather'
+import { supabase } from '../../../lib/supabase'
 
 interface WTomorrowProps { dark?: boolean }
 
@@ -15,23 +17,167 @@ const DOW_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 
 function nextMorningDate() {
   const now = new Date()
-  // Before 6am still feels like "tonight" — the morning coming up is today
   if (now.getHours() < 6) return now
   const d = new Date(now)
   d.setDate(d.getDate() + 1)
   return d
 }
 
+function thisWeekMonday(): string {
+  const today = new Date()
+  const d = new Date(today)
+  d.setDate(today.getDate() - ((today.getDay() + 6) % 7))
+  return d.toISOString().substring(0, 10)
+}
+
+interface WeekSummary {
+  runMiles: number
+  rideMiles: number
+  strengthSessions: number
+  longRunMiles: number  // longest run this week
+}
+
+interface Rec {
+  type: 'long_run' | 'run' | 'ride' | 'strength' | 'rest'
+  headline: string
+  why: string
+  program?: string
+}
+
+function buildRec(params: {
+  week: TrainingWeek | null
+  actuals: WeekSummary
+  recoveryTier: string
+  runOk: boolean | null
+  bikeOk: boolean | null
+  programs: ProgramState[]
+  dow: number  // tomorrow's dow
+}): Rec {
+  const { week, actuals, recoveryTier, runOk, bikeOk, programs, dow } = params
+
+  // Recovery gates everything outdoor
+  if (recoveryTier === 'recovery') {
+    const strengthLeft = (week?.target_strength_sessions ?? 0) - actuals.strengthSessions
+    if (strengthLeft > 0 && programs.length > 0) {
+      return {
+        type: 'strength',
+        headline: 'Strength — recovery day',
+        why: 'Body needs rest · indoor session fits',
+        program: programs[0].next_workout_title ?? undefined,
+      }
+    }
+    return { type: 'rest', headline: 'Rest or easy walk', why: 'Recovery score is low — protect the adaptation' }
+  }
+
+  const targetLongRun = week?.target_long_run_miles ?? null
+  const targetRun = week?.target_run_miles ?? null
+  const targetRide = week?.target_cycling_miles ?? null
+  const targetStrength = week?.target_strength_sessions ?? 0
+
+  const longRunDone = targetLongRun ? actuals.longRunMiles >= targetLongRun * 0.8 : actuals.longRunMiles >= 8
+  const runGap = targetRun ? Math.max(0, targetRun - actuals.runMiles) : 0
+  const rideGap = targetRide ? Math.max(0, targetRide - actuals.rideMiles) : 0
+  const strengthLeft = Math.max(0, targetStrength - actuals.strengthSessions)
+
+  // Long run: weekend or if it's the most pressing gap
+  const isWeekend = dow === 0 || dow === 6
+  const longRunTarget = targetLongRun ?? 10
+  if (!longRunDone && (isWeekend || runGap >= longRunTarget * 0.8)) {
+    if (runOk !== false) {
+      return {
+        type: 'long_run',
+        headline: `Long run · ~${longRunTarget}mi`,
+        why: targetLongRun
+          ? `${longRunTarget}mi target not done this week`
+          : 'Long effort not done this week · WLW training',
+      }
+    }
+  }
+
+  // Run gap
+  if (runGap >= 2 && runOk !== false) {
+    return {
+      type: 'run',
+      headline: `Run · ~${Math.round(runGap)}mi to go`,
+      why: `${actuals.runMiles.toFixed(1)} of ${targetRun}mi run this week`,
+    }
+  }
+
+  // Ride gap
+  if (rideGap >= 5 && bikeOk !== false) {
+    return {
+      type: 'ride',
+      headline: `Ride · ~${Math.round(rideGap)}mi to go`,
+      why: `${actuals.rideMiles.toFixed(0)} of ${targetRide}mi ridden this week`,
+    }
+  }
+
+  // Strength
+  if (strengthLeft > 0 && programs.length > 0) {
+    return {
+      type: 'strength',
+      headline: `Strength · ${strengthLeft} session${strengthLeft > 1 ? 's' : ''} left`,
+      why: `${actuals.strengthSessions} of ${targetStrength} done this week`,
+      program: programs[0].next_workout_title ?? undefined,
+    }
+  }
+
+  // Week targets met or no targets set
+  if (!week) {
+    return { type: 'rest', headline: 'No targets set this week', why: 'Add a training week in the Training tab' }
+  }
+  return { type: 'rest', headline: 'Week targets on track', why: 'All targets met — free choice tomorrow' }
+}
+
+const REC_ICON: Record<Rec['type'], string> = {
+  long_run: '🏃', run: '🏃', ride: '🚴', strength: '🏋️', rest: '🛌',
+}
+
 export function WTomorrow({ dark }: WTomorrowProps) {
   const { user } = useAuth()
-  const [program, setProgram] = useState<ProgramState | null>(null)
-  const [pilotLights, setPilotLights] = useState<PilotLights | null>(null)
+  const [week, setWeek] = useState<TrainingWeek | null>(null)
+  const [actuals, setActuals] = useState<WeekSummary>({ runMiles: 0, rideMiles: 0, strengthSessions: 0, longRunMiles: 0 })
+  const [programs, setPrograms] = useState<ProgramState[]>([])
+  const [recoveryTier, setRecoveryTier] = useState<string>('unknown')
   const { weather } = useWeather()
 
   useEffect(() => {
     if (!user) return
-    getProgram(user.id).then(setProgram).catch(() => null)
-    getReviewHistory(user.id).then(h => setPilotLights(h.pilotLights)).catch(() => null)
+    const monday = thisWeekMonday()
+    const today = new Date().toISOString().substring(0, 10)
+
+    Promise.allSettled([
+      getCurrentTrainingWeek(user.id),
+      getAllPrograms(user.id),
+      loadRecovery(user.id),
+      (supabase as any)
+        .from('activities')
+        .select('activity_type, distance_miles')
+        .eq('user_id', user.id)
+        .gte('activity_date', monday)
+        .lte('activity_date', today),
+    ]).then(([weekRes, programsRes, recoveryRes, activitiesRes]) => {
+      const w = weekRes.status === 'fulfilled' ? weekRes.value : null
+      setWeek(w)
+      setPrograms(programsRes.status === 'fulfilled' ? programsRes.value : [])
+      if (recoveryRes.status === 'fulfilled') {
+        setRecoveryTier(recoveryRes.value.tier ?? 'unknown')
+      }
+      const acts = activitiesRes.status === 'fulfilled' ? (activitiesRes.value.data ?? []) : []
+      const summary: WeekSummary = { runMiles: 0, rideMiles: 0, strengthSessions: 0, longRunMiles: 0 }
+      for (const a of acts as { activity_type: string; distance_miles: number | null }[]) {
+        const mi = a.distance_miles ?? 0
+        if (a.activity_type === 'run') {
+          summary.runMiles += mi
+          if (mi > summary.longRunMiles) summary.longRunMiles = mi
+        } else if (a.activity_type === 'ride') {
+          summary.rideMiles += mi
+        } else if (a.activity_type === 'strength') {
+          summary.strengthSessions += 1
+        }
+      }
+      setActuals(summary)
+    })
   }, [user])
 
   const tmrw = nextMorningDate()
@@ -40,32 +186,18 @@ export function WTomorrow({ dark }: WTomorrowProps) {
   const dateLabel = `${DOW_FULL[dow]} · ${MONTHS[tmrw.getMonth()]} ${tmrw.getDate()}`
 
   const tomorrowForecast = weather?.dailyForecast.find(d => d.label === 'Tomorrow')
-  const runOk = tomorrowForecast ? tomorrowForecast.highF < 80 : null
+  const runOk = tomorrowForecast ? tomorrowForecast.highF < 85 && !tomorrowForecast.isRaining : null
   const bikeOk = tomorrowForecast
-    ? tomorrowForecast.highF < 90 && !tomorrowForecast.isRaining && !tomorrowForecast.isSnowing
+    ? tomorrowForecast.highF < 95 && !tomorrowForecast.isRaining && !tomorrowForecast.isSnowing
     : null
 
-  // Next strength session title (what's queued for tomorrow)
-  const strengthTitle = program?.next_workout_title ?? null
-  const parts = strengthTitle ? strengthTitle.split('·').map(p => p.trim()) : []
-
-  // Portfolio focus — top 2 most neglected categories
-  const PILOT_LABELS: Record<keyof PilotLights, string> = {
-    family_creative: 'FAMILY', home: 'HOME', career: 'CAREER', projects: 'PROJECTS',
-  }
-  const neglected = pilotLights
-    ? (Object.entries(pilotLights) as [keyof PilotLights, number][])
-        .filter(([, days]) => days >= 2)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 2)
-    : []
+  const rec = buildRec({ week, actuals, recoveryTier, runOk, bikeOk, programs, dow })
 
   return (
     <Glass dark={dark} span={12} pad={14}>
       <CardLabel dark={dark}>Tomorrow · {dateLabel}</CardLabel>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
-        {/* Run Club callout if Monday */}
         {isMonday && (
           <div className="badge" style={{ fontSize: 'var(--fs-15)' }}>
             RUN CLUB · WASH PARK · 6PM{' '}
@@ -73,48 +205,32 @@ export function WTomorrow({ dark }: WTomorrowProps) {
           </div>
         )}
 
-        {/* Strength session */}
-        {strengthTitle && (
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <span className="badge" style={{
-              fontSize: isMonday ? 11 : 13,
-              color: dark ? C.cream : C.dark,
-            }}>
-              {parts[0]}
-            </span>
-            {parts[1] && (
-              <span className="mono" style={{ fontSize: 'var(--fs-12)', color: C.teal }}>
-                {parts[1]}
-              </span>
-            )}
-            {parts[2] && (
-              <span className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.6 }}>
-                · {parts[2]}
-              </span>
-            )}
+        {/* Recommendation headline */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16, flexShrink: 0 }}>{REC_ICON[rec.type]}</span>
+          <span className="badge" style={{ fontSize: 'var(--fs-15)', color: dark ? C.cream : C.dark }}>
+            {rec.headline}
+          </span>
+        </div>
+
+        {/* Why line */}
+        <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.55, marginLeft: 24 }}>
+          {rec.why}
+        </div>
+
+        {/* Program detail when strength is the rec */}
+        {rec.program && (
+          <div className="mono" style={{
+            fontSize: 'var(--fs-11)', color: C.teal, marginLeft: 24,
+          }}>
+            {rec.program}
           </div>
         )}
 
-        {/* Portfolio focus */}
-        {neglected.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-            <span className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.5, letterSpacing: '0.1em' }}>FOCUS</span>
-            {neglected.map(([cat, days]) => (
-              <span key={cat} className="mono" style={{
-                fontSize: 'var(--fs-10)', letterSpacing: '0.08em',
-                color: days >= 4 ? C.rust : C.sand,
-                fontWeight: 700,
-              }}>
-                {PILOT_LABELS[cat]} <span style={{ opacity: 0.6 }}>{days}d</span>
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Weather routing line */}
+        {/* Weather line */}
         {tomorrowForecast && (
-          <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.55, marginTop: 2 }}>
-            {DOW_SHORT[dow]} forecast: {tomorrowForecast.highF}° high
+          <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.5, marginTop: 2 }}>
+            {DOW_SHORT[dow]} {tomorrowForecast.highF}°
             {tomorrowForecast.precipPct > 15 ? ` · ${tomorrowForecast.precipPct}% precip` : ''}
             {runOk !== null ? ` · run ${runOk ? '✓' : '✗'}` : ''}
             {bikeOk !== null ? ` · bike ${bikeOk ? '✓' : '✗'}` : ''}
