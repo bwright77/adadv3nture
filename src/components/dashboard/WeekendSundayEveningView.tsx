@@ -6,6 +6,7 @@ import { WCalendar } from './widgets/WCalendar'
 import { WInspire } from './widgets/WInspire'
 import { WForecast } from './widgets/WForecast'
 import { WPilots } from './widgets/WPilots'
+import { WWeekAhead } from './widgets/WWeekAhead'
 import type { WeekendBlock } from '../../hooks/useDayType'
 import type { TimeOfDay } from '../../hooks/useTimeOfDay'
 
@@ -35,6 +36,7 @@ export function WeekendSundayEveningView({ weekendBlock, isOverride, onSetWeeken
         dark
       />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, padding: '0 14px 100px' }}>
+        <WWeekAhead dark />
         <WReview dark />
         <WDrinkEntry dark />
         <WTomorrow dark />

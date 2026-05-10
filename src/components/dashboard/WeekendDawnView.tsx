@@ -12,6 +12,7 @@ import { WCalendar } from './widgets/WCalendar'
 import { W50Hikes } from './widgets/W50Hikes'
 import { WConditions } from './widgets/WConditions'
 import { WAdventureToday } from './widgets/WAdventureToday'
+import { WFamilyDay } from './widgets/WFamilyDay'
 import { useAuth } from '../../contexts/AuthContext'
 import { loadRecovery } from '../../lib/recovery'
 import { supabase } from '../../lib/supabase'
@@ -99,6 +100,7 @@ export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }:
         <WInspire dark />
         <WForecast dark />
         <WConditions dark />
+        <WFamilyDay dark />
         <WAdventureToday dark />
         <W50Hikes dark />
       </div>
