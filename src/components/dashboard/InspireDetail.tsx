@@ -3,6 +3,7 @@ import { C } from '../../tokens'
 import type { InspirationPhoto } from '../../hooks/useInspiration'
 import { getPhotosAroundDate } from '../../lib/inspiration'
 import { useAuth } from '../../contexts/AuthContext'
+import { formatFullDate } from '../../lib/utils'
 
 interface InspireDetailProps {
   photo: InspirationPhoto
@@ -32,13 +33,7 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
   const current = photos[idx] ?? photo
   const yearsAgo = new Date().getFullYear() - current.year
   const subtitle = [current.location, current.activity_type].filter(Boolean).join(' · ')
-  const fullDate = (() => {
-    const d = new Date(current.taken_at + 'T12:00:00')
-    const month = d.toLocaleDateString('en-US', { month: 'long' })
-    const day = d.getDate()
-    const ord = (n: number) => { const s = ['th','st','nd','rd']; const v = n % 100; return n + (s[(v-20)%10] ?? s[v] ?? s[0]) }
-    return `${month} ${ord(day)}, ${current.year}`
-  })()
+  const fullDate = formatFullDate(current.taken_at)
 
   const activeDx = exitDx ?? dx
 
