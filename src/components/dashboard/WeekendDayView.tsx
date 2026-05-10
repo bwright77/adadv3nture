@@ -8,6 +8,7 @@ import { WInspire } from './widgets/WInspire'
 import { WWorkout } from './widgets/WWorkout'
 import { WForecast } from './widgets/WForecast'
 import { W50Hikes } from './widgets/W50Hikes'
+import { WAdventureToday } from './widgets/WAdventureToday'
 import type { WeekendBlock } from '../../hooks/useDayType'
 import type { TimeOfDay } from '../../hooks/useTimeOfDay'
 
@@ -32,6 +33,7 @@ export function WeekendDayView({ weekendBlock, isOverride, onSetWeekendBlock }: 
         dark
       />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, padding: '0 14px 100px' }}>
+        <WAdventureToday dark />
         <WWorkout dark />
         <WCalendar dark span={12} />
         <WInbox dark />
