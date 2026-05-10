@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
 import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, updateTrainingGoalNotes, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
+import { getAllPrograms, addProgram, advanceProgram, setProgramPosition, deactivateProgram, type ProgramState } from '../../lib/program-tracker'
 
 const EVENT_COLOR: Record<string, string> = {
   trail_run:      C.rust,
@@ -227,6 +228,185 @@ function WeekCard({ week }: { week: TrainingWeek }) {
   )
 }
 
+function ProgramCard({ program, onAdvance, onRemove }: {
+  program: ProgramState
+  onAdvance: () => void
+  onRemove: () => void
+}) {
+  const [editingPos, setEditingPos] = useState(false)
+  const [draftWeek, setDraftWeek] = useState(String(program.current_week))
+  const [draftDay, setDraftDay] = useState(String(program.current_day))
+  const [saving, setSaving] = useState(false)
+  const { user } = useAuth()
+
+  const totalWeeks = program.total_weeks
+  const pct = totalWeeks ? Math.round(((program.current_week - 1) * 4 + program.current_day) / (totalWeeks * 4) * 100) : null
+  const lastDone = program.last_completed_date
+    ? new Date(program.last_completed_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : null
+
+  async function handleAdvance() {
+    setSaving(true)
+    await advanceProgram(user!.id)
+    onAdvance()
+    setSaving(false)
+  }
+
+  async function handleSetPosition() {
+    const w = parseInt(draftWeek)
+    const d = parseInt(draftDay)
+    if (!w || !d || w < 1 || d < 1 || d > 4) return
+    setSaving(true)
+    await setProgramPosition(program.id, w, d, program.program_name)
+    onAdvance()
+    setEditingPos(false)
+    setSaving(false)
+  }
+
+  return (
+    <div style={{ position: 'relative', marginBottom: 10 }}>
+      <div style={{
+        position: 'absolute', left: 0, top: 0, bottom: 0, width: 4,
+        background: C.teal, borderRadius: '4px 0 0 4px',
+      }} />
+      <div style={{
+        marginLeft: 4, background: '#fff',
+        border: `0.5px solid ${C.ink20}`, borderLeft: 'none',
+        borderRadius: '0 14px 14px 0', padding: '12px 16px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.teal, letterSpacing: '0.12em', fontWeight: 700, marginBottom: 2 }}>
+              STRENGTH PROGRAM
+            </div>
+            <div style={{ fontSize: 'var(--fs-16)', fontWeight: 600, color: C.dark, lineHeight: 1.2 }}>
+              {program.program_name}
+            </div>
+            {program.instructor && (
+              <div className="mono" style={{ fontSize: 'var(--fs-11)', color: C.ink60, marginTop: 1 }}>
+                {program.instructor}
+              </div>
+            )}
+            <div style={{ marginTop: 8 }}>
+              {program.next_workout_title && (
+                <div style={{ fontSize: 'var(--fs-13)', color: C.dark, marginBottom: 6 }}>
+                  {program.next_workout_title}
+                </div>
+              )}
+              {editingPos ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <span className="mono" style={{ fontSize: 'var(--fs-11)', color: C.ink40 }}>Week</span>
+                  <input
+                    type="number" min="1" value={draftWeek}
+                    onChange={e => setDraftWeek(e.target.value)}
+                    style={{ width: 44, border: `1px solid ${C.ink20}`, borderRadius: 6, padding: '3px 6px', fontSize: 'var(--fs-13)', textAlign: 'center' }}
+                  />
+                  <span className="mono" style={{ fontSize: 'var(--fs-11)', color: C.ink40 }}>Day</span>
+                  <input
+                    type="number" min="1" max="4" value={draftDay}
+                    onChange={e => setDraftDay(e.target.value)}
+                    style={{ width: 44, border: `1px solid ${C.ink20}`, borderRadius: 6, padding: '3px 6px', fontSize: 'var(--fs-13)', textAlign: 'center' }}
+                  />
+                  <button onClick={handleSetPosition} disabled={saving} style={{ background: C.teal, color: '#fff', border: 'none', borderRadius: 6, padding: '3px 10px', fontSize: 'var(--fs-12)', fontWeight: 700, cursor: 'pointer' }}>Set</button>
+                  <button onClick={() => setEditingPos(false)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-16)', cursor: 'pointer', lineHeight: 1 }}>×</button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setEditingPos(true); setDraftWeek(String(program.current_week)); setDraftDay(String(program.current_day)) }}
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}
+                >
+                  <span className="mono" style={{ fontSize: 'var(--fs-11)', color: C.ink40, letterSpacing: '0.08em' }}>
+                    W{program.current_week}D{program.current_day}
+                    {lastDone ? ` · last done ${lastDone}` : ''}
+                  </span>
+                </button>
+              )}
+              {pct !== null && (
+                <div style={{ height: 3, background: C.ink20, borderRadius: 2, marginTop: 8 }}>
+                  <div style={{ height: 3, width: `${pct}%`, background: C.teal, borderRadius: 2, transition: 'width 0.3s' }} />
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
+            <button
+              onClick={handleAdvance}
+              disabled={saving}
+              style={{
+                background: C.teal, color: '#fff', border: 'none',
+                borderRadius: 10, padding: '7px 14px',
+                fontSize: 'var(--fs-12)', fontWeight: 700, cursor: 'pointer',
+                opacity: saving ? 0.6 : 1,
+              }}
+            >
+              ✓ Done
+            </button>
+            <button
+              onClick={onRemove}
+              style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-11)', cursor: 'pointer', padding: 0 }}
+            >
+              retire
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AddProgramForm({ onSave, onCancel }: { onSave: (p: ProgramState) => void; onCancel: () => void }) {
+  const { user } = useAuth()
+  const [name, setName] = useState('')
+  const [instructor, setInstructor] = useState('')
+  const [totalWeeks, setTotalWeeks] = useState('')
+  const [saving, setSaving] = useState(false)
+  const nameRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { nameRef.current?.focus() }, [])
+
+  async function handleSave() {
+    if (!user || !name.trim()) return
+    setSaving(true)
+    try {
+      const p = await addProgram(user.id, name.trim(), {
+        instructor: instructor.trim() || undefined,
+        totalWeeks: totalWeeks ? parseInt(totalWeeks) : undefined,
+      })
+      onSave(p)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const inputStyle = {
+    border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px',
+    fontSize: 'var(--fs-14)', background: '#fff', color: C.dark,
+    fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' as const, outline: 'none',
+  }
+
+  return (
+    <div style={{ background: '#fff', border: `1.5px solid ${C.teal}`, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.teal, letterSpacing: '0.12em', marginBottom: 10 }}>NEW PROGRAM</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <input ref={nameRef} style={inputStyle} placeholder="Program name (e.g. Total Strength)" value={name} onChange={e => setName(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Escape') onCancel() }} />
+        <input style={inputStyle} placeholder="Instructor (optional)" value={instructor} onChange={e => setInstructor(e.target.value)} />
+        <input style={{ ...inputStyle, minWidth: 0 }} type="number" placeholder="Total weeks (optional)" value={totalWeeks} onChange={e => setTotalWeeks(e.target.value)} />
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 2 }}>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-14)', cursor: 'pointer', padding: '6px 10px' }}>Cancel</button>
+          <button onClick={handleSave} disabled={saving || !name.trim()} style={{
+            background: C.teal, color: '#fff', border: 'none', borderRadius: 8,
+            padding: '6px 16px', fontSize: 'var(--fs-14)', fontWeight: 700, cursor: 'pointer',
+            opacity: !name.trim() ? 0.5 : 1,
+          }}>
+            {saving ? 'Saving…' : 'Add Program'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function AddEventForm({ onSave, onCancel }: { onSave: (g: TrainingGoal) => void; onCancel: () => void }) {
   const { user } = useAuth()
   const [name, setName] = useState('')
@@ -302,8 +482,10 @@ export function TrainingView() {
   const { user } = useAuth()
   const [goals, setGoals] = useState<TrainingGoal[]>([])
   const [week, setWeek] = useState<TrainingWeek | null>(null)
+  const [programs, setPrograms] = useState<ProgramState[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
+  const [addingProgram, setAddingProgram] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -312,11 +494,24 @@ export function TrainingView() {
     Promise.all([
       getTrainingGoals(user.id),
       getCurrentTrainingWeek(user.id),
-    ]).then(([g, w]) => {
+      getAllPrograms(user.id),
+    ]).then(([g, w, p]) => {
       setGoals(g)
       setWeek(w)
+      setPrograms(p)
     }).catch(() => null).finally(() => setLoading(false))
   }, [user])
+
+  async function handleProgramAdvance() {
+    if (!user) return
+    const updated = await getAllPrograms(user.id)
+    setPrograms(updated)
+  }
+
+  async function handleProgramRemove(id: string) {
+    await deactivateProgram(id)
+    setPrograms(prev => prev.filter(p => p.id !== id))
+  }
 
   const selectedGoal = goals.find(g => g.id === selectedId) ?? null
 
@@ -336,7 +531,44 @@ export function TrainingView() {
 
       {week && <WeekCard week={week} />}
 
+      {/* Programs */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: week ? 20 : 0 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40 }}>
+          ◆ PROGRAMS
+        </div>
+        {!addingProgram && (
+          <button onClick={() => setAddingProgram(true)} style={{
+            background: 'none', border: 'none', color: C.teal, fontSize: 'var(--fs-13)',
+            fontWeight: 700, cursor: 'pointer', padding: '2px 0',
+          }}>
+            + Add
+          </button>
+        )}
+      </div>
+
+      {addingProgram && (
+        <AddProgramForm
+          onSave={p => { setPrograms(prev => [...prev, p]); setAddingProgram(false) }}
+          onCancel={() => setAddingProgram(false)}
+        />
+      )}
+
+      {programs.map(p => (
+        <ProgramCard
+          key={p.id}
+          program={p}
+          onAdvance={handleProgramAdvance}
+          onRemove={() => handleProgramRemove(p.id)}
+        />
+      ))}
+
+      {programs.length === 0 && !addingProgram && (
+        <div style={{ textAlign: 'center', padding: '12px 0 20px', color: C.ink40, fontSize: 'var(--fs-14)' }}>
+          No active programs.
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: 20 }}>
         <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40 }}>
           ◆ TARGET EVENTS
         </div>

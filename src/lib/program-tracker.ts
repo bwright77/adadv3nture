@@ -47,6 +47,65 @@ const WORKOUT_TITLES: Record<string, Record<number, Record<number, string>>> = {
   },
 }
 
+export async function getAllPrograms(userId: string): Promise<ProgramState[]> {
+  const { data } = await supabase
+    .from('program_tracker')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('active', true)
+    .order('created_at', { ascending: true }) as unknown as { data: ProgramState[] | null }
+  return data ?? []
+}
+
+export async function addProgram(
+  userId: string,
+  programName: string,
+  opts?: { instructor?: string; totalWeeks?: number; daysPerWeek?: number }
+): Promise<ProgramState> {
+  const week = 1
+  const day = 1
+  const title =
+    WORKOUT_TITLES[programName]?.[week]?.[day] ??
+    `${programName} · W${week}D${day}`
+  const { data, error } = await db
+    .from('program_tracker')
+    .insert({
+      user_id: userId,
+      program_name: programName,
+      instructor: opts?.instructor ?? null,
+      current_week: week,
+      current_day: day,
+      total_weeks: opts?.totalWeeks ?? null,
+      next_workout_title: title,
+      started_at: new Date().toISOString().substring(0, 10),
+      active: true,
+    })
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data as ProgramState
+}
+
+export async function setProgramPosition(
+  id: string,
+  week: number,
+  day: number,
+  programName: string
+): Promise<void> {
+  const title =
+    WORKOUT_TITLES[programName]?.[week]?.[day] ??
+    `${programName} · W${week}D${day}`
+  await db.from('program_tracker').update({
+    current_week: week,
+    current_day: day,
+    next_workout_title: title,
+  }).eq('id', id)
+}
+
+export async function deactivateProgram(id: string): Promise<void> {
+  await db.from('program_tracker').update({ active: false }).eq('id', id)
+}
+
 export async function getProgram(userId: string): Promise<ProgramState | null> {
   const { data } = await supabase
     .from('program_tracker')
