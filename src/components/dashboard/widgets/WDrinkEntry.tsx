@@ -3,13 +3,9 @@ import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
-import { setDrinksForDate, getLast7Days } from '../../../lib/drinks'
+import { setDrinksForDate, getLast7Days, logicalDrinkDate } from '../../../lib/drinks'
 
 interface WDrinkEntryProps { dark?: boolean }
-
-function toDateStr(d: Date): string {
-  return d.toISOString().substring(0, 10)
-}
 
 function dayLabel(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00')
@@ -23,7 +19,7 @@ function avg(counts: number[]): string {
 
 export function WDrinkEntry({ dark }: WDrinkEntryProps) {
   const { user } = useAuth()
-  const today = toDateStr(new Date())
+  const today = logicalDrinkDate()
   const [count, setCount] = useState(0)
   const [history, setHistory] = useState<{ date: string; count: number }[]>([])
   const [editing, setEditing] = useState<string | null>(null)
