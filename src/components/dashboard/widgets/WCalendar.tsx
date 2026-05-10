@@ -79,7 +79,7 @@ export function WCalendar({ dark, span = 6, tomorrow = false }: WCalendarProps) 
           }}>
             <span className="mono" style={{
               fontSize: 'var(--fs-12)', color: dark ? C.teal : C.rust,
-              width: 38, flexShrink: 0,
+              width: 56, flexShrink: 0,
             }}>
               {formatTime(e.start)}
             </span>
