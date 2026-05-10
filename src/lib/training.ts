@@ -17,6 +17,7 @@ export interface TrainingGoal {
   is_anchor: boolean
   status: TrainingStatus
   notes: string | null
+  image_url: string | null
   created_at: string
 }
 
@@ -101,6 +102,10 @@ export async function updateTrainingGoalNotes(id: string, notes: string): Promis
     .single()
   if (error) throw new Error(error.message)
   return data as TrainingGoal
+}
+
+export async function updateTrainingGoalImageUrl(id: string, imageUrl: string): Promise<void> {
+  await db.from('training_goals').update({ image_url: imageUrl.trim() || null }).eq('id', id)
 }
 
 export async function updateTrainingActuals(

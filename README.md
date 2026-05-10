@@ -1,5 +1,9 @@
 # adadv3nture
 
+<p align="center">
+  <img src="public/adadv3nture.png" alt="adadv3nture" width="220" />
+</p>
+
 > "a dad adventure" — mission control for my life.
 
 I'm building a career, raising three kids, keeping a house running, training for a 30K in September, and staying connected to the things that are just mine.

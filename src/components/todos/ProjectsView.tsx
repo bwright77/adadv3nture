@@ -50,9 +50,16 @@ function ProjectCard({ project, onOpen }: { project: Project; onOpen: () => void
         background: '#fff',
         border: `0.5px solid ${C.ink20}`,
         borderLeft: 'none', borderRadius: '0 14px 14px 0',
-        padding: '12px 16px',
+        overflow: 'hidden',
       }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        {project.image_url && (
+          <div style={{ position: 'relative', height: 72 }}>
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${project.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55) 100%)' }} />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: color }} />
+          </div>
+        )}
+        <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="mono" style={{ fontSize: 'var(--fs-10)', color, letterSpacing: '0.12em', marginBottom: 3 }}>
               {project.category.toUpperCase()}
@@ -101,7 +108,7 @@ function ProjectCard({ project, onOpen }: { project: Project; onOpen: () => void
               )}
             </div>
           )}
-        </div>
+        </div>{/* end flex row */}
       </div>
     </button>
   )

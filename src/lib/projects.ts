@@ -16,6 +16,7 @@ export interface Project {
   progress_pct: number
   next_action: string | null
   status: ProjectStatus
+  image_url: string | null
   created_at: string
 }
 
@@ -105,6 +106,10 @@ export async function updateProjectProgress(id: string, progress_pct: number): P
 export async function updateNextAction(id: string, next_action: string): Promise<void> {
   const { error } = await db.from('projects').update({ next_action }).eq('id', id)
   if (error) throw new Error(error.message)
+}
+
+export async function updateProjectImageUrl(id: string, imageUrl: string): Promise<void> {
+  await db.from('projects').update({ image_url: imageUrl.trim() || null }).eq('id', id)
 }
 
 export async function toggleMilestone(id: string, done: boolean): Promise<void> {

@@ -44,9 +44,16 @@ function CareerCard({ project, primaryContact, onOpen }: {
         background: '#fff',
         border: `0.5px solid ${C.ink20}`,
         borderLeft: 'none', borderRadius: '0 14px 14px 0',
-        padding: '12px 16px',
+        overflow: 'hidden',
       }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        {project.image_url && (
+          <div style={{ position: 'relative', height: 72 }}>
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${project.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55) 100%)' }} />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: C.rust }} />
+          </div>
+        )}
+        <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 'var(--fs-17)', fontWeight: 600, color: C.dark, lineHeight: 1.2, marginBottom: 4 }}>
               {project.title}
@@ -84,7 +91,7 @@ function CareerCard({ project, primaryContact, onOpen }: {
               <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, marginTop: 1 }}>{formatDate(displayDate)}</div>
             </div>
           )}
-        </div>
+        </div>{/* end flex row */}
       </div>
     </button>
   )

@@ -2,7 +2,18 @@ import { useState, useEffect, useRef } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
 import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, updateTrainingGoalNotes, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
-import { getAllPrograms, addProgram, advanceProgram, setProgramPosition, deactivateProgram, type ProgramState } from '../../lib/program-tracker'
+import { getAllPrograms, addProgram, advanceProgram, setProgramPosition, deactivateProgram, syncProgramFromStrava, updateProgramImageUrl, type ProgramState } from '../../lib/program-tracker'
+import { updateTrainingGoalImageUrl } from '../../lib/training'
+
+function CardImageBanner({ url, color, radius = '0 14px 0 0' }: { url: string; color: string; radius?: string }) {
+  return (
+    <div style={{ position: 'relative', height: 72, overflow: 'hidden', borderRadius: radius }}>
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55) 100%)` }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: color }} />
+    </div>
+  )
+}
 
 const EVENT_COLOR: Record<string, string> = {
   trail_run:      C.rust,
@@ -50,9 +61,10 @@ function EventCard({ goal, onOpen }: { goal: TrainingGoal; onOpen: () => void })
         background: goal.is_anchor ? `${color}08` : '#fff',
         border: goal.is_anchor ? `0.5px solid ${color}30` : `0.5px solid ${C.ink20}`,
         borderLeft: 'none', borderRadius: '0 14px 14px 0',
-        padding: '12px 16px',
+        overflow: 'hidden',
       }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        {goal.image_url && <CardImageBanner url={goal.image_url} color={color} />}
+        <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
               <span className="mono" style={{ fontSize: 'var(--fs-10)', color, letterSpacing: '0.12em', fontWeight: 700 }}>
@@ -101,6 +113,8 @@ function EventDetail({ goal, onClose, onUpdate }: {
 }) {
   const [notes, setNotes] = useState(goal.notes ?? '')
   const [saving, setSaving] = useState(false)
+  const [editingImage, setEditingImage] = useState(false)
+  const [imageDraft, setImageDraft] = useState(goal.image_url ?? '')
   const days = daysUntil(goal.event_date)
   const color = EVENT_COLOR[goal.event_type] ?? C.rust
 
@@ -115,6 +129,12 @@ function EventDetail({ goal, onClose, onUpdate }: {
     }
   }
 
+  async function saveImage() {
+    await updateTrainingGoalImageUrl(goal.id, imageDraft)
+    onUpdate({ ...goal, image_url: imageDraft.trim() || null })
+    setEditingImage(false)
+  }
+
   const meta: [string, string][] = [
     ['DATE', formatDate(goal.event_date)],
     ['COUNTDOWN', days < 0 ? 'COMPLETE' : `${days}d · ${Math.floor(days / 7)}wk`],
@@ -126,20 +146,47 @@ function EventDetail({ goal, onClose, onUpdate }: {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: C.paper, overflowY: 'auto' }}>
       <div style={{
-        background: color,
+        background: goal.image_url ? 'transparent' : color,
         padding: 'calc(env(safe-area-inset-top, 0px) + 56px) 18px 24px',
         position: 'relative',
+        minHeight: goal.image_url ? 180 : 'auto',
       }}>
+        {goal.image_url && (
+          <>
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${goal.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)' }} />
+          </>
+        )}
         <button onClick={onClose} style={{
           position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: 16,
           background: 'rgba(255,255,255,0.22)', border: 'none', borderRadius: 20,
-          padding: '5px 14px', color: '#fff', fontSize: 'var(--fs-13)', cursor: 'pointer',
+          padding: '5px 14px', color: '#fff', fontSize: 'var(--fs-13)', cursor: 'pointer', zIndex: 1,
         }}>← Back</button>
-        <div className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(255,255,255,0.75)', letterSpacing: '0.15em', marginBottom: 4 }}>
-          {EVENT_LABEL[goal.event_type]}{goal.is_anchor ? ' · ◆ ANCHOR' : ''}
-        </div>
-        <div className="badge" style={{ fontSize: 'var(--fs-28)', color: '#fff', lineHeight: 1.1 }}>
-          {goal.event_name}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(255,255,255,0.75)', letterSpacing: '0.15em', marginBottom: 4 }}>
+            {EVENT_LABEL[goal.event_type]}{goal.is_anchor ? ' · ◆ ANCHOR' : ''}
+          </div>
+          <div className="badge" style={{ fontSize: 'var(--fs-28)', color: '#fff', lineHeight: 1.1 }}>
+            {goal.event_name}
+          </div>
+          {editingImage ? (
+            <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+              <input
+                autoFocus
+                value={imageDraft}
+                onChange={e => setImageDraft(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') saveImage(); if (e.key === 'Escape') setEditingImage(false) }}
+                placeholder="Image URL…"
+                style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: 8, padding: '5px 10px', color: '#fff', fontSize: 'var(--fs-13)', outline: 'none', fontFamily: 'inherit' }}
+              />
+              <button onClick={saveImage} style={{ background: color, color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 'var(--fs-12)', fontWeight: 700, cursor: 'pointer' }}>Set</button>
+              <button onClick={() => setEditingImage(false)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, padding: '5px 10px', color: '#fff', fontSize: 'var(--fs-13)', cursor: 'pointer' }}>×</button>
+            </div>
+          ) : (
+            <button onClick={() => { setEditingImage(true); setImageDraft(goal.image_url ?? '') }} style={{ marginTop: 8, background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, padding: '4px 10px', color: 'rgba(255,255,255,0.8)', fontSize: 'var(--fs-11)', cursor: 'pointer', fontFamily: 'inherit' }}>
+              {goal.image_url ? '⬛ Edit image' : '+ Add image'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -234,8 +281,10 @@ function ProgramCard({ program, onAdvance, onRemove }: {
   onRemove: () => void
 }) {
   const [editingPos, setEditingPos] = useState(false)
+  const [editingImage, setEditingImage] = useState(false)
   const [draftWeek, setDraftWeek] = useState(String(program.current_week))
   const [draftDay, setDraftDay] = useState(String(program.current_day))
+  const [imageDraft, setImageDraft] = useState(program.image_url ?? '')
   const [saving, setSaving] = useState(false)
   const { user } = useAuth()
 
@@ -250,6 +299,12 @@ function ProgramCard({ program, onAdvance, onRemove }: {
     await advanceProgram(user!.id)
     onAdvance()
     setSaving(false)
+  }
+
+  async function handleSaveImage() {
+    await updateProgramImageUrl(program.id, imageDraft)
+    onAdvance() // refetch programs
+    setEditingImage(false)
   }
 
   async function handleSetPosition() {
@@ -272,9 +327,10 @@ function ProgramCard({ program, onAdvance, onRemove }: {
       <div style={{
         marginLeft: 4, background: '#fff',
         border: `0.5px solid ${C.ink20}`, borderLeft: 'none',
-        borderRadius: '0 14px 14px 0', padding: '12px 16px',
+        borderRadius: '0 14px 14px 0', overflow: 'hidden',
       }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        {program.image_url && <CardImageBanner url={program.image_url} color={C.teal} />}
+        <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.teal, letterSpacing: '0.12em', fontWeight: 700, marginBottom: 2 }}>
               STRENGTH PROGRAM
@@ -349,6 +405,25 @@ function ProgramCard({ program, onAdvance, onRemove }: {
             </button>
           </div>
         </div>
+        {/* Image URL editor */}
+        {editingImage ? (
+          <div style={{ display: 'flex', gap: 6, padding: '0 12px 10px' }}>
+            <input
+              autoFocus
+              value={imageDraft}
+              onChange={e => setImageDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSaveImage(); if (e.key === 'Escape') setEditingImage(false) }}
+              placeholder="Image URL…"
+              style={{ flex: 1, border: `1px solid ${C.ink20}`, borderRadius: 6, padding: '4px 8px', fontSize: 'var(--fs-12)', fontFamily: 'inherit', outline: 'none', minWidth: 0 }}
+            />
+            <button onClick={handleSaveImage} style={{ background: C.teal, color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', fontSize: 'var(--fs-11)', fontWeight: 700, cursor: 'pointer' }}>Set</button>
+            <button onClick={() => setEditingImage(false)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-16)', cursor: 'pointer' }}>×</button>
+          </div>
+        ) : (
+          <button onClick={() => { setEditingImage(true); setImageDraft(program.image_url ?? '') }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0 12px 8px', background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-11)', cursor: 'pointer', fontFamily: 'inherit' }}>
+            {program.image_url ? '⬛ Edit image' : '+ Add image'}
+          </button>
+        )}
       </div>
     </div>
   )
@@ -495,10 +570,18 @@ export function TrainingView() {
       getTrainingGoals(user.id),
       getCurrentTrainingWeek(user.id),
       getAllPrograms(user.id),
-    ]).then(([g, w, p]) => {
+    ]).then(async ([g, w, p]) => {
       setGoals(g)
       setWeek(w)
-      setPrograms(p)
+      // Sync each active program against Strava history, then refetch if any changed
+      const synced = await Promise.all(p.map(prog => syncProgramFromStrava(user.id, prog)))
+      const anyUpdated = synced.some(n => n > 0)
+      if (anyUpdated) {
+        const refreshed = await getAllPrograms(user.id)
+        setPrograms(refreshed)
+      } else {
+        setPrograms(p)
+      }
     }).catch(() => null).finally(() => setLoading(false))
   }, [user])
 

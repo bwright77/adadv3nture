@@ -3,7 +3,7 @@ import { C } from '../../tokens'
 import {
   toggleMilestone, addUpdate, updateNextAction, updateProjectProgress,
   addMilestone, deleteMilestone, reorderMilestones,
-  addContact, deleteContact,
+  addContact, deleteContact, updateProjectImageUrl,
   type Project, type ProjectMilestone, type ProjectUpdate, type ProjectContact,
 } from '../../lib/projects'
 
@@ -48,6 +48,8 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
   const [contactName, setContactName] = useState('')
   const [contactTitle, setContactTitle] = useState('')
   const [contactRelationship, setContactRelationship] = useState('')
+  const [editingImage, setEditingImage] = useState(false)
+  const [imageDraft, setImageDraft] = useState(project.image_url ?? '')
 
   // Drag state
   const [dragIdx, setDragIdx] = useState<number | null>(null)
@@ -154,6 +156,12 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
     onUpdate()
   }
 
+  async function handleSaveImage() {
+    await updateProjectImageUrl(project.id, imageDraft)
+    onUpdate()
+    setEditingImage(false)
+  }
+
   async function handleSaveAction() {
     if (!actionDraft.trim()) { setEditingAction(false); return }
     await updateNextAction(project.id, actionDraft.trim())
@@ -180,54 +188,82 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
       background: C.paper, overflowY: 'auto',
     }}>
       {/* Header */}
-      <div style={{ background: C.dark, padding: 'calc(env(safe-area-inset-top, 0px) + 56px) 18px 20px', position: 'relative' }}>
+      <div style={{ background: project.image_url ? 'transparent' : C.dark, padding: 'calc(env(safe-area-inset-top, 0px) + 56px) 18px 20px', position: 'relative', minHeight: project.image_url ? 200 : 'auto' }}>
+        {project.image_url && (
+          <>
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${project.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.75) 100%)' }} />
+          </>
+        )}
         <button
           onClick={onClose}
           style={{
-            position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 14px)', left: 14,
+            position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 14px)', left: 14, zIndex: 1,
             background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: 8,
             color: C.cream, fontSize: 'var(--fs-20)', cursor: 'pointer',
             width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >←</button>
-        <div className="mono" style={{ fontSize: 'var(--fs-10)', color, letterSpacing: '0.15em', marginBottom: 4 }}>
-          {project.category.toUpperCase()}
-        </div>
-        <div className="badge" style={{ fontSize: 'var(--fs-28)', color: C.cream, lineHeight: 1, letterSpacing: '0.01em' }}>
-          {project.title.toUpperCase()}
-        </div>
-        {project.description && (
-          <div style={{ fontSize: 'var(--fs-13)', color: 'rgba(245,237,214,0.6)', marginTop: 6, lineHeight: 1.5 }}>
-            {project.description}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-10)', color, letterSpacing: '0.15em', marginBottom: 4 }}>
+            {project.category.toUpperCase()}
           </div>
-        )}
-
-        <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-          {softDays !== null && (
-            <div style={{
-              padding: '4px 10px', borderRadius: 999,
-              background: softDays <= 14 ? 'rgba(196,82,42,0.25)' : 'rgba(255,255,255,0.1)',
-              border: softDays <= 14 ? `1px solid ${C.rust}` : '1px solid rgba(255,255,255,0.15)',
-              display: 'flex', gap: 6, alignItems: 'center',
-            }}>
-              <span className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(245,237,214,0.55)', letterSpacing: '0.1em' }}>SOFT</span>
-              <span className="badge" style={{ fontSize: 'var(--fs-13)', color: softDays <= 14 ? C.rust : C.cream }}>
-                {formatDate(project.soft_deadline_date!)} · {softDays}D
-              </span>
+          <div className="badge" style={{ fontSize: 'var(--fs-28)', color: C.cream, lineHeight: 1, letterSpacing: '0.01em' }}>
+            {project.title.toUpperCase()}
+          </div>
+          {project.description && (
+            <div style={{ fontSize: 'var(--fs-13)', color: 'rgba(245,237,214,0.6)', marginTop: 6, lineHeight: 1.5 }}>
+              {project.description}
             </div>
           )}
-          {hardDays !== null && (
-            <div style={{
-              padding: '4px 10px', borderRadius: 999,
-              background: hardDays <= 7 ? 'rgba(196,82,42,0.35)' : 'rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              display: 'flex', gap: 6, alignItems: 'center',
-            }}>
-              <span className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(245,237,214,0.55)', letterSpacing: '0.1em' }}>DEADLINE</span>
-              <span className="badge" style={{ fontSize: 'var(--fs-13)', color: C.cream }}>
-                {formatDate(project.deadline_date!)} · {hardDays}D
-              </span>
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
+            {softDays !== null && (
+              <div style={{
+                padding: '4px 10px', borderRadius: 999,
+                background: softDays <= 14 ? 'rgba(196,82,42,0.25)' : 'rgba(255,255,255,0.1)',
+                border: softDays <= 14 ? `1px solid ${C.rust}` : '1px solid rgba(255,255,255,0.15)',
+                display: 'flex', gap: 6, alignItems: 'center',
+              }}>
+                <span className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(245,237,214,0.55)', letterSpacing: '0.1em' }}>SOFT</span>
+                <span className="badge" style={{ fontSize: 'var(--fs-13)', color: softDays <= 14 ? C.rust : C.cream }}>
+                  {formatDate(project.soft_deadline_date!)} · {softDays}D
+                </span>
+              </div>
+            )}
+            {hardDays !== null && (
+              <div style={{
+                padding: '4px 10px', borderRadius: 999,
+                background: hardDays <= 7 ? 'rgba(196,82,42,0.35)' : 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                display: 'flex', gap: 6, alignItems: 'center',
+              }}>
+                <span className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(245,237,214,0.55)', letterSpacing: '0.1em' }}>DEADLINE</span>
+                <span className="badge" style={{ fontSize: 'var(--fs-13)', color: C.cream }}>
+                  {formatDate(project.deadline_date!)} · {hardDays}D
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Image URL editor */}
+          {editingImage ? (
+            <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+              <input
+                autoFocus
+                value={imageDraft}
+                onChange={e => setImageDraft(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSaveImage(); if (e.key === 'Escape') setEditingImage(false) }}
+                placeholder="Image URL…"
+                style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: 8, padding: '5px 10px', color: '#fff', fontSize: 'var(--fs-13)', outline: 'none', fontFamily: 'inherit', minWidth: 0 }}
+              />
+              <button onClick={handleSaveImage} style={{ background: color, color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 'var(--fs-12)', fontWeight: 700, cursor: 'pointer' }}>Set</button>
+              <button onClick={() => setEditingImage(false)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, padding: '5px 10px', color: '#fff', fontSize: 'var(--fs-13)', cursor: 'pointer' }}>×</button>
             </div>
+          ) : (
+            <button onClick={() => { setEditingImage(true); setImageDraft(project.image_url ?? '') }} style={{ marginTop: 10, background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: 8, padding: '4px 10px', color: 'rgba(255,255,255,0.7)', fontSize: 'var(--fs-11)', cursor: 'pointer', fontFamily: 'inherit' }}>
+              {project.image_url ? '⬛ Edit image' : '+ Add image'}
+            </button>
           )}
         </div>
       </div>
