@@ -17,6 +17,7 @@ export interface Project {
   next_action: string | null
   status: ProjectStatus
   image_url: string | null
+  website_url: string | null
   created_at: string
 }
 
@@ -112,6 +113,10 @@ export async function updateProjectImageUrl(id: string, imageUrl: string): Promi
   await db.from('projects').update({ image_url: imageUrl.trim() || null }).eq('id', id)
 }
 
+export async function updateProjectWebsiteUrl(id: string, url: string): Promise<void> {
+  await db.from('projects').update({ website_url: url.trim() || null }).eq('id', id)
+}
+
 export async function toggleMilestone(id: string, done: boolean): Promise<void> {
   const { error } = await db
     .from('project_milestones')
@@ -158,10 +163,11 @@ export async function addProject(
   title: string,
   category: ProjectCategory,
   deadline_date: string | null,
+  opts?: { website_url?: string }
 ): Promise<Project> {
   const { data, error } = await db
     .from('projects')
-    .insert({ user_id: userId, title, category, deadline_date })
+    .insert({ user_id: userId, title, category, deadline_date, website_url: opts?.website_url ?? null })
     .select()
     .single()
   if (error) throw new Error(error.message)

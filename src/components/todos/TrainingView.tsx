@@ -3,7 +3,7 @@ import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
 import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, updateTrainingGoalNotes, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
 import { getAllPrograms, addProgram, advanceProgram, setProgramPosition, deactivateProgram, syncProgramFromStrava, updateProgramImageUrl, type ProgramState } from '../../lib/program-tracker'
-import { updateTrainingGoalImageUrl } from '../../lib/training'
+import { updateTrainingGoalImageUrl, updateTrainingGoalWebsiteUrl } from '../../lib/training'
 
 function CardImageBanner({ url, color, radius = '0 14px 0 0' }: { url: string; color: string; radius?: string }) {
   return (
@@ -115,6 +115,8 @@ function EventDetail({ goal, onClose, onUpdate }: {
   const [saving, setSaving] = useState(false)
   const [editingImage, setEditingImage] = useState(false)
   const [imageDraft, setImageDraft] = useState(goal.image_url ?? '')
+  const [editingUrl, setEditingUrl] = useState(false)
+  const [urlDraft, setUrlDraft] = useState(goal.website_url ?? '')
   const days = daysUntil(goal.event_date)
   const color = EVENT_COLOR[goal.event_type] ?? C.rust
 
@@ -133,6 +135,12 @@ function EventDetail({ goal, onClose, onUpdate }: {
     await updateTrainingGoalImageUrl(goal.id, imageDraft)
     onUpdate({ ...goal, image_url: imageDraft.trim() || null })
     setEditingImage(false)
+  }
+
+  async function saveUrl() {
+    await updateTrainingGoalWebsiteUrl(goal.id, urlDraft)
+    onUpdate({ ...goal, website_url: urlDraft.trim() || null })
+    setEditingUrl(false)
   }
 
   const meta: [string, string][] = [
@@ -201,6 +209,42 @@ function EventDetail({ goal, onClose, onUpdate }: {
             ))}
           </div>
         </div>
+
+        {/* Website URL */}
+        {editingUrl ? (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <input
+              autoFocus
+              value={urlDraft}
+              onChange={e => setUrlDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') saveUrl(); if (e.key === 'Escape') setEditingUrl(false) }}
+              placeholder="https://…"
+              style={{ flex: 1, border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '8px 12px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', outline: 'none', minWidth: 0 }}
+            />
+            <button onClick={saveUrl} style={{ background: color, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 'var(--fs-13)', fontWeight: 700, cursor: 'pointer' }}>Set</button>
+            <button onClick={() => setEditingUrl(false)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-18)', cursor: 'pointer' }}>×</button>
+          </div>
+        ) : goal.website_url ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <a href={goal.website_url} target="_blank" rel="noopener noreferrer" style={{
+              flex: 1, display: 'block', background: color, color: '#fff',
+              borderRadius: 10, padding: '10px 16px', fontSize: 'var(--fs-14)', fontWeight: 700,
+              textDecoration: 'none', textAlign: 'center',
+            }}>
+              Visit event website ↗
+            </a>
+            <button onClick={() => { setEditingUrl(true); setUrlDraft(goal.website_url ?? '') }} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-12)', cursor: 'pointer', padding: '4px 2px', fontFamily: 'inherit' }}>edit</button>
+          </div>
+        ) : (
+          <button onClick={() => setEditingUrl(true)} style={{
+            display: 'block', width: '100%', marginBottom: 16,
+            background: 'none', border: `1px dashed ${C.ink20}`, borderRadius: 10,
+            padding: '10px 16px', color: C.ink40, fontSize: 'var(--fs-14)',
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}>
+            + Add event website
+          </button>
+        )}
 
         <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em', marginBottom: 8 }}>NOTES</div>
         <textarea
@@ -490,6 +534,7 @@ function AddEventForm({ onSave, onCancel }: { onSave: (g: TrainingGoal) => void;
   const [location, setLocation] = useState('')
   const [distance, setDistance] = useState('')
   const [elevation, setElevation] = useState('')
+  const [websiteUrl, setWebsiteUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const nameRef = useRef<HTMLInputElement>(null)
 
@@ -503,6 +548,7 @@ function AddEventForm({ onSave, onCancel }: { onSave: (g: TrainingGoal) => void;
         location: location.trim() || undefined,
         distance_label: distance.trim() || undefined,
         elevation_label: elevation.trim() || undefined,
+        website_url: websiteUrl.trim() || undefined,
       })
       onSave(g)
     } catch {
@@ -538,6 +584,7 @@ function AddEventForm({ onSave, onCancel }: { onSave: (g: TrainingGoal) => void;
           <input style={{ ...inputStyle, minWidth: 0 }} placeholder="Distance (e.g. 18.6mi)" value={distance} onChange={e => setDistance(e.target.value)} />
           <input style={{ ...inputStyle, minWidth: 0 }} placeholder="Elevation (e.g. 3,200ft)" value={elevation} onChange={e => setElevation(e.target.value)} />
         </div>
+        <input style={inputStyle} placeholder="Event website URL (optional)" value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} />
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 2 }}>
           <button onClick={onCancel} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-14)', cursor: 'pointer', padding: '6px 10px' }}>Cancel</button>
           <button onClick={handleSave} disabled={saving || !name.trim() || !date} style={{

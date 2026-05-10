@@ -108,6 +108,7 @@ function AddOpportunityForm({ onSave, onCancel }: { onSave: (p: Project) => void
   const { user } = useAuth()
   const [title, setTitle] = useState('')
   const [deadline, setDeadline] = useState('')
+  const [websiteUrl, setWebsiteUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   useEffect(() => { inputRef.current?.focus() }, [])
@@ -116,10 +117,12 @@ function AddOpportunityForm({ onSave, onCancel }: { onSave: (p: Project) => void
     if (!user || !title.trim()) return
     setSaving(true)
     try {
-      const p = await addProject(user.id, title.trim(), 'career', deadline || null)
+      const p = await addProject(user.id, title.trim(), 'career', deadline || null, { website_url: websiteUrl.trim() || undefined })
       onSave(p)
     } catch { setSaving(false) }
   }
+
+  const inputStyle = { border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', background: '#fff', color: C.dark, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' as const, outline: 'none' }
 
   return (
     <div style={{ background: '#fff', border: `1.5px solid ${C.rust}`, borderRadius: 14, padding: '14px 16px', marginBottom: 10 }}>
@@ -131,14 +134,19 @@ function AddOpportunityForm({ onSave, onCancel }: { onSave: (p: Project) => void
           onChange={e => setTitle(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onCancel() }}
           placeholder="Opportunity / org name"
-          style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', background: '#fff', color: C.dark, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box', outline: 'none' }}
+          style={inputStyle}
         />
         <input
           type="date"
           value={deadline}
           onChange={e => setDeadline(e.target.value)}
-          placeholder="Deadline (optional)"
-          style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', background: '#fff', color: C.dark, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box', outline: 'none' }}
+          style={inputStyle}
+        />
+        <input
+          value={websiteUrl}
+          onChange={e => setWebsiteUrl(e.target.value)}
+          placeholder="Website URL (optional)"
+          style={inputStyle}
         />
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 2 }}>
           <button onClick={onCancel} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-14)', cursor: 'pointer', padding: '6px 10px' }}>Cancel</button>

@@ -18,6 +18,7 @@ export interface TrainingGoal {
   status: TrainingStatus
   notes: string | null
   image_url: string | null
+  website_url: string | null
   created_at: string
 }
 
@@ -73,6 +74,7 @@ export async function addTrainingGoal(
     distance_label?: string
     elevation_label?: string
     is_anchor?: boolean
+    website_url?: string
   }
 ): Promise<TrainingGoal> {
   const { data, error } = await db
@@ -86,6 +88,7 @@ export async function addTrainingGoal(
       distance_label: opts?.distance_label ?? null,
       elevation_label: opts?.elevation_label ?? null,
       is_anchor: opts?.is_anchor ?? false,
+      website_url: opts?.website_url ?? null,
     })
     .select()
     .single()
@@ -106,6 +109,10 @@ export async function updateTrainingGoalNotes(id: string, notes: string): Promis
 
 export async function updateTrainingGoalImageUrl(id: string, imageUrl: string): Promise<void> {
   await db.from('training_goals').update({ image_url: imageUrl.trim() || null }).eq('id', id)
+}
+
+export async function updateTrainingGoalWebsiteUrl(id: string, url: string): Promise<void> {
+  await db.from('training_goals').update({ website_url: url.trim() || null }).eq('id', id)
 }
 
 export async function updateTrainingActuals(
