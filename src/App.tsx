@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTimeOfDay, useBgPhoto, type TimeOfDay } from './hooks/useTimeOfDay'
+import { useDayType, type WeekendBlock } from './hooks/useDayType'
 import type { Tab } from './components/ui/TabBar'
 type ListsTab = 'training' | 'career' | 'family' | 'home' | 'projects'
 import { TabBar } from './components/ui/TabBar'
@@ -8,6 +9,10 @@ import { MorningView } from './components/dashboard/MorningView'
 import { MidMorningView } from './components/dashboard/MidMorningView'
 import { AfternoonView } from './components/dashboard/AfternoonView'
 import { EveningView } from './components/dashboard/EveningView'
+import { WeekendDawnView } from './components/dashboard/WeekendDawnView'
+import { WeekendDayView } from './components/dashboard/WeekendDayView'
+import { WeekendEveningView } from './components/dashboard/WeekendEveningView'
+import { WeekendSundayEveningView } from './components/dashboard/WeekendSundayEveningView'
 import { InboxPage } from './pages/InboxPage'
 import { TrendsPage } from './pages/TrendsPage'
 import { LogPage } from './pages/LogPage'
@@ -17,21 +22,30 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { C } from './tokens'
 
 const VEIL: Record<string, string> = {
-  'morning':     'linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.6) 100%)',
-  'mid-morning': 'linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.45) 100%)',
-  'afternoon':   'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.55) 100%)',
-  'evening':     'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)',
+  'morning':             'linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.6) 100%)',
+  'mid-morning':         'linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.45) 100%)',
+  'afternoon':           'linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.55) 100%)',
+  'evening':             'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)',
+  'weekend-dawn':        'linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.55) 100%)',
+  'weekend-day':         'linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.45) 100%)',
+  'weekend-evening-sat': 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)',
+  'weekend-evening-sun': 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)',
 }
 
 function Dashboard() {
   const realTod = useTimeOfDay()
   const [todOverride, setTodOverride] = useState<TimeOfDay | null>(null)
   const tod = todOverride ?? realTod
-
-  // Auto-clear override when real time naturally transitions to a new block
   useEffect(() => { setTodOverride(null) }, [realTod])
 
+  const { dayType, weekendBlock: realWb } = useDayType()
+  const [wbOverride, setWbOverride] = useState<WeekendBlock | null>(null)
+  const wb = wbOverride ?? realWb
+  useEffect(() => { setWbOverride(null) }, [realWb])
+
+  const activeVeilKey = dayType === 'weekend' ? wb : tod
   const bgPhoto = useBgPhoto(tod)
+
   const [tab, setTab] = useState<Tab>(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('strava') === 'connected' || params.get('withings') === 'connected') {
@@ -63,31 +77,29 @@ function Dashboard() {
 
       {tab === 'home' && (
         <>
-          <div style={{
-            position: 'fixed', inset: 0, zIndex: 0,
-            background: `url(${bgPhoto}) center/cover no-repeat`,
-          }} />
-          <div style={{
-            position: 'fixed', inset: 0, zIndex: 1,
-            background: VEIL[tod],
-          }} />
+          <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: `url(${bgPhoto}) center/cover no-repeat` }} />
+          <div style={{ position: 'fixed', inset: 0, zIndex: 1, background: VEIL[activeVeilKey] }} />
         </>
       )}
       {tab !== 'home' && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: C.paper }} />
       )}
 
-      <div style={{
-        position: 'relative', zIndex: 2,
-        overflowY: 'auto', overflowX: 'hidden',
-        minHeight: '100dvh',
-      }}>
+      <div style={{ position: 'relative', zIndex: 2, overflowY: 'auto', overflowX: 'hidden', minHeight: '100dvh' }}>
         {tab === 'home' && <div style={{ height: 'calc(env(safe-area-inset-top, 16px) + 28px)' }} />}
 
-        {tab === 'home' && tod === 'morning'     && <MorningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
-        {tab === 'home' && tod === 'mid-morning' && <MidMorningView  activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenCareer={openCareer} />}
-        {tab === 'home' && tod === 'afternoon'   && <AfternoonView   activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
-        {tab === 'home' && tod === 'evening'     && <EveningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenListTab={openListTab} />}
+        {/* Weekday views */}
+        {tab === 'home' && dayType === 'weekday' && tod === 'morning'     && <MorningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
+        {tab === 'home' && dayType === 'weekday' && tod === 'mid-morning' && <MidMorningView  activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenCareer={openCareer} />}
+        {tab === 'home' && dayType === 'weekday' && tod === 'afternoon'   && <AfternoonView   activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
+        {tab === 'home' && dayType === 'weekday' && tod === 'evening'     && <EveningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenListTab={openListTab} />}
+
+        {/* Weekend views */}
+        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-dawn'        && <WeekendDawnView        weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} />}
+        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-day'         && <WeekendDayView         weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} />}
+        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sat' && <WeekendEveningView     weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
+        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sun' && <WeekendSundayEveningView weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
+
         {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} />}
         {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} initialTab={listsInitialTab} />}
         {tab === 'inbox'  && <InboxPage  bgPhoto={bgPhoto || undefined} />}

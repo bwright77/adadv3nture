@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { C } from '../../tokens'
 import { TOD_BLOCKS, type TimeOfDay } from '../../hooks/useTimeOfDay'
+import { WEEKEND_BLOCKS, WEEKEND_BLOCK_ORDER, type WeekendBlock } from '../../hooks/useDayType'
 
 const TOD_ORDER: TimeOfDay[] = ['morning', 'mid-morning', 'afternoon', 'evening']
 
@@ -9,6 +10,10 @@ interface HeaderProps {
   isOverride: boolean
   onSetOverride: (tod: TimeOfDay | null) => void
   dark?: boolean
+  // Weekend mode
+  weekendBlock?: WeekendBlock
+  isWeekendOverride?: boolean
+  onSetWeekendBlock?: (wb: WeekendBlock | null) => void
 }
 
 function useLiveClock() {
@@ -31,23 +36,50 @@ function formatGreeting(d: Date): string {
   return `${day} ${month} ${date} · ${hour}:${m} ${ampm}`
 }
 
-export function Header({ activeTod, isOverride, onSetOverride, dark = true }: HeaderProps) {
+export function Header({
+  activeTod, isOverride, onSetOverride, dark = true,
+  weekendBlock, isWeekendOverride, onSetWeekendBlock,
+}: HeaderProps) {
   const now = useLiveClock()
   const [picking, setPicking] = useState(false)
-  const block = TOD_BLOCKS[activeTod]
 
-  function handleSubTap() {
-    setPicking(p => !p)
-  }
+  const isWeekend = weekendBlock !== undefined
+  const block = isWeekend ? WEEKEND_BLOCKS[weekendBlock!] : TOD_BLOCKS[activeTod]
+  const showOverride = isWeekend ? !!isWeekendOverride : isOverride
 
-  function handlePick(tod: TimeOfDay) {
-    if (tod === activeTod && isOverride) {
-      onSetOverride(null)
-    } else if (tod !== activeTod) {
-      onSetOverride(tod)
+  function handlePick(key: string) {
+    if (isWeekend) {
+      const wb = key as WeekendBlock
+      if (wb === weekendBlock && isWeekendOverride) {
+        onSetWeekendBlock?.(null)
+      } else if (wb !== weekendBlock) {
+        onSetWeekendBlock?.(wb)
+      }
+    } else {
+      const tod = key as TimeOfDay
+      if (tod === activeTod && isOverride) {
+        onSetOverride(null)
+      } else if (tod !== activeTod) {
+        onSetOverride(tod)
+      }
     }
     setPicking(false)
   }
+
+  function handleRestore() {
+    if (isWeekend) {
+      onSetWeekendBlock?.(null)
+    } else {
+      onSetOverride(null)
+    }
+    setPicking(false)
+  }
+
+  const pickerItems = isWeekend
+    ? WEEKEND_BLOCK_ORDER.map(wb => ({ key: wb, ...WEEKEND_BLOCKS[wb] }))
+    : TOD_ORDER.map(tod => ({ key: tod, ...TOD_BLOCKS[tod] }))
+
+  const activeKey = isWeekend ? weekendBlock! : activeTod
 
   return (
     <div style={{ padding: '10px 20px 14px', color: dark ? C.cream : C.dark }}>
@@ -58,9 +90,8 @@ export function Header({ activeTod, isOverride, onSetOverride, dark = true }: He
         {formatGreeting(now)}
       </div>
 
-      {/* Sub line — tappable to open picker */}
       <button
-        onClick={handleSubTap}
+        onClick={() => setPicking(p => !p)}
         style={{
           background: 'none', border: 'none', padding: '4px 0 0', cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: 6,
@@ -68,10 +99,10 @@ export function Header({ activeTod, isOverride, onSetOverride, dark = true }: He
           fontFamily: 'inherit',
         }}
       >
-        <span className="mono" style={{ fontSize: 'var(--fs-13)', opacity: isOverride ? 1 : 0.7 }}>
+        <span className="mono" style={{ fontSize: 'var(--fs-13)', opacity: showOverride ? 1 : 0.7 }}>
           {block.sub}
         </span>
-        {isOverride && (
+        {showOverride && (
           <span className="mono" style={{
             fontSize: 'var(--fs-10)', padding: '2px 6px', borderRadius: 999,
             background: C.rust, color: C.cream, letterSpacing: '0.1em',
@@ -82,25 +113,21 @@ export function Header({ activeTod, isOverride, onSetOverride, dark = true }: He
         <span style={{ fontSize: 'var(--fs-11)', opacity: 0.45 }}>{picking ? '▲' : '▾'}</span>
       </button>
 
-      {/* Block picker */}
       {picking && (
-        <div style={{
-          display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap',
-        }}>
-          {TOD_ORDER.map(tod => {
-            const b = TOD_BLOCKS[tod]
-            const isActive = tod === activeTod
+        <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+          {pickerItems.map(item => {
+            const isActive = item.key === activeKey
             return (
               <button
-                key={tod}
-                onClick={() => handlePick(tod)}
+                key={item.key}
+                onClick={() => handlePick(item.key)}
                 style={{
                   padding: '5px 10px', borderRadius: 999, cursor: 'pointer',
                   background: isActive
-                    ? (isOverride ? C.rust : 'rgba(255,255,255,0.25)')
+                    ? (showOverride ? C.rust : 'rgba(255,255,255,0.25)')
                     : 'rgba(255,255,255,0.1)',
                   border: isActive
-                    ? `1.5px solid ${isOverride ? C.rust : 'rgba(255,255,255,0.6)'}`
+                    ? `1.5px solid ${showOverride ? C.rust : 'rgba(255,255,255,0.6)'}`
                     : '1.5px solid rgba(255,255,255,0.2)',
                   color: dark ? C.cream : C.dark,
                   fontFamily: 'inherit',
@@ -108,17 +135,17 @@ export function Header({ activeTod, isOverride, onSetOverride, dark = true }: He
                 }}
               >
                 <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.1em', fontWeight: isActive ? 700 : 400 }}>
-                  {b.label}
+                  {item.label}
                 </div>
                 <div className="mono" style={{ fontSize: 9, opacity: 0.6, marginTop: 1 }}>
-                  {b.time}
+                  {item.time}
                 </div>
               </button>
             )
           })}
-          {isOverride && (
+          {showOverride && (
             <button
-              onClick={() => { onSetOverride(null); setPicking(false) }}
+              onClick={handleRestore}
               style={{
                 padding: '5px 10px', borderRadius: 999, cursor: 'pointer',
                 background: 'transparent',

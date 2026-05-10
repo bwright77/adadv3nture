@@ -1,0 +1,51 @@
+book_number,name,region,hub,distance_mi,difficulty,elevation_ft,highlights,done,date_done,drive_minutes_denver,best_months,stroller_ok,family_rating,notes,alltrails_url
+1,Horsetooth Falls,Front Range,Fort Collins,2.4,Moderate,325,"Wildflowers, views, waterfall, cave",,,75,"May,Jun,Jul,Aug,Sep,Oct",,, https://www.alltrails.com/trail/us/colorado/horsetooth-falls--4
+2,Chautauqua and Bluebell Loop,Front Range,Boulder,1.6,Moderate,463,"Flowers, cool geology, history",,,45,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/chautauqua-and-bluebell-trail-loop
+3,Crags Hotel Ruins,Front Range,"Eldorado Springs/Boulder",3,Challenging,725,"View, geology, historical ruins",,,35,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/crags-hotel-ruins-and-continental-divide-overlook
+4,White Ranch and Sawmill Trail,Front Range,Golden,2.3,Moderate,361,"Historic sawmill, view",,,40,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/sawmill-trail-and-belcher-hill-trail-loop
+5,Lair o' the Bear,Front Range,Morrison,2,Easy,141,"Castle and beautiful creek",,,35,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/bear-creek-trail-to-the-castle
+6,Brother and Sisters Loop,Front Range,Evergreen,3.5,Moderate,456,"Meadows, forests, views, cool rocks, climbing",,,45,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/the-brother-and-sisters-loop
+7,Mount Falcon,Front Range,Morrison,2.6,Moderate,361,"Meadows, forests, castle ruins, lookout tower",,,35,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/castle-meadow-and-tower-trails
+8,Red Rock Canyon,Front Range,Manitou Springs,1.8,Easy,282,"Red rocks, quarry, lake",,,75,"Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/red-rock-canyon-open-space-main-loop
+9,Seven Bridges,Front Range,Colorado Springs,3.7,Challenging,725,"Bridges, creek, forest",,,75,"May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/seven-bridges-trail
+10,Devil's Head,Front Range,Castle Rock,2.8,Challenging,843,"Views, fire tower, meadows",,,75,"May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/devils-head-trail
+11,Pine Valley Lake,North and Central Rockies,Conifer,1.6,Easy,36,"Lake, fishing, bridges, old railroad tracks",,,45,"May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/pine-valley-ranch-loop-trail
+12,South Rim of Roxborough State Park,North and Central Rockies,Roxborough State Park,2.1,Moderate,466,"Wildflowers, geology, birdwatching, views",,,40,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/south-rim-trail--3
+13,Eleven Mile State Park,North and Central Rockies,"Florissant/Colorado Springs",4,Moderate,427,"Lake, climbing rocks, caves",,,90,"May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/eleven-mile-canyon-trail
+14,Twin Lakes,North and Central Rockies,Buena Vista,4.6,Easy,213,"Lake, historical hotel, meadows, aspens",,,120,"Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/twin-lakes-trail--4
+15,Judd Falls,North and Central Rockies,Crested Butte,2.4,Moderate,486,"Waterfall, views",,,195,"Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/judd-falls-trail
+16,Crater Lake,North and Central Rockies,Snowmass Village,4,Challenging,705,"Glaciers, views",,,180,"Jun,Jul,Aug,Sep",,,https://www.alltrails.com/trail/us/colorado/crater-lake-trail--3
+17,Linkins Lake,North and Central Rockies,Aspen,1.2,Moderate,495,"Lake, mountain views, creek",,,165,"Jul,Aug,Sep",,,https://www.alltrails.com/trail/us/colorado/linkins-lake-trail
+18,Rifle Falls,North and Central Rockies,Rifle,0.9,Easy,79,"Caves, waterfalls",,,195,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/rifle-falls-trail
+19,Uranium Mine,Rocky Mountains,Steamboat Springs,3,Challenging,600,"Old mine, wildflowers, creek",,,165,"Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/uranium-mine-trail
+20,Lake Agnes,Rocky Mountains,Steamboat Springs,1.2,Challenging,410,"Lake, views",,,165,"Jul,Aug,Sep",,,https://www.alltrails.com/trail/us/colorado/lake-agnes-trail--2
+21,Adams Falls,Rocky Mountains,Grand Lake,1.1,Easy,128,"Falls, creek fun, meadows",,,90,"May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/adams-falls-trail
+22,Dream and Emerald Lakes,Rocky Mountains,Estes Park,3.4,Challenging,712,"Three lakes, views, elk",,,90,"Jun,Jul,Aug,Sep",,,https://www.alltrails.com/trail/us/colorado/dream-lake-trail
+23,Alberta Falls,Rocky Mountains,Estes Park,1.6,Easy,224,"Falls, cool rocks, views",,,90,"Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/alberta-falls-trail
+24,Lumpy Ridge,Rocky Mountains,Estes Park,1.9,Moderate,433,"Views, cool rocks",,,90,"May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/lumpy-ridge-loop-trail
+25,Mitchell Lake,Rocky Mountains,Ward,1.8,Easy,223,Lake,,,75,"Jul,Aug,Sep",,,https://www.alltrails.com/trail/us/colorado/mitchell-lake-trail
+26,Saint Mary's Glacier,Rocky Mountains,Idaho Springs,1.8,Challenging,591,"Glacier, views, lake",,,60,"Jun,Jul,Aug,Sep",,,https://www.alltrails.com/trail/us/colorado/saint-marys-glacier-trail
+27,Chief Mountain,Rocky Mountains,Idaho Springs,3.2,Challenging,928,"Summit, views, evergreen forest",,,60,"Jun,Jul,Aug,Sep",,,https://www.alltrails.com/trail/us/colorado/chief-mountain-trail--2
+28,Lily Pad Lake,Rocky Mountains,Breckenridge,3.3,Moderate,354,"Lake, moose",,,90,"Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/lily-pad-lake-trail
+29,Lower Cataract Lake,Rocky Mountains,Silverthorne,2.3,Moderate,223,"Lake, waterfall",,,80,"Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/lower-cataract-lake-trail
+30,Sallie Barber Mine,Rocky Mountains,Breckenridge,3,Challenging,394,Old mine,,,90,"Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/sallie-barber-mine-trail
+31,Harpers Corner,Plateau Lands,Dinosaur,2.2,Moderate,285,"Dinosaur tracks, geology",,,225,"Apr,May,Jun,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/harpers-corner-trail
+32,Coke Ovens,Plateau Lands,Grand Junction,1.4,Easy,141,"Desert big horn sheep, unusual rock formations, great canyon views",,,225,"Mar,Apr,May,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/coke-ovens-trail
+33,Devil's Kitchen,Plateau Lands,Grand Junction,1.4,Moderate,52,"An awesome geologic playground",,,225,"Mar,Apr,May,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/devils-kitchen-trail
+34,Mica Mine,Plateau Lands,Grand Junction,2.6,Moderate,291,"Rockhounding, hoodoos, old mine equipment",,,225,"Mar,Apr,May,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/mica-mine-trail
+35,Exclamation Point,Plateau Lands,"Gunnison/Grand Junction",3,Moderate,384,"Crazy canyon views, neat geology",,,225,"Mar,Apr,May,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/exclamation-point-trail
+36,Dillon Pinnacles,Plateau Lands,"Sanpiero/Grand Junction",3.7,Moderate,489,"Volcanic pinnacles, views",,,195,"Mar,Apr,May,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/dillon-pinnacles-trail
+37,Sand Canyon,Plateau Lands,Cortez,2.2,Easy,315,"Cliff dwellings, views, canyons, history, geology",,,330,"Mar,Apr,May,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/sand-canyon-trail--2
+38,Petroglyph Point,Plateau Lands,Cortez,2.4,Challenging,328,"Cliff dwellings, views, canyons, history, geology",,,330,"Mar,Apr,May,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/petroglyph-point-trail
+39,Keystone Gorge,Southern Rockies,Telluride,1.8,Moderate,492,"River, bridges, gorge, views, mining ruins",,,330,"Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/keystone-gorge-trail
+40,Bear Creek Preserve,Southern Rockies,Telluride,4.8,Challenging,925,"Waterfall, river, views",,,330,"Jun,Jul,Aug,Sep",,,https://www.alltrails.com/trail/us/colorado/bear-creek-trail--8
+41,Twin Sisters,Southern Rockies,Durango,2.6,Easy,390,"Views, lake, forest",,,330,"May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/twin-sisters-trail--7
+42,Perimeter and Ice Park Loop,Southern Rockies,Ouray,3.9,Challenging,1030,"Water play, creek, river, waterfalls, views, geological features",,,300,"Jun,Jul,Aug,Sep",,,https://www.alltrails.com/trail/us/colorado/perimeter-trail-and-ice-park-loop
+43,Sheep Creek Hot Springs,Southern Rockies,Pagosa Springs,3.5,Challenging,689,"Hot springs, river, forest",,,270,"May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/sheep-creek-trail
+44,Zapata Falls,Southern Rockies,Alamosa,1.2,Easy,215,"Hidden waterfall, creek, views of Great Sand Dunes",,,225,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/zapata-falls-trail
+45,San Isabel,Eastern Plains,Rye,2,Moderate,226,"River, water play, rocks, meadows",,,120,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/san-isabel-trail
+46,Paint Mines Interpretive Park,Eastern Plains,Calhan,2.5,Easy,289,"Geological formations, hoodoos",,,75,"Mar,Apr,May,Jun,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/paint-mines-interpretive-park-loop
+47,Castlewood Canyon,Eastern Plains,Castle Rock,2,Moderate,200,"Canyon, creek, cool rocks",,,45,"Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/inner-canyon-loop-trail
+48,Vogel Canyon,Eastern Plains,La Junta,1.4,Easy,125,"Sandstone canyon, Native petroglyphs",,,165,"Mar,Apr,May,Sep,Oct,Nov",,,https://www.alltrails.com/trail/us/colorado/vogel-canyon-trail
+49,Riverside Trail,Eastern Plains,Fort Morgan,1.8,Easy,3,"River, birdwatching",,,75,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/riverside-trail--46
+50,Pawnee Buttes,Eastern Plains,Fort Collins,4.3,Moderate,338,"Views, birdwatching",,,90,"Apr,May,Jun,Jul,Aug,Sep,Oct",,,https://www.alltrails.com/trail/us/colorado/pawnee-buttes-trail
