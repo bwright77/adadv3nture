@@ -135,7 +135,7 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
                   </span>
                 )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0, overflow: 'hidden', justifyContent: 'flex-end', marginLeft: 12 }}>
                 <span className="mono" style={{
                   fontSize: 'var(--fs-12)', opacity: 0.7,
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
