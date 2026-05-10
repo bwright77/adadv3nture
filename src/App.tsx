@@ -34,7 +34,7 @@ function Dashboard() {
   const bgPhoto = useBgPhoto(tod)
   const [tab, setTab] = useState<Tab>(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get('strava') === 'connected') {
+    if (params.get('strava') === 'connected' || params.get('withings') === 'connected') {
       window.history.replaceState({}, '', '/')
       return 'log'
     }

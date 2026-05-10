@@ -1,4 +1,5 @@
 import { useStrava } from '../hooks/useStrava'
+import { useWithings } from '../hooks/useWithings'
 import { C } from '../tokens'
 
 function formatPace(secondsPerMile: number | null): string {
@@ -20,90 +21,151 @@ const TYPE_ICON: Record<string, string> = {
   hike: '🥾', walk: '🚶', swim: '🏊', yoga: '🧘',
 }
 
+function ConnectCard({
+  label, connected, syncing, syncCount, onConnect, onSync, syncLabel = 'Sync',
+}: {
+  label: string
+  connected: boolean | null
+  syncing: boolean
+  syncCount: number | null
+  onConnect: () => void
+  onSync: () => void
+  syncLabel?: string
+}) {
+  return (
+    <div style={{
+      background: connected === true ? 'rgba(91,188,184,0.1)' : 'rgba(196,82,42,0.08)',
+      border: `1px solid ${connected === true ? C.teal : C.ink20}`,
+      borderRadius: 14,
+      padding: '14px 16px',
+      marginBottom: 12,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    }}>
+      <div>
+        <div style={{ fontSize: 'var(--fs-15)', fontWeight: 600, color: C.dark }}>
+          {connected === null ? `Checking ${label}…`
+            : connected ? `✓ ${label} connected`
+            : `${label} not connected`}
+        </div>
+        {syncCount !== null && (
+          <div style={{ fontSize: 'var(--fs-13)', color: C.ink60, marginTop: 2 }}>
+            Synced {syncCount} {syncLabel === 'Sync' ? 'records' : syncLabel.toLowerCase()}
+          </div>
+        )}
+      </div>
+      {connected === true ? (
+        <button
+          onClick={onSync}
+          disabled={syncing}
+          style={{
+            padding: '8px 14px', borderRadius: 8,
+            background: syncing ? C.sandLt : C.teal,
+            color: 'white', fontSize: 'var(--fs-14)', fontWeight: 600,
+            border: 'none', cursor: syncing ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {syncing ? 'Syncing…' : 'Sync'}
+        </button>
+      ) : connected === false ? (
+        <button
+          onClick={onConnect}
+          style={{
+            padding: '8px 14px', borderRadius: 8,
+            background: C.rust, color: 'white',
+            fontSize: 'var(--fs-14)', fontWeight: 600,
+            border: 'none', cursor: 'pointer',
+          }}
+        >
+          Connect {label}
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
 export function LogPage() {
-  const { connected, syncing, syncCount, activities, connect, sync } = useStrava()
+  const strava = useStrava()
+  const withings = useWithings()
+
+  const latestMetric = withings.metrics[0]
 
   return (
     <div style={{ padding: '20px 16px 100px', maxWidth: 600, margin: '0 auto' }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <div className="badge" style={{ fontSize: 'var(--fs-22)', color: C.dark }}>ACTIVITY LOG</div>
-        <div style={{ fontSize: 'var(--fs-15)', color: C.ink60, marginTop: 4 }}>Strava sync · last 90 days</div>
       </div>
 
-      {/* Connection status */}
-      <div style={{
-        background: connected === true ? 'rgba(91,188,184,0.1)' : 'rgba(196,82,42,0.08)',
-        border: `1px solid ${connected === true ? C.teal : C.ink20}`,
-        borderRadius: 14,
-        padding: '14px 16px',
-        marginBottom: 20,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <div>
-          <div style={{ fontSize: 'var(--fs-15)', fontWeight: 600, color: C.dark }}>
-            {connected === null ? 'Checking Strava…'
-              : connected ? '✓ Strava connected'
-              : 'Strava not connected'}
-          </div>
-          {syncCount !== null && (
-            <div style={{ fontSize: 'var(--fs-13)', color: C.ink60, marginTop: 2 }}>
-              Synced {syncCount} activities
+      {/* Connections */}
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40, marginBottom: 8 }}>◆ CONNECTIONS</div>
+
+      <ConnectCard
+        label="Strava"
+        connected={strava.connected}
+        syncing={strava.syncing}
+        syncCount={strava.syncCount}
+        onConnect={strava.connect}
+        onSync={strava.sync}
+      />
+      <ConnectCard
+        label="Withings"
+        connected={withings.connected}
+        syncing={withings.syncing}
+        syncCount={withings.syncCount}
+        onConnect={withings.connect}
+        onSync={withings.sync}
+      />
+
+      {/* Latest body metrics */}
+      {latestMetric && (
+        <div style={{ marginBottom: 24 }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40, marginBottom: 8, marginTop: 8 }}>◆ BODY METRICS</div>
+          <div style={{ background: '#fff', border: `0.5px solid ${C.ink20}`, borderRadius: 14, padding: '14px 16px' }}>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, marginBottom: 12 }}>
+              {new Date(latestMetric.measured_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </div>
-          )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px 16px' }}>
+              {latestMetric.weight_lbs !== null && (
+                <div>
+                  <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.1em' }}>WEIGHT</div>
+                  <div className="badge" style={{ fontSize: 'var(--fs-20)', color: C.dark }}>{latestMetric.weight_lbs.toFixed(1)}</div>
+                  <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40 }}>LBS</div>
+                </div>
+              )}
+              {latestMetric.body_fat_pct !== null && (
+                <div>
+                  <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.1em' }}>BODY FAT</div>
+                  <div className="badge" style={{ fontSize: 'var(--fs-20)', color: C.dark }}>{latestMetric.body_fat_pct.toFixed(1)}</div>
+                  <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40 }}>%</div>
+                </div>
+              )}
+              {latestMetric.muscle_mass_pct !== null && (
+                <div>
+                  <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.1em' }}>MUSCLE</div>
+                  <div className="badge" style={{ fontSize: 'var(--fs-20)', color: C.dark }}>{latestMetric.muscle_mass_pct.toFixed(1)}</div>
+                  <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40 }}>%</div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        {connected === true ? (
-          <button
-            onClick={sync}
-            disabled={syncing}
-            style={{
-              padding: '8px 14px',
-              borderRadius: 8,
-              background: syncing ? C.sandLt : C.teal,
-              color: 'white',
-              fontSize: 'var(--fs-14)',
-              fontWeight: 600,
-              border: 'none',
-              cursor: syncing ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {syncing ? 'Syncing…' : 'Sync'}
-          </button>
-        ) : connected === false ? (
-          <button
-            onClick={connect}
-            style={{
-              padding: '8px 14px',
-              borderRadius: 8,
-              background: C.rust,
-              color: 'white',
-              fontSize: 'var(--fs-14)',
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            Connect Strava
-          </button>
-        ) : null}
-      </div>
+      )}
 
       {/* Activity list */}
-      {activities.length === 0 && connected === true && (
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40, marginBottom: 8 }}>◆ ACTIVITIES</div>
+
+      {strava.activities.length === 0 && strava.connected === true && (
         <div style={{ textAlign: 'center', padding: '40px 0', color: C.ink60, fontSize: 'var(--fs-15)' }}>
           No activities yet — tap Sync to load your history.
         </div>
       )}
 
-      {activities.map(a => (
+      {strava.activities.map(a => (
         <div key={a.id} style={{
-          background: 'white',
-          borderRadius: 14,
-          padding: '12px 14px',
-          marginBottom: 10,
-          border: `1px solid ${C.ink20}`,
+          background: 'white', borderRadius: 14, padding: '12px 14px',
+          marginBottom: 10, border: `1px solid ${C.ink20}`,
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
