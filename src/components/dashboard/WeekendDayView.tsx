@@ -8,6 +8,7 @@ import { WInspire } from './widgets/WInspire'
 import { WWorkout } from './widgets/WWorkout'
 import { WForecast } from './widgets/WForecast'
 import { W50Hikes } from './widgets/W50Hikes'
+import { WConditions } from './widgets/WConditions'
 import { WAdventureToday } from './widgets/WAdventureToday'
 import type { WeekendBlock } from '../../hooks/useDayType'
 import type { TimeOfDay } from '../../hooks/useTimeOfDay'
@@ -41,6 +42,7 @@ export function WeekendDayView({ weekendBlock, isOverride, onSetWeekendBlock }: 
         <WSteps dark />
         <WWeather dark />
         <WInspire dark />
+        <WConditions dark />
         <WForecast dark />
         <W50Hikes dark />
       </div>
