@@ -1055,7 +1055,6 @@ ANTHROPIC_API_KEY=          # server-side ONLY
 - PeopleForBikes (Jenn Dice, CEO) — AI/BIDE intelligence layer · $50-85K
   Jenn replied May 6: data team call invited. José + Liam on thread.
   Next action: reply to Jenn, confirm call with data team.
-- GSEMA — $50K technology assessment RFP · active pursuit
 
 **Job targets:** Coforma (Principal Product Engineer — strong fit) · Change Research · Murmuration · Skylight
 

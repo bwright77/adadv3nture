@@ -192,7 +192,7 @@ function EventDetail({ goal, onClose, onUpdate }: {
             </div>
           ) : (
             <button onClick={() => { setEditingImage(true); setImageDraft(goal.image_url ?? '') }} style={{ marginTop: 8, background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 8, padding: '4px 10px', color: 'rgba(255,255,255,0.8)', fontSize: 'var(--fs-11)', cursor: 'pointer', fontFamily: 'inherit' }}>
-              {goal.image_url ? '⬛ Edit image' : '+ Add image'}
+              {goal.image_url ? '✎' : '+ Add image'}
             </button>
           )}
         </div>
@@ -208,43 +208,33 @@ function EventDetail({ goal, onClose, onUpdate }: {
               </div>
             ))}
           </div>
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: `0.5px solid ${C.ink20}` }}>
+            {editingUrl ? (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  autoFocus
+                  value={urlDraft}
+                  onChange={e => setUrlDraft(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveUrl(); if (e.key === 'Escape') setEditingUrl(false) }}
+                  placeholder="https://…"
+                  style={{ flex: 1, border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '6px 10px', fontSize: 'var(--fs-13)', fontFamily: 'inherit', outline: 'none', minWidth: 0 }}
+                />
+                <button onClick={saveUrl} style={{ background: color, color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 'var(--fs-12)', fontWeight: 700, cursor: 'pointer' }}>Set</button>
+                <button onClick={() => setEditingUrl(false)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-16)', cursor: 'pointer' }}>×</button>
+              </div>
+            ) : goal.website_url ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em', flexShrink: 0 }}>WEBSITE</span>
+                <a href={goal.website_url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, fontSize: 'var(--fs-13)', color, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+                  {goal.website_url.replace(/^https?:\/\//, '')}
+                </a>
+                <button onClick={() => { setEditingUrl(true); setUrlDraft(goal.website_url ?? '') }} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-15)', cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}>✎</button>
+              </div>
+            ) : (
+              <button onClick={() => setEditingUrl(true)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-13)', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>+ Add website</button>
+            )}
+          </div>
         </div>
-
-        {/* Website URL */}
-        {editingUrl ? (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            <input
-              autoFocus
-              value={urlDraft}
-              onChange={e => setUrlDraft(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') saveUrl(); if (e.key === 'Escape') setEditingUrl(false) }}
-              placeholder="https://…"
-              style={{ flex: 1, border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '8px 12px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', outline: 'none', minWidth: 0 }}
-            />
-            <button onClick={saveUrl} style={{ background: color, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 'var(--fs-13)', fontWeight: 700, cursor: 'pointer' }}>Set</button>
-            <button onClick={() => setEditingUrl(false)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-18)', cursor: 'pointer' }}>×</button>
-          </div>
-        ) : goal.website_url ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <a href={goal.website_url} target="_blank" rel="noopener noreferrer" style={{
-              flex: 1, display: 'block', background: color, color: '#fff',
-              borderRadius: 10, padding: '10px 16px', fontSize: 'var(--fs-14)', fontWeight: 700,
-              textDecoration: 'none', textAlign: 'center',
-            }}>
-              Visit event website ↗
-            </a>
-            <button onClick={() => { setEditingUrl(true); setUrlDraft(goal.website_url ?? '') }} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-12)', cursor: 'pointer', padding: '4px 2px', fontFamily: 'inherit' }}>edit</button>
-          </div>
-        ) : (
-          <button onClick={() => setEditingUrl(true)} style={{
-            display: 'block', width: '100%', marginBottom: 16,
-            background: 'none', border: `1px dashed ${C.ink20}`, borderRadius: 10,
-            padding: '10px 16px', color: C.ink40, fontSize: 'var(--fs-14)',
-            cursor: 'pointer', fontFamily: 'inherit',
-          }}>
-            + Add event website
-          </button>
-        )}
 
         <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em', marginBottom: 8 }}>NOTES</div>
         <textarea
@@ -465,7 +455,7 @@ function ProgramCard({ program, onAdvance, onRemove }: {
           </div>
         ) : (
           <button onClick={() => { setEditingImage(true); setImageDraft(program.image_url ?? '') }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0 12px 8px', background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-11)', cursor: 'pointer', fontFamily: 'inherit' }}>
-            {program.image_url ? '⬛ Edit image' : '+ Add image'}
+            {program.image_url ? '✎' : '+ Add image'}
           </button>
         )}
       </div>

@@ -270,7 +270,7 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
             </div>
           ) : (
             <button onClick={() => { setEditingImage(true); setImageDraft(project.image_url ?? '') }} style={{ marginTop: 10, background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: 8, padding: '4px 10px', color: 'rgba(255,255,255,0.7)', fontSize: 'var(--fs-11)', cursor: 'pointer', fontFamily: 'inherit' }}>
-              {project.image_url ? '⬛ Edit image' : '+ Add image'}
+              {project.image_url ? '✎' : '+ Add image'}
             </button>
           )}
         </div>
@@ -289,29 +289,21 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
               onChange={e => setUrlDraft(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSaveUrl(); if (e.key === 'Escape') setEditingUrl(false) }}
               placeholder="https://…"
-              style={{ flex: 1, border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '8px 12px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', outline: 'none', minWidth: 0 }}
+              style={{ flex: 1, border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '6px 10px', fontSize: 'var(--fs-13)', fontFamily: 'inherit', outline: 'none', minWidth: 0 }}
             />
-            <button onClick={handleSaveUrl} style={{ background: color, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 'var(--fs-13)', fontWeight: 700, cursor: 'pointer' }}>Set</button>
-            <button onClick={() => setEditingUrl(false)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-18)', cursor: 'pointer' }}>×</button>
+            <button onClick={handleSaveUrl} style={{ background: color, color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 'var(--fs-12)', fontWeight: 700, cursor: 'pointer' }}>Set</button>
+            <button onClick={() => setEditingUrl(false)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-16)', cursor: 'pointer' }}>×</button>
           </div>
         ) : project.website_url ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <a href={project.website_url} target="_blank" rel="noopener noreferrer" style={{
-              flex: 1, display: 'block', background: color, color: '#fff',
-              borderRadius: 10, padding: '10px 16px', fontSize: 'var(--fs-14)', fontWeight: 700,
-              textDecoration: 'none', textAlign: 'center',
-            }}>
-              Visit website ↗
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <span className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em', flexShrink: 0 }}>WEBSITE</span>
+            <a href={project.website_url} target="_blank" rel="noopener noreferrer" style={{ flex: 1, fontSize: 'var(--fs-13)', color, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+              {project.website_url.replace(/^https?:\/\//, '')}
             </a>
-            <button onClick={() => { setEditingUrl(true); setUrlDraft(project.website_url ?? '') }} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-12)', cursor: 'pointer', padding: '4px 2px', fontFamily: 'inherit' }}>edit</button>
+            <button onClick={() => { setEditingUrl(true); setUrlDraft(project.website_url ?? '') }} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-15)', cursor: 'pointer', padding: '0 2px', flexShrink: 0 }}>✎</button>
           </div>
         ) : (
-          <button onClick={() => setEditingUrl(true)} style={{
-            display: 'block', width: '100%', marginBottom: 16,
-            background: 'none', border: `1px dashed ${C.ink20}`, borderRadius: 10,
-            padding: '10px 16px', color: C.ink40, fontSize: 'var(--fs-14)',
-            cursor: 'pointer', fontFamily: 'inherit',
-          }}>
+          <button onClick={() => setEditingUrl(true)} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-13)', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginBottom: 16, display: 'block' }}>
             + Add website
           </button>
         )}
