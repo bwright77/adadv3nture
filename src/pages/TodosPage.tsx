@@ -96,10 +96,16 @@ export function TodosPage({ bgPhoto, initialTab }: TodosPageProps) {
   const { user } = useAuth()
   const [tab, setTab] = useState<TabId>(initialTab ?? 'training')
 
+  const isTodoCat = (t: string): t is TodoCategory => t !== 'training' && t !== 'projects' && t !== 'career'
+  const [cat, setCat] = useState<TodoCategory>(
+    initialTab && isTodoCat(initialTab) ? initialTab : 'career'
+  )
+
   useEffect(() => {
-    if (initialTab) setTab(initialTab)
+    if (!initialTab) return
+    setTab(initialTab)
+    if (isTodoCat(initialTab)) setCat(initialTab)
   }, [initialTab])
-  const [cat, setCat] = useState<TodoCategory>('career')
   const [todos, setTodos] = useState<Todo[]>([])
   const [done, setDone] = useState<Todo[]>([])
   const [showDone, setShowDone] = useState(false)
@@ -113,7 +119,7 @@ export function TodosPage({ bgPhoto, initialTab }: TodosPageProps) {
   const [addingReminder, setAddingReminder] = useState(false)
   const [reminderDraft, setReminderDraft] = useState('')
 
-  const isTodoTab = tab !== 'training' && tab !== 'projects' && tab !== 'career'
+  const isTodoTab = isTodoCat(tab)
   const current = TABS.find(t => t.id === (isTodoTab ? cat : tab))!
 
   function sortByUrgency(list: Todo[]): Todo[] {
