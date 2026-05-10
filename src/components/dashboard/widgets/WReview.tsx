@@ -9,7 +9,7 @@ import type { Database } from '../../../types/database'
 
 type Activity = Database['public']['Tables']['activities']['Row']
 
-interface WReviewProps { dark?: boolean }
+interface WReviewProps { dark?: boolean; hideCareer?: boolean }
 
 interface RowConfig {
   label: string
@@ -33,7 +33,7 @@ const CAT_TO_PILOT: Record<string, keyof PilotLights> = {
   projects: 'projects',
 }
 
-export function WReview({ dark }: WReviewProps) {
+export function WReview({ dark, hideCareer }: WReviewProps) {
   const { user } = useAuth()
   const [plan, setPlan] = useState<DailyPlan | null>(null)
   const [todayAct, setTodayAct] = useState<Activity | null>(null)
@@ -78,7 +78,7 @@ export function WReview({ dark }: WReviewProps) {
     <Glass dark={dark} span={12} pad={16}>
       <CardLabel dark={dark}>Day review</CardLabel>
 
-      {ROWS.map((row, i) => {
+      {ROWS.filter(r => !(hideCareer && r.label === 'CAREER')).map((row, i) => {
         const done = row.doneKey && plan ? Boolean(plan[row.doneKey]) : false
         const note = row.noteKey && plan ? (plan[row.noteKey] as string | null) : null
 
