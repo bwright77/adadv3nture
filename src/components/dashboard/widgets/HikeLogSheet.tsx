@@ -10,7 +10,7 @@ interface Props {
   onSaved: () => void
 }
 
-function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+function StarPicker({ value, onChange, dark }: { value: number; onChange: (v: number) => void; dark?: boolean }) {
   return (
     <div style={{ display: 'flex', gap: 6 }}>
       {[1, 2, 3, 4, 5].map(n => (
@@ -19,7 +19,9 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
           onClick={() => onChange(n)}
           style={{
             background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-            fontSize: 20, color: n <= value ? C.rust : C.ink40,
+            fontSize: 22,
+            color: n <= value ? C.rust : (dark ? 'rgba(245,237,214,0.35)' : 'rgba(26,18,8,0.3)'),
+            textShadow: n <= value ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
           }}
         >
           {n <= value ? '★' : '☆'}
@@ -87,7 +89,7 @@ export function HikeLogSheet({ hike, dark, onClose, onSaved }: Props) {
 
         <div style={{ marginBottom: 16 }}>
           <div className="mono" style={label}>Family Rating</div>
-          <StarPicker value={rating} onChange={setRating} />
+          <StarPicker value={rating} onChange={setRating} dark={dark} />
         </div>
 
         <div style={{ marginBottom: 24 }}>
