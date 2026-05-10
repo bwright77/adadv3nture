@@ -38,6 +38,7 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
   const [localContacts, setLocalContacts] = useState(contacts)
   const [editingAction, setEditingAction] = useState(false)
   const [actionDraft, setActionDraft] = useState(project.next_action ?? '')
+  const [localNextAction, setLocalNextAction] = useState(project.next_action ?? '')
   const [updatesLocal, setUpdatesLocal] = useState(updates)
   const [noteDraft, setNoteDraft] = useState('')
   const [addingNote, setAddingNote] = useState(false)
@@ -74,6 +75,17 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
     setLocalMilestones(updated)
     await toggleMilestone(m.id, !m.done)
     await recalcProgress(updated)
+    // Auto-advance next_action to first remaining incomplete milestone
+    if (!m.done) {
+      const next = updated
+        .filter(x => !x.done)
+        .sort((a, b) => a.sort_order - b.sort_order)[0]
+      if (next) {
+        setLocalNextAction(next.title)
+        setActionDraft(next.title)
+        await updateNextAction(project.id, next.title)
+      }
+    }
   }
 
   async function handleDeleteMilestone(id: string) {
@@ -145,6 +157,7 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
   async function handleSaveAction() {
     if (!actionDraft.trim()) { setEditingAction(false); return }
     await updateNextAction(project.id, actionDraft.trim())
+    setLocalNextAction(actionDraft.trim())
     setEditingAction(false)
     onUpdate()
   }
@@ -319,7 +332,7 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
             </div>
           ) : (
             <button
-              onClick={() => { setEditingAction(true); setActionDraft(project.next_action ?? '') }}
+              onClick={() => { setEditingAction(true); setActionDraft(localNextAction) }}
               style={{
                 display: 'block', width: '100%', textAlign: 'left',
                 background: `${color}10`, border: `0.5px solid ${color}30`,
@@ -328,7 +341,7 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
                 fontFamily: 'inherit',
               }}
             >
-              {project.next_action ?? <span style={{ color: C.ink40 }}>Add next action…</span>}
+              {localNextAction || <span style={{ color: C.ink40 }}>Add next action…</span>}
             </button>
           )}
         </div>
