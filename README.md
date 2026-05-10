@@ -1,7 +1,7 @@
 # adadv3nture
 
 <p align="center">
-  <img src="public/adadv3nture.png" alt="adadv3nture" width="220" />
+  <img src="public/adadv3nture_transparent.png" alt="adadv3nture" width="220" />
 </p>
 
 > "a dad adventure" — mission control for my life.
