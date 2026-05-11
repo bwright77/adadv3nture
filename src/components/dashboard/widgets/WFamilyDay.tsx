@@ -3,6 +3,7 @@ import { Glass } from '../../ui/Glass'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { supabase } from '../../../lib/supabase'
+import { getFamilyMembers, type FamilyMember } from '../../../lib/family'
 
 interface Props { dark?: boolean }
 
@@ -16,23 +17,21 @@ interface Spot {
   age_min: number
 }
 
-const KIDS = [
-  { name: 'Chase',  age: 8.5, emoji: '🏀', vibe: 'Hoop it up · throw the ball · trail challenge' },
-  { name: 'Ada',    age: 7,   emoji: '🐒', vibe: 'Ninja course · climb something · self-sufficient' },
-  { name: 'Sylvia', age: 5,   emoji: '🔧', vibe: 'Needs engagement · loves helping · good truck helper' },
-]
-
 const TYPE_ICON: Record<string, string> = {
   trail: '🥾', park: '🌳', ski: '⛷', bike: '🚴', family: '👨‍👩‍👧', run: '🏃',
 }
 
 export function WFamilyDay({ dark }: Props) {
   const { user } = useAuth()
+  const [kids, setKids] = useState<FamilyMember[]>([])
   const [spots, setSpots] = useState<Spot[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) return
+    getFamilyMembers(user.id)
+      .then(rows => setKids(rows.filter(r => r.role === 'child')))
+      .catch(() => setKids([]))
     ;(supabase as any)
       .from('weekend_spots')
       .select('id, name, type, location, drive_minutes, notes, age_min')
@@ -61,17 +60,19 @@ export function WFamilyDay({ dark }: Props) {
 
       {/* Kids row */}
       <div style={{ display: 'flex', gap: 8, marginBottom: spots.length > 0 ? 14 : 0 }}>
-        {KIDS.map(k => (
-          <div key={k.name} style={{
+        {kids.map(k => (
+          <div key={k.id} style={{
             flex: 1, padding: '8px 10px', borderRadius: 12,
             background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(26,18,8,0.04)',
             border: `1px solid ${divider}`,
           }}>
-            <div style={{ fontSize: 18, marginBottom: 4 }}>{k.emoji}</div>
+            <div style={{ fontSize: 18, marginBottom: 4 }}>{k.emoji ?? '👶'}</div>
             <div className="badge" style={{ fontSize: 'var(--fs-13)', marginBottom: 2 }}>{k.name}</div>
-            <div className="mono" style={{ fontSize: 9, color: subColor, lineHeight: 1.4, opacity: 0.8 }}>
-              {k.vibe}
-            </div>
+            {k.vibe && (
+              <div className="mono" style={{ fontSize: 9, color: subColor, lineHeight: 1.4, opacity: 0.8 }}>
+                {k.vibe}
+              </div>
+            )}
           </div>
         ))}
       </div>
