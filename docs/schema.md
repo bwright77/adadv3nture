@@ -1,6 +1,6 @@
 # Database Schema
 
-**Migrations applied:** 001–022 (run `npx supabase db push` to apply new ones — no Docker needed)
+**Migrations applied:** 001–024 (run `npx supabase db push` to apply new ones — no Docker needed)
 
 ```sql
 -- USERS
@@ -415,4 +415,38 @@ create table inspiration_photos (
   created_at timestamptz default now()
 );
 create index idx_inspiration_taken_at on inspiration_photos(taken_at);
+
+-- FAMILY MEMBERS (migration 023)
+-- Source of truth for self/spouse/kids — widgets compute age from birthday.
+create table family_members (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  name text not null,
+  role text not null check (role in ('self', 'spouse', 'child')),
+  birthday date not null,
+  emoji text,
+  vibe text,
+  sort_order integer default 0,
+  created_at timestamptz default now()
+);
+create index family_members_user_role_idx on family_members(user_id, role);
+
+-- ANCHOR EVENTS (migration 024)
+-- Dated lifeplan anchors (race day, career decision date, milestones).
+-- Slug is a stable code-side identifier; date/title/notes are user-editable.
+-- Code references known slugs: 'wlw' (West Line Winder), 'labor_day' (Career Anchor).
+create table anchor_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  slug text not null,
+  title text not null,
+  event_date date not null,
+  location text,
+  notes text,
+  category text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(user_id, slug)
+);
+create index anchor_events_user_date_idx on anchor_events(user_id, event_date);
 ```

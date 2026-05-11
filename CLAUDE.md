@@ -14,14 +14,14 @@ Every morning it surfaces my Most Important Tasks — not what's loudest, what a
 _Update this at the start of every Claude Code session._
 
 ```
-NEXT PRIORITY: Withings OAuth — connect, sync body metrics, weight trend
+NEXT PRIORITY: Trends engine — sparkline charts + weekly summary report card
 ```
 
 ---
 
-## What's Live (as of May 10, 2026)
+## What's Live (as of May 11, 2026)
 
-**Migrations applied:** 001–022 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main)
+**Migrations applied:** 001–024 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main)
 
 | Area | Status |
 |------|--------|
@@ -45,8 +45,12 @@ NEXT PRIORITY: Withings OAuth — connect, sync body metrics, weight trend
 | Drinks widget — +/- counter, 7-day avg | ✓ |
 | Weekend Mode — 4 views (Dawn/Day/Sat Eve/Sun Eve), weekend briefing variant | ✓ |
 | 50 Hikes with Kids tracker — seasonal suggestion, log, expanded list | ✓ |
-| Withings OAuth + body metrics | ✗ |
-| Trends engine — charts, weekly summaries | ✗ |
+| Withings OAuth + body metrics — connect + sync to body_metrics, weight/body-fat in trends | ✓ |
+| Trends engine — report card rows + weekly_summaries Edge Function (sparkline charts pending) | partial |
+| MIT widget — 7d completion rate from daily_plans, ±vs-prior-week, last 5 days dotted | ✓ |
+| Family source of truth — `family_members` (Ben/Tangier + 3 kids, birthdays → computed ages) | ✓ |
+| Anchor events — `anchor_events` (WLW + Career Anchor), editable in Career panel | ✓ |
+| Dynamic location — snap to Denver / Howard from geolocation; falls through to Denver | ✓ |
 | Daily check-in — mood, MIT portfolio check | ✗ |
 
 ---
@@ -102,7 +106,7 @@ NEXT PRIORITY: Withings OAuth — connect, sync body metrics, weight trend
 
 ```
 ✓ 01. Project init — Vite + React 19 + TypeScript + Tailwind + Supabase
-✓ 02. Schema — migrations 001-022, RLS, seed data
+✓ 02. Schema — migrations 001-024, RLS, seed data
 ✓ 03. Auth — email + Google OAuth
 ✓ 04. Widget grid — time-aware views
 ✓ 05. Inbox — FAB, swipe triage
@@ -119,10 +123,10 @@ NEXT PRIORITY: Withings OAuth — connect, sync body metrics, weight trend
 ✓ 19. Inspiration widget — storage, on this day, swipe
   +. Training tab, Projects tab, Career tab, design system
 ✓ WM. Weekend Mode — 4 views, 8 widgets, briefing variant, 50 Hikes tracker
+✓ 09. Withings OAuth — connect, sync metrics, weight + body-fat in trends
 
-  09. Withings OAuth — connect, sync metrics, weight trend  ← NEXT
-  10. Daily check-in — drinks +/- counter, mood
-  18. Trends engine — weekly summaries, report card, charts
+  10. Daily check-in — mood entry (drinks +/- already live)
+  18. Trends engine — sparkline charts (rows + weekly_summaries function live)  ← NEXT
   20. Historic import — Strava backfill, Peloton CSV, weight CSV
   21. Polish — mobile empty states, event countdowns
 ```
@@ -144,4 +148,4 @@ NEXT PRIORITY: Withings OAuth — connect, sync body metrics, weight trend
 
 ---
 
-*Last updated: May 10, 2026*
+*Last updated: May 11, 2026*
