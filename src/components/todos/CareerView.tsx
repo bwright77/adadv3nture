@@ -149,7 +149,7 @@ function DecisionDateCard() {
       padding: '12px 14px', marginBottom: 14,
     }}>
       <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.12em', color: C.ink40, marginBottom: 6 }}>
-        ◆ DECISION DATE · {anchor.title.toUpperCase()}
+        ◆ CAREER ANCHOR · {anchor.title.toUpperCase()}
       </div>
       {editing ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
