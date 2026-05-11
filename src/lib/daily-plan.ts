@@ -128,6 +128,51 @@ export async function getReviewHistory(userId: string): Promise<ReviewHistory> {
   }
 }
 
+export interface MITStats {
+  rate7d: number          // 0..1 completion rate over the last 7 days (incl. today)
+  deltaVsPrior: number    // percentage-point change vs the prior 7-day window
+  last5Days: boolean[]    // [today-4 ... today], true if that day had ≥ 3 of 4 done
+}
+
+export async function getMITStats(userId: string): Promise<MITStats> {
+  const today = logicalToday()
+  const todayDate = new Date(today + 'T12:00:00')
+  const start = new Date(todayDate)
+  start.setDate(todayDate.getDate() - 13)
+  const startStr = start.toISOString().substring(0, 10)
+
+  const { data } = await supabase
+    .from('daily_plans')
+    .select('plan_date, family_creative_done, home_done, career_done, projects_done')
+    .eq('user_id', userId)
+    .gte('plan_date', startStr)
+    .lte('plan_date', today)
+
+  const rows = (data ?? []) as ReviewRow[]
+  const byDate = new Map<string, number>()
+  for (const row of rows) {
+    let n = 0
+    for (const cat of REVIEW_CATS) if (row[`${cat}_done` as keyof ReviewRow]) n++
+    byDate.set(row.plan_date, n)
+  }
+
+  const counts: number[] = []
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(todayDate)
+    d.setDate(todayDate.getDate() - i)
+    counts.push(byDate.get(d.toISOString().substring(0, 10)) ?? 0)
+  }
+
+  const prior7 = counts.slice(0, 7)
+  const last7 = counts.slice(7, 14)
+  const rate = (xs: number[]) => xs.reduce((s, n) => s + n, 0) / (xs.length * 4)
+  const rate7d = rate(last7)
+  const deltaVsPrior = Math.round((rate7d - rate(prior7)) * 100)
+  const last5Days = counts.slice(9, 14).map(n => n >= 3)
+
+  return { rate7d, deltaVsPrior, last5Days }
+}
+
 export async function saveThinkingAnswer(userId: string, answer: string): Promise<void> {
   const today = logicalToday()
   await db.from('daily_plans').upsert(

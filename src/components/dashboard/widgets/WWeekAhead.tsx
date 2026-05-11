@@ -88,7 +88,7 @@ export function WWeekAhead({ dark }: Props) {
                 Run Club
               </span>
               <span className="mono" style={{ fontSize: 'var(--fs-11)', color: C.teal, marginLeft: 8 }}>
-                Wash Park · 6:30pm · SACRED
+                Wash Park · 6pm · SACRED
               </span>
             </div>
           </div>
