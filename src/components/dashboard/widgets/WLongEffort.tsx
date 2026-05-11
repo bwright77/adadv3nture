@@ -5,6 +5,7 @@ import { useAuth } from '../../../contexts/AuthContext'
 import { loadRecovery } from '../../../lib/recovery'
 import { getTrainingGoals } from '../../../lib/training'
 import { supabase } from '../../../lib/supabase'
+import { daysUntil, formatCountdown } from '../../../lib/countdown'
 
 interface Props { dark?: boolean }
 
@@ -41,9 +42,6 @@ function formatElev(ft: number | null): string {
   return `+${ft.toLocaleString()}ft`
 }
 
-function daysUntil(dateStr: string): number {
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86_400_000)
-}
 
 function thisWeekMonday(): string {
   const d = new Date()
@@ -106,9 +104,9 @@ export function WLongEffort({ dark }: Props) {
             LONG EFFORT
           </span>
         </div>
-        {anchor && anchorDays !== null && (
+        {anchor && anchorDays !== null && anchorDays >= 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span className="mono" style={{ fontSize: 'var(--fs-10)', color: C.rust }}>{anchorDays}d</span>
+            <span className="mono" style={{ fontSize: 'var(--fs-10)', color: C.rust }}>{formatCountdown(anchorDays)}</span>
             <span className="mono" style={{ fontSize: 'var(--fs-10)', color: subColor, opacity: 0.7 }}>
               {anchor.event_name.split(' ').slice(0, 3).join(' ')}
             </span>

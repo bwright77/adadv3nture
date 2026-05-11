@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Header } from '../ui/Header'
 import { useAnchorEvent } from '../../hooks/useAnchorEvent'
-import { daysUntilDate } from '../../lib/anchorEvents'
+import { daysUntil, formatCountdownChip } from '../../lib/countdown'
 import { useLocation } from '../../hooks/useLocation'
 import { WMorningHero } from './widgets/WMorningHero'
 import { WWorkout } from './widgets/WWorkout'
@@ -33,7 +33,7 @@ interface BriefingData {
 function LockStrip({ userId }: { userId: string | undefined }) {
   const [recoveryScore, setRecoveryScore] = useState<number | null>(null)
   const wlw = useAnchorEvent('wlw')
-  const wlwDays = daysUntilDate(wlw.event_date)
+  const wlwDays = daysUntil(wlw.event_date)
   const { location } = useLocation()
 
   useEffect(() => {
@@ -49,7 +49,7 @@ function LockStrip({ userId }: { userId: string | undefined }) {
     <div style={{ padding: '4px 14px 8px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
       {[
         { label: location.name.toUpperCase(), value: locationValue },
-        { label: 'WLW', value: `${wlwDays}D` },
+        { label: 'WLW', value: formatCountdownChip(wlwDays) },
         ...(recoveryScore !== null ? [{ label: 'REC', value: String(recoveryScore) }] : []),
       ].map(chip => (
         <div key={chip.label} style={{

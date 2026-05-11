@@ -52,6 +52,6 @@ export async function updateAnchorEvent(
   )
 }
 
-export function daysUntilDate(dateStr: string): number {
-  return Math.ceil((new Date(dateStr + 'T12:00:00').getTime() - Date.now()) / 86_400_000)
-}
+// Re-export from the shared countdown helper so anchors and projects share
+// the same day-counting semantics (local noon anchor, plain integer days).
+export { daysUntil as daysUntilDate } from './countdown'

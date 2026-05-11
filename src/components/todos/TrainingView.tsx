@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, updateTrainingGoalNotes, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
 import { getAllPrograms, addProgram, advanceProgram, setProgramPosition, deactivateProgram, syncProgramFromStrava, updateProgramImageUrl, type ProgramState } from '../../lib/program-tracker'
 import { updateTrainingGoalImageUrl, updateTrainingGoalWebsiteUrl } from '../../lib/training'
+import { daysUntil as daysUntilDate } from '../../lib/countdown'
 
 function CardImageBanner({ url, color, radius = '0 14px 0 0' }: { url: string; color: string; radius?: string }) {
   return (
@@ -28,7 +29,7 @@ const EVENT_LABEL: Record<string, string> = {
 }
 
 function daysUntil(dateStr: string): number {
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86_400_000)
+  return daysUntilDate(dateStr)
 }
 
 function formatDate(dateStr: string): string {

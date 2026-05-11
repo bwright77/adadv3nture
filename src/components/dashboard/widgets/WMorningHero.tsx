@@ -6,7 +6,7 @@ import { loadRecovery, type RecoveryResult } from '../../../lib/recovery'
 import { getProgram, type ProgramState } from '../../../lib/program-tracker'
 import { supabase } from '../../../lib/supabase'
 import { useAnchorEvent } from '../../../hooks/useAnchorEvent'
-import { daysUntilDate } from '../../../lib/anchorEvents'
+import { daysUntil, formatCountdownChip } from '../../../lib/countdown'
 import { useLocation } from '../../../hooks/useLocation'
 
 interface WMorningHeroProps {
@@ -119,8 +119,8 @@ export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMo
   const tierColor = TIER_COLOR[tier]
   const wlwEvent = useAnchorEvent('wlw')
   const laborEvent = useAnchorEvent('labor_day')
-  const wlwDays = daysUntilDate(wlwEvent.event_date)
-  const laborDays = daysUntilDate(laborEvent.event_date)
+  const wlwDays = daysUntil(wlwEvent.event_date)
+  const laborDays = daysUntil(laborEvent.event_date)
   const { location } = useLocation()
   const locationStamp = location.elevationFt != null
     ? `${location.name.toUpperCase()} ${location.elevationFt.toLocaleString()}FT`
@@ -196,15 +196,15 @@ export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMo
         />
         <MiniTile
           label="WLW 30K"
-          value={String(wlwDays)}
-          sub="DAYS"
+          value={wlwDays >= 0 ? String(wlwDays) : '—'}
+          sub={wlwDays >= 0 ? 'DAYS' : 'PASSED'}
           accent={C.rust}
           tileDark
         />
         <MiniTile
           label="LABOR DAY"
-          value={String(laborDays)}
-          sub="DAYS"
+          value={laborDays >= 0 ? String(laborDays) : '—'}
+          sub={laborDays >= 0 ? 'DAYS' : 'PASSED'}
           accent="#8B3A1E"
         />
       </div>

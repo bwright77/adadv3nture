@@ -5,12 +5,13 @@ import {
   getProjects, getProjectWithMilestones, addProject,
   type Project, type ProjectMilestone, type ProjectUpdate, type ProjectContact,
 } from '../../lib/projects'
-import { getAnchorEvent, updateAnchorEvent, daysUntilDate, type AnchorEvent } from '../../lib/anchorEvents'
+import { getAnchorEvent, updateAnchorEvent, type AnchorEvent } from '../../lib/anchorEvents'
+import { daysUntil as daysUntilDate, formatWeeksDays } from '../../lib/countdown'
 import { ProjectDetail } from './ProjectDetail'
 
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86_400_000)
+  return daysUntilDate(dateStr)
 }
 
 function formatDate(dateStr: string): string {
@@ -120,8 +121,8 @@ function DecisionDateCard() {
   if (!anchor) return null
 
   const days = daysUntilDate(anchor.event_date)
-  const weeks = Math.floor(days / 7)
-  const urgent = days < 60 ? C.rust : days < 90 ? C.sand : C.ink40
+  const isPast = days < 0
+  const urgent = isPast ? C.ink40 : days < 60 ? C.rust : days < 90 ? C.sand : C.ink40
   const formatted = new Date(anchor.event_date + 'T12:00:00')
     .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 
@@ -187,7 +188,7 @@ function DecisionDateCard() {
               {formatted}
             </div>
             <div className="mono" style={{ fontSize: 'var(--fs-12)', color: urgent, marginTop: 2 }}>
-              {weeks}wk · {days}d
+              {formatWeeksDays(days)}
             </div>
           </div>
           <button

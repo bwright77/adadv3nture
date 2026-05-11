@@ -4,12 +4,13 @@ import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { getProjects, type Project } from '../../../lib/projects'
 import { useAuth } from '../../../contexts/AuthContext'
+import { daysUntil as daysUntilDate } from '../../../lib/countdown'
 
 interface WWAProps { dark?: boolean; onOpenCareer?: () => void }
 
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86_400_000)
+  return daysUntilDate(dateStr)
 }
 
 function DeadlineTag({ days }: { days: number }) {

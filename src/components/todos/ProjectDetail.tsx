@@ -6,6 +6,7 @@ import {
   addContact, deleteContact, updateProjectImageUrl, updateProjectWebsiteUrl,
   type Project, type ProjectMilestone, type ProjectUpdate, type ProjectContact,
 } from '../../lib/projects'
+import { daysUntil as daysUntilDate } from '../../lib/countdown'
 
 interface ProjectDetailProps {
   project: Project
@@ -26,7 +27,7 @@ const CAT_COLOR: Record<string, string> = {
 
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86_400_000)
+  return daysUntilDate(dateStr)
 }
 
 function formatDate(dateStr: string): string {

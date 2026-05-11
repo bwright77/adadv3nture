@@ -1,7 +1,7 @@
 import { Glass } from '../../ui/Glass'
 import { C } from '../../../tokens'
 import { useAnchorEvent } from '../../../hooks/useAnchorEvent'
-import { daysUntilDate } from '../../../lib/anchorEvents'
+import { daysUntil, formatCountdown } from '../../../lib/countdown'
 
 interface WEventProps { dark?: boolean }
 
@@ -12,7 +12,8 @@ function formatShortDate(dateStr: string): string {
 
 export function WEvent({ dark }: WEventProps) {
   const wlw = useAnchorEvent('wlw')
-  const days = daysUntilDate(wlw.event_date)
+  const days = daysUntil(wlw.event_date)
+  const isPast = days < 0
   const subParts = [
     formatShortDate(wlw.event_date),
     wlw.location,
@@ -21,7 +22,7 @@ export function WEvent({ dark }: WEventProps) {
 
   return (
     <Glass dark={dark} span={12} pad={14} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <div style={{ width: 4, height: 36, background: C.rust, borderRadius: 2 }} />
+      <div style={{ width: 4, height: 36, background: isPast ? C.ink40 : C.rust, borderRadius: 2 }} />
       <div style={{ flex: 1 }}>
         <div className="badge" style={{ fontSize: 'var(--fs-14)' }}>{wlw.title.toUpperCase()}</div>
         <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.6 }}>
@@ -30,9 +31,11 @@ export function WEvent({ dark }: WEventProps) {
       </div>
       <div style={{ textAlign: 'right' }}>
         <div className="mono" style={{ fontSize: 'var(--fs-18)', fontWeight: 700, lineHeight: 1 }}>
-          {days}<span style={{ fontSize: 'var(--fs-12)', opacity: 0.5 }}>d</span>
+          {formatCountdown(days)}
         </div>
-        <div className="mono" style={{ fontSize: 'var(--fs-11)', color: C.teal }}>register now ↗</div>
+        {!isPast && (
+          <div className="mono" style={{ fontSize: 'var(--fs-11)', color: C.teal }}>register now ↗</div>
+        )}
       </div>
     </Glass>
   )
