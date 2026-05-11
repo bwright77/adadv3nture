@@ -175,10 +175,24 @@ async function loadAnchorsAndFamily(admin: any, userId: string, today: string): 
   return { anchorBlock, familyBlock }
 }
 
-async function fetchDenverWeather(owmKey: string): Promise<string | null> {
+// Default to Denver when the client didn't (or couldn't) pass a location.
+// Keeping a default avoids "no weather" briefings — the rest of the UI uses
+// the same fallback in `src/lib/locations.ts` (DEFAULT_LOCATION).
+const DEFAULT_BRIEFING_LOCATION = {
+  lat: 39.7392, lon: -104.9903, name: 'Denver', elevation_ft: 5318,
+}
+
+interface BriefingLocation {
+  lat: number
+  lon: number
+  name: string
+  elevation_ft: number | null
+}
+
+async function fetchWeather(owmKey: string, lat: number, lon: number): Promise<string | null> {
   try {
     const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=39.7392&lon=-104.9903&appid=${owmKey}&units=imperial`,
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${owmKey}&units=imperial`,
     )
     if (!res.ok) return null
     const d = await res.json() as {
@@ -191,6 +205,13 @@ async function fetchDenverWeather(owmKey: string): Promise<string | null> {
   } catch {
     return null
   }
+}
+
+function locationStamp(loc: BriefingLocation): string {
+  if (loc.elevation_ft != null) {
+    return `${loc.name} ${loc.elevation_ft.toLocaleString()}ft`
+  }
+  return loc.name
 }
 
 // ─── Main handler ────────────────────────────────────────────────────────────
@@ -229,6 +250,18 @@ Deno.serve(async (req: Request) => {
       body.day_type === 'weekend' ? 'weekend'
       : body.day_type === 'weekday' ? 'weekday'
       : serverIsWeekend ? 'weekend' : 'weekday'
+
+    // Optional client-supplied location. Validate the shape; otherwise default to Denver.
+    const rawLoc = body.location as Partial<BriefingLocation> | undefined
+    const location: BriefingLocation =
+      rawLoc && typeof rawLoc.lat === 'number' && typeof rawLoc.lon === 'number' && typeof rawLoc.name === 'string'
+        ? {
+            lat: rawLoc.lat,
+            lon: rawLoc.lon,
+            name: rawLoc.name,
+            elevation_ft: typeof rawLoc.elevation_ft === 'number' ? rawLoc.elevation_ft : null,
+          }
+        : DEFAULT_BRIEFING_LOCATION
 
     const admin = createClient(supabaseUrl, serviceKey)
     const today = new Date().toISOString().substring(0, 10)
@@ -308,7 +341,7 @@ Deno.serve(async (req: Request) => {
           .eq('user_id', user.id)
           .eq('plan_date', today)
           .maybeSingle(),
-        owmKey ? fetchDenverWeather(owmKey) : Promise.resolve(null),
+        owmKey ? fetchWeather(owmKey, location.lat, location.lon) : Promise.resolve(null),
       ])
 
       const signal = recoveryRes.data?.[0] as {
@@ -344,7 +377,7 @@ ${familyBlock}
 
 ${anchorBlock}
 
-WEATHER (Denver 5,318ft):
+WEATHER (${locationStamp(location)}):
 ${weatherStr ? `- ${weatherStr}` : '- No weather data'}
 
 RECOVERY:
@@ -463,6 +496,7 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
       const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
 
       contextMsg = `Today is ${dayName}, ${today}.
+LOCATION: ${locationStamp(location)}
 
 ${familyBlock}
 

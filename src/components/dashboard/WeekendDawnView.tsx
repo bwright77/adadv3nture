@@ -70,16 +70,27 @@ function LockStrip({ userId }: { userId: string | undefined }) {
 
 export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }: Props) {
   const { user } = useAuth()
+  const { location, loading: locationLoading } = useLocation()
   const [briefingData, setBriefingData] = useState<BriefingData | null>(null)
   const [briefingLoading, setBriefingLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) return
+    if (!user || locationLoading) return
     setBriefingLoading(true)
-    supabase.functions.invoke<BriefingData>('morning-briefing', { body: { day_type: 'weekend' } })
+    supabase.functions.invoke<BriefingData>('morning-briefing', {
+      body: {
+        day_type: 'weekend',
+        location: {
+          lat: location.lat,
+          lon: location.lon,
+          name: location.name,
+          elevation_ft: location.elevationFt,
+        },
+      },
+    })
       .then(({ data, error }) => { if (!error && data) setBriefingData(data) })
       .finally(() => setBriefingLoading(false))
-  }, [user])
+  }, [user, locationLoading, location.lat, location.lon])
 
   // Header needs activeTod prop; pass a dummy since weekend header uses weekendBlock
   const dummyTod: TimeOfDay = 'morning'
