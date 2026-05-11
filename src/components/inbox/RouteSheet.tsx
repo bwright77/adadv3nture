@@ -80,7 +80,9 @@ export function RouteSheet({ item, onDone, onClose }: RouteSheetProps) {
         onClick={e => e.stopPropagation()}
         style={{
           width: '100%', background: C.paper, borderRadius: '20px 20px 0 0',
-          padding: '20px 18px 40px', boxShadow: '0 -8px 32px rgba(26,18,8,0.18)',
+          padding: '20px 18px calc(env(safe-area-inset-bottom, 0px) + 28px)',
+          boxShadow: '0 -8px 32px rgba(26,18,8,0.18)',
+          maxHeight: '88dvh', overflowY: 'auto',
         }}
       >
         {/* Handle */}
