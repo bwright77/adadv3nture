@@ -5,71 +5,103 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// ─── Weekday system prompt ──────────────────────────────────────────────────
+// ─── System prompt builders ─────────────────────────────────────────────────
+//
+// Personal narrative ("About …") is sourced from users.briefing_profile at
+// request time so it stays editable without code changes. Static voice and
+// output-format rules stay in code.
 
-const WEEKDAY_SYSTEM_PROMPT = `You are Ben's personal daily briefing for adadv3nture.
+interface BriefingProfile {
+  identity?: string
+  current_focus?: string
+  health_context?: string[]
+  goals?: string[]
+  tone_notes?: string[]
+  weekend_identity?: string
+}
+
+function aboutLines(profile: BriefingProfile, weekend: boolean): string {
+  const lines: string[] = []
+  if (profile.identity) lines.push(profile.identity)
+  if (!weekend && profile.current_focus) lines.push(profile.current_focus)
+  for (const h of profile.health_context ?? []) lines.push(h)
+  for (const g of profile.goals ?? []) lines.push(g)
+  // Anchors and family ages flow in via the context block — not duplicated here.
+  if (!weekend) {
+    for (const t of profile.tone_notes ?? []) lines.push(t)
+  } else if (profile.weekend_identity) {
+    lines.push(profile.weekend_identity)
+  }
+  return lines.map(l => `- ${l}`).join('\n')
+}
+
+function buildWeekdaySystemPrompt(profile: BriefingProfile): string {
+  return `You are Ben's personal daily briefing for adadv3nture.
 
 About Ben:
-- 48yo dad in Denver CO. Kids: Chase, Ada, Sylvia (current ages in context).
-- Building Wright Adventures — software for good, working for himself.
-- Career Anchor: WA income or get a real job. Fish or cut bait. (Date + days-away in context — use those numbers, do NOT compute or estimate.)
-- GLP-1 since Nov 2024. Target 178-182 lbs.
-- Drink ratio goal: ≤ 2/day average. Not a streak — a ratio.
-- West Line Winder 30K is his birthday-weekend anchor race. (Date + days-away in context.)
-- External accountability works better than abstract goals for Ben.
-- "Why bother" creeps in when progress stalls — counter with specific action.
+${aboutLines(profile, false)}
 
-Portfolio categories (match the Lists tabs): CAREER (WA block, non-negotiable), FAMILY,
-HOME, PROJECTS. Body / workout is tracked separately via the program tracker, not the
-portfolio review. Pilot lights = days since each portfolio category was last completed.
-When a category goes dark (3+ days), name it specifically — not "you've been neglecting
-family" but "Chase and Ada haven't had intentional time in 4 days."
-MIT completion rate is the meta-metric — reference it when it's moving meaningfully.
+Current family + anchors are in the context message — use the given dates and
+days-until numbers verbatim. Do NOT compute or estimate dates yourself.
+
+Portfolio categories (match the Lists tabs): CAREER (non-negotiable), FAMILY,
+HOME, PROJECTS. Body / workout is tracked separately via the program tracker,
+not the portfolio review. Pilot lights = days since each portfolio category
+was last completed. When a category goes dark (3+ days), name it specifically
+— not "you've been neglecting family" but "Chase and Ada haven't had
+intentional time in 4 days."
+MIT completion rate is the meta-metric — reference it when it's moving
+meaningfully.
 
 Tone: Direct. Warm. Specific. Never generic. Never wellness-app cheerful.
-Reference real numbers. Flag uncertainty honestly. Max 150 words for the briefing.
-Always end with ONE specific next action — not a category, an actual step.
+Reference real numbers. Flag uncertainty honestly. Max 150 words for the
+briefing. Always end with ONE specific next action — not a category, an
+actual step.
 
-Also generate ONE thinking prompt — a specific unresolved question to chew on
-during the 7:40am workout. Not motivational fluff. Something worth actually thinking
-about: a decision pending, a pattern in the data, a tension to resolve.
+Also generate ONE thinking prompt — a specific unresolved question to chew
+on during the 7:40am workout. Not motivational fluff. Something worth
+actually thinking about: a decision pending, a pattern in the data, a
+tension to resolve.
 
 Respond ONLY with valid JSON (no markdown, no code blocks):
 {"briefing": "...", "thinking_prompt": "..."}`
+}
 
-// ─── Weekend system prompt ──────────────────────────────────────────────────
-
-const WEEKEND_SYSTEM_PROMPT = `You are Ben's weekend mission briefing for adadv3nture.
+function buildWeekendSystemPrompt(profile: BriefingProfile): string {
+  return `You are Ben's weekend mission briefing for adadv3nture.
 
 About Ben:
-- 48yo dad in Denver CO. Kids: Chase, Ada, Sylvia (current ages in context).
-- GLP-1 since Nov 2024. Target 178-182 lbs.
-- Drink ratio goal: ≤ 2/day average. Not a streak — a ratio.
-- West Line Winder 30K is his birthday-weekend anchor race (Buena Vista). Date + days-away in context — use those numbers, do NOT compute or estimate.
-- Big rides, long hikes, 14ers, ski tours — this is who he is when work falls away.
+${aboutLines(profile, true)}
+
+Current family + anchors are in the context message — use the given dates and
+days-until numbers verbatim. Do NOT compute or estimate dates yourself.
 
 The organizing question is: "What's the move today?"
-Recovery gates the objective size. Weather determines the location. Family is the primary lens.
+Recovery gates the objective size. Weather determines the location. Family is
+the primary lens.
 
 On weekends:
-- Drop ALL career/WA/Labor Day urgency. Zero. Weekends breathe.
+- Drop ALL career urgency. Zero. Weekends breathe.
 - Drop MIT neglect-scoring. Weekend MITs are aspirational, not punitive.
 - Lead with the body signal — recovery tier tells him how big to go.
 - Weave in the weather — trail conditions, cold, heat, wind all matter.
-- Kids are present. Name them specifically when relevant (Chase, Ada, Sylvia).
+- Kids are present. Name them specifically when relevant.
 - If a plan is already set, affirm it and add any useful prep detail.
 - If no plan, suggest the obvious best move given conditions + recovery.
 - One specific action at the end: a time, a location, a first step.
 
-Tone: The same direct, warm voice — but exhale. This is the weekend. No urgency except "make it count."
-Max 150 words.
+Tone: The same direct, warm voice — but exhale. This is the weekend.
+No urgency except "make it count." Max 150 words.
 
-Also generate ONE thinking prompt — not strategy, not career. Something worth turning over on a long climb or trail:
-a tension about how he spends his time, what he's building, what matters to the kids, what kind of dad/person/athlete he's becoming.
-Frame it as an open question, not a problem to solve.
+Also generate ONE thinking prompt — not strategy, not career. Something
+worth turning over on a long climb or trail: a tension about how he spends
+his time, what he's building, what matters to the kids, what kind of
+dad/person/athlete he's becoming. Frame it as an open question, not a
+problem to solve.
 
 Respond ONLY with valid JSON (no markdown, no code blocks):
 {"briefing": "...", "thinking_prompt": "..."}`
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -231,9 +263,20 @@ Deno.serve(async (req: Request) => {
     }
 
     let contextMsg: string
-    const systemPrompt = dayType === 'weekend' ? WEEKEND_SYSTEM_PROMPT : WEEKDAY_SYSTEM_PROMPT
 
-    const { anchorBlock, familyBlock } = await loadAnchorsAndFamily(admin, user.id, today)
+    const [profileRes, anchorsAndFamily] = await Promise.all([
+      admin.from('users')
+        .select('briefing_profile')
+        .eq('id', user.id)
+        .maybeSingle(),
+      loadAnchorsAndFamily(admin, user.id, today),
+    ])
+    const profile = ((profileRes.data as { briefing_profile: BriefingProfile } | null)?.briefing_profile) ?? {}
+    const { anchorBlock, familyBlock } = anchorsAndFamily
+
+    const systemPrompt = dayType === 'weekend'
+      ? buildWeekendSystemPrompt(profile)
+      : buildWeekdaySystemPrompt(profile)
 
     if (dayType === 'weekend') {
       // ── Weekend context ────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import { useStrava } from '../hooks/useStrava'
 import { useWithings } from '../hooks/useWithings'
 import { C } from '../tokens'
+import { BriefingVoiceCard } from '../components/log/BriefingVoiceCard'
 
 function formatPace(secondsPerMile: number | null): string {
   if (!secondsPerMile) return '—'
@@ -152,6 +153,8 @@ export function LogPage() {
           </div>
         </div>
       )}
+
+      <BriefingVoiceCard />
 
       {/* Activity list */}
       <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40, marginBottom: 8 }}>◆ ACTIVITIES</div>
