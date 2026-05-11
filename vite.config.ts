@@ -6,8 +6,14 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
       registerType: 'autoUpdate',
+      srcDir: 'src',
+      filename: 'sw.ts',
       includeAssets: ['adadv3nture.png', 'adadv3nture_transparent.png', 'icons/*.png'],
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
+      },
       manifest: {
         name: 'adadv3nture',
         short_name: 'adadv3nture',
@@ -34,43 +40,6 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
-          },
-        ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
-        navigateFallback: 'index.html',
-        navigateFallbackDenylist: [/^\/api\//, /^\/supabase\//],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com/,
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'google-fonts-stylesheets' },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/storage/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'supabase-storage',
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/api\.openweathermap\.org/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'openweather',
-              networkTimeoutSeconds: 5,
-              expiration: { maxAgeSeconds: 300 },
-            },
           },
         ],
       },
