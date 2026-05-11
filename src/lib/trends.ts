@@ -29,6 +29,7 @@ export interface TrendRow {
   isGood: boolean | null    // null = neutral
   isHero: boolean
   noData: boolean
+  spark: number[]           // oldest → newest; <2 points means "skip drawing"
 }
 
 export interface RaceReadiness {
@@ -170,6 +171,35 @@ export async function getTrends(userId: string): Promise<TrendData> {
   const dkPrev = avg(dkLastWeek.map(r => r.drinks_consumed))
   const dkDelta = dkCurr != null && dkPrev != null ? dkCurr - dkPrev : null
 
+  // ── Sparkline series ────────────────────────────────────────
+  // body_metrics rows arrive newest → oldest; reverse to chronological.
+  const metricsAsc = [...metrics].reverse()
+  const weightSpark = metricsAsc
+    .map(m => m.weight_lbs)
+    .filter((v): v is number => v != null)
+  const bodyFatSpark = metricsAsc
+    .map(m => m.body_fat_pct)
+    .filter((v): v is number => v != null)
+
+  // 4 weekly buckets, oldest → newest
+  const milesSpark: number[] = []
+  const workoutsSpark: number[] = []
+  for (let w = 3; w >= 0; w--) {
+    const wStart = subDays((w + 1) * 7)
+    const wEnd = subDays(w * 7)
+    milesSpark.push(sum(
+      runs.filter(r => r.activity_date >= wStart && r.activity_date < wEnd).map(r => r.distance_miles),
+    ))
+    workoutsSpark.push(
+      activities.filter(a => a.activity_date >= wStart && a.activity_date < wEnd).length,
+    )
+  }
+
+  // Daily series, oldest → newest, nulls dropped
+  const recoveryAsc = [...recovery].reverse()
+  const rhrSpark = recoveryAsc.map(r => r.rhr).filter((v): v is number => v != null)
+  const drinksSpark = recoveryAsc.map(r => r.drinks_consumed).filter((v): v is number => v != null)
+
   // ── Race readiness ────────────────────────────────────────────
   const daysUntil = Math.ceil((raceDate.getTime() - today.getTime()) / 86400000)
   const runs30d = activities.filter(a =>
@@ -222,6 +252,7 @@ export async function getTrends(userId: string): Promise<TrendData> {
       isGood: wDelta != null ? wDelta < 0 : null,
       isHero: false,
       noData: wLatest == null,
+      spark: weightSpark,
     },
     {
       label: 'Body fat %',
@@ -231,6 +262,7 @@ export async function getTrends(userId: string): Promise<TrendData> {
       isGood: bfDelta != null ? bfDelta < 0 : null,
       isHero: false,
       noData: bfLatest == null,
+      spark: bodyFatSpark,
     },
     {
       label: 'Miles run',
@@ -240,6 +272,7 @@ export async function getTrends(userId: string): Promise<TrendData> {
       isGood: milesDelta != null ? milesDelta >= 0 : null,
       isHero: false,
       noData: milesCurr === 0 && activities.length === 0,
+      spark: milesSpark,
     },
     {
       label: 'Workouts',
@@ -249,6 +282,7 @@ export async function getTrends(userId: string): Promise<TrendData> {
       isGood: wkDelta != null ? wkDelta >= 0 : null,
       isHero: false,
       noData: wkCurr === 0 && activities.length === 0,
+      spark: workoutsSpark,
     },
     {
       label: 'RHR',
@@ -258,6 +292,7 @@ export async function getTrends(userId: string): Promise<TrendData> {
       isGood: rhrDelta != null ? rhrDelta < 0 : null,
       isHero: false,
       noData: rhrCurr == null,
+      spark: rhrSpark,
     },
     {
       label: 'Drinks/day',
@@ -267,6 +302,7 @@ export async function getTrends(userId: string): Promise<TrendData> {
       isGood: dkDelta != null ? dkDelta <= 0 : dkCurr != null ? dkCurr <= 2 : null,
       isHero: false,
       noData: dkCurr == null,
+      spark: drinksSpark,
     },
   ]
 

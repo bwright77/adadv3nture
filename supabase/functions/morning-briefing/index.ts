@@ -284,7 +284,7 @@ Deno.serve(async (req: Request) => {
 
       const [recoveryRes, weightRes, lastEffortRes, weekendPlanRes, weatherStr] = await Promise.all([
         admin.from('recovery_signals')
-          .select('rhr, sleep_duration_hours, drinks_consumed, recovery_score, recovery_tier')
+          .select('rhr, sleep_duration_hours, drinks_consumed, recovery_score, recovery_tier, mood_score')
           .eq('user_id', user.id)
           .in('signal_date', [today, yesterday])
           .order('signal_date', { ascending: false })
@@ -317,6 +317,7 @@ Deno.serve(async (req: Request) => {
         drinks_consumed: number
         recovery_score: number | null
         recovery_tier: string | null
+        mood_score: number | null
       } | undefined
       const yDrinks = (recoveryRes.data?.[1] as { drinks_consumed: number } | undefined)?.drinks_consumed ?? 0
 
@@ -351,6 +352,7 @@ RECOVERY:
 - RHR: ${signal?.rhr ?? 'no data'} bpm (baseline 63)
 - Sleep: ${signal?.sleep_duration_hours != null ? `${signal.sleep_duration_hours.toFixed(1)}h` : 'no data'}
 - Drinks yesterday: ${yDrinks}
+- Mood (1-5): ${signal?.mood_score ?? 'not logged'}
 
 LAST BIG EFFORT:${effort
   ? `
@@ -369,7 +371,7 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
       const yesterday = prevDate(today, 1)
       const [recoveryRes, programRes, inboxRes, weightRes, reviewRes] = await Promise.all([
         admin.from('recovery_signals')
-          .select('signal_date, rhr, sleep_duration_hours, drinks_consumed, recovery_score, recovery_tier')
+          .select('signal_date, rhr, sleep_duration_hours, drinks_consumed, recovery_score, recovery_tier, mood_score')
           .eq('user_id', user.id)
           .in('signal_date', [today, yesterday])
           .order('signal_date', { ascending: false }),
@@ -403,9 +405,11 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
         drinks_consumed: number
         recovery_score: number | null
         recovery_tier: string | null
+        mood_score: number | null
       } | undefined
       const ySignal = recoveryRes.data?.find((r: { signal_date: string }) => r.signal_date === yesterday) as {
         drinks_consumed: number
+        mood_score: number | null
       } | undefined
       const program = programRes.data as {
         program_name: string; current_week: number; current_day: number
@@ -468,6 +472,7 @@ RECOVERY:
 - RHR: ${todaySignal?.rhr ?? 'no data'} bpm (baseline 63)
 - Sleep: ${todaySignal?.sleep_duration_hours != null ? `${todaySignal.sleep_duration_hours.toFixed(1)}h` : 'no data'}
 - Drinks yesterday: ${ySignal?.drinks_consumed ?? 0}
+- Mood yesterday (1-5): ${ySignal?.mood_score ?? 'not logged'}
 - Recovery score: ${todaySignal?.recovery_score != null ? Math.round(todaySignal.recovery_score) : 'unknown'}/100${todaySignal?.recovery_tier ? ` · ${todaySignal.recovery_tier}` : ''}
 
 WORKOUT:

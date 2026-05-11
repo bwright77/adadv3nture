@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Ring } from '../components/ui/Ring'
+import { Sparkline } from '../components/ui/Sparkline'
 import { C } from '../tokens'
 import { useAuth } from '../contexts/AuthContext'
 import { getTrends, type TrendData } from '../lib/trends'
@@ -157,6 +158,9 @@ export function TrendsPage({ bgPhoto }: TrendsPageProps) {
                   <div className="mono" style={{ fontSize: 'var(--fs-11)', color: dirColor, marginTop: 1 }}>
                     {row.delta}
                   </div>
+                </div>
+                <div style={{ flexShrink: 0, color: row.isGood === false ? C.rust : C.ink60 }}>
+                  <Sparkline values={row.spark} color="currentColor" />
                 </div>
                 <div style={{ color: dirColor, fontSize: 'var(--fs-15)', fontWeight: 700, width: 18, textAlign: 'center', flexShrink: 0 }}>
                   {dirIcon}

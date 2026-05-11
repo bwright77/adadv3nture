@@ -4,6 +4,7 @@ import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getTodayPlan, updateReviewRow, getReviewHistory, type DailyPlan, type ReviewCategory, type PilotLights } from '../../../lib/daily-plan'
+import { getTodayMood, setTodayMood } from '../../../lib/mood'
 import { logicalToday } from '../../../lib/utils'
 import { getRecentActivities } from '../../../lib/strava'
 import type { Database } from '../../../types/database'
@@ -42,6 +43,7 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
   const [draftNote, setDraftNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [pilotLights, setPilotLights] = useState<PilotLights | null>(null)
+  const [mood, setMood] = useState<number | null>(null)
 
   const today = logicalToday()
 
@@ -51,12 +53,22 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
       getTodayPlan(user.id),
       getRecentActivities(user.id, 3),
       getReviewHistory(user.id),
-    ]).then(([p, acts, history]) => {
+      getTodayMood(user.id),
+    ]).then(([p, acts, history, m]) => {
       setPlan(p as DailyPlan | null)
       setTodayAct((acts as Activity[]).find(a => a.activity_date === today) ?? null)
       setPilotLights(history.pilotLights)
+      setMood(m as number | null)
     }).catch(() => null)
   }, [user])
+
+  async function handleMood(score: number) {
+    if (!user) return
+    // Tap the same value to clear.
+    const next = mood === score ? null : score
+    setMood(next)
+    try { await setTodayMood(user.id, next) } catch { /* ignore */ }
+  }
 
   async function handleSave(category: ReviewCategory, done: boolean) {
     if (!user) return
@@ -78,6 +90,48 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
   return (
     <Glass dark={dark} span={12} pad={16}>
       <CardLabel dark={dark}>Day review</CardLabel>
+
+      {/* MOOD — 1 (rough) → 5 (great), tap same value to clear */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '8px 0',
+        borderBottom: `0.5px dashed ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(26,18,8,0.12)'}`,
+      }}>
+        <span className="badge" style={{
+          fontSize: 'var(--fs-13)',
+          color: mood == null
+            ? (dark ? 'rgba(245,237,214,0.4)' : C.ink40)
+            : (dark ? C.cream : C.dark),
+        }}>
+          MOOD
+        </span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {[1, 2, 3, 4, 5].map(n => {
+            const selected = mood === n
+            return (
+              <button
+                key={n}
+                onClick={() => handleMood(n)}
+                aria-label={`Mood ${n}`}
+                style={{
+                  width: 22, height: 22, borderRadius: '50%',
+                  background: selected
+                    ? C.rust
+                    : (dark ? 'rgba(255,255,255,0.08)' : 'rgba(26,18,8,0.06)'),
+                  border: `1px solid ${selected
+                    ? C.rust
+                    : (dark ? 'rgba(255,255,255,0.18)' : 'rgba(26,18,8,0.18)')}`,
+                  color: selected ? C.cream : (dark ? 'rgba(245,237,214,0.55)' : C.ink60),
+                  fontFamily: 'inherit', fontSize: 'var(--fs-11)', fontWeight: 700,
+                  cursor: 'pointer', padding: 0, lineHeight: 1,
+                }}
+              >
+                {n}
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
       {ROWS.filter(r => !(hideCareer && r.label === 'CAREER')).map((row, i) => {
         const done = row.doneKey && plan ? Boolean(plan[row.doneKey]) : false
