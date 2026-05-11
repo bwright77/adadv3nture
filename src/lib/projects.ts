@@ -117,6 +117,18 @@ export async function updateProjectWebsiteUrl(id: string, url: string): Promise<
   await db.from('projects').update({ website_url: url.trim() || null }).eq('id', id)
 }
 
+// Pass empty string or null to clear the deadline.
+export async function updateProjectDeadlines(
+  id: string,
+  patch: { soft_deadline_date?: string | null; deadline_date?: string | null },
+): Promise<void> {
+  const update: Record<string, string | null> = {}
+  if ('soft_deadline_date' in patch) update.soft_deadline_date = patch.soft_deadline_date || null
+  if ('deadline_date' in patch) update.deadline_date = patch.deadline_date || null
+  const { error } = await db.from('projects').update(update).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
 export async function toggleMilestone(id: string, done: boolean): Promise<void> {
   const { error } = await db
     .from('project_milestones')

@@ -4,6 +4,7 @@ import {
   toggleMilestone, addUpdate, updateNextAction, updateProjectProgress,
   addMilestone, deleteMilestone, reorderMilestones,
   addContact, deleteContact, updateProjectImageUrl, updateProjectWebsiteUrl,
+  updateProjectDeadlines,
   type Project, type ProjectMilestone, type ProjectUpdate, type ProjectContact,
 } from '../../lib/projects'
 import { daysUntil as daysUntilDate } from '../../lib/countdown'
@@ -53,6 +54,16 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
   const [imageDraft, setImageDraft] = useState(project.image_url ?? '')
   const [editingUrl, setEditingUrl] = useState(false)
   const [urlDraft, setUrlDraft] = useState(project.website_url ?? '')
+  const [editingDeadline, setEditingDeadline] = useState<'soft' | 'hard' | null>(null)
+  const [softDraft, setSoftDraft] = useState(project.soft_deadline_date ?? '')
+  const [hardDraft, setHardDraft] = useState(project.deadline_date ?? '')
+
+  async function handleSaveDeadline(which: 'soft' | 'hard', value: string) {
+    const field = which === 'soft' ? 'soft_deadline_date' : 'deadline_date'
+    await updateProjectDeadlines(project.id, { [field]: value || null })
+    setEditingDeadline(null)
+    onUpdate()
+  }
 
   // Drag state
   const [dragIdx, setDragIdx] = useState<number | null>(null)
@@ -226,33 +237,110 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-            {softDays !== null && (
-              <div style={{
-                padding: '4px 10px', borderRadius: 999,
-                background: softDays <= 14 ? 'rgba(196,82,42,0.25)' : 'rgba(255,255,255,0.1)',
-                border: softDays <= 14 ? `1px solid ${C.rust}` : '1px solid rgba(255,255,255,0.15)',
-                display: 'flex', gap: 6, alignItems: 'center',
-              }}>
-                <span className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(245,237,214,0.55)', letterSpacing: '0.1em' }}>SOFT</span>
-                <span className="badge" style={{ fontSize: 'var(--fs-13)', color: softDays <= 14 ? C.rust : C.cream }}>
-                  {formatDate(project.soft_deadline_date!)} · {softDays}D
-                </span>
-              </div>
-            )}
-            {hardDays !== null && (
-              <div style={{
-                padding: '4px 10px', borderRadius: 999,
-                background: hardDays <= 7 ? 'rgba(196,82,42,0.35)' : 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                display: 'flex', gap: 6, alignItems: 'center',
-              }}>
-                <span className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(245,237,214,0.55)', letterSpacing: '0.1em' }}>DEADLINE</span>
-                <span className="badge" style={{ fontSize: 'var(--fs-13)', color: C.cream }}>
-                  {formatDate(project.deadline_date!)} · {hardDays}D
-                </span>
-              </div>
-            )}
+          <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+            {(['soft', 'hard'] as const).map(which => {
+              const isEditing = editingDeadline === which
+              const isSoft = which === 'soft'
+              const value = isSoft ? project.soft_deadline_date : project.deadline_date
+              const days = isSoft ? softDays : hardDays
+              const draft = isSoft ? softDraft : hardDraft
+              const setDraft = isSoft ? setSoftDraft : setHardDraft
+              const urgent = isSoft ? (days != null && days <= 14) : (days != null && days <= 7)
+              const accentBg = urgent ? (isSoft ? 'rgba(196,82,42,0.25)' : 'rgba(196,82,42,0.35)') : 'rgba(255,255,255,0.1)'
+              const accentBorder = urgent && isSoft ? `1px solid ${C.rust}` : '1px solid rgba(255,255,255,0.15)'
+
+              if (isEditing) {
+                return (
+                  <div key={which} style={{
+                    padding: '4px 8px', borderRadius: 999,
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    display: 'flex', gap: 6, alignItems: 'center',
+                  }}>
+                    <span className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(245,237,214,0.55)', letterSpacing: '0.1em' }}>
+                      {isSoft ? 'SOFT' : 'DEADLINE'}
+                    </span>
+                    <input
+                      type="date"
+                      autoFocus
+                      value={draft}
+                      onChange={e => setDraft(e.target.value)}
+                      style={{
+                        background: 'transparent', border: 'none', color: C.cream,
+                        fontSize: 'var(--fs-13)', fontFamily: 'inherit', outline: 'none', padding: '2px 0',
+                        colorScheme: 'dark',
+                      }}
+                    />
+                    <button
+                      onClick={() => handleSaveDeadline(which, draft)}
+                      style={{ background: 'rgba(255,255,255,0.2)', color: C.cream, border: 'none', borderRadius: 6, padding: '2px 8px', fontSize: 'var(--fs-11)', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Save
+                    </button>
+                    {value && (
+                      <button
+                        onClick={() => handleSaveDeadline(which, '')}
+                        style={{ background: 'none', color: 'rgba(245,237,214,0.6)', border: 'none', padding: '2px 4px', fontSize: 'var(--fs-11)', cursor: 'pointer' }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setEditingDeadline(null)}
+                      style={{ background: 'none', color: 'rgba(245,237,214,0.45)', border: 'none', padding: '2px 4px', fontSize: 'var(--fs-11)', cursor: 'pointer' }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                )
+              }
+
+              if (value && days !== null) {
+                return (
+                  <button
+                    key={which}
+                    onClick={() => {
+                      setDraft(value)
+                      setEditingDeadline(which)
+                    }}
+                    style={{
+                      padding: '4px 10px', borderRadius: 999,
+                      background: accentBg,
+                      border: accentBorder,
+                      display: 'flex', gap: 6, alignItems: 'center',
+                      color: 'inherit', fontFamily: 'inherit', cursor: 'pointer',
+                    }}
+                  >
+                    <span className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(245,237,214,0.55)', letterSpacing: '0.1em' }}>
+                      {isSoft ? 'SOFT' : 'DEADLINE'}
+                    </span>
+                    <span className="badge" style={{ fontSize: 'var(--fs-13)', color: urgent && isSoft ? C.rust : C.cream }}>
+                      {formatDate(value)} · {days}D
+                    </span>
+                  </button>
+                )
+              }
+
+              // Unset — show a subtle "+ add" pill so the user can attach a date
+              return (
+                <button
+                  key={which}
+                  onClick={() => {
+                    setDraft('')
+                    setEditingDeadline(which)
+                  }}
+                  style={{
+                    padding: '4px 10px', borderRadius: 999,
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px dashed rgba(255,255,255,0.18)',
+                    color: 'rgba(245,237,214,0.55)', fontFamily: 'inherit', cursor: 'pointer',
+                    fontSize: 'var(--fs-11)', letterSpacing: '0.05em',
+                  }}
+                >
+                  + {isSoft ? 'soft date' : 'deadline'}
+                </button>
+              )
+            })}
           </div>
 
           {/* Image URL editor */}
