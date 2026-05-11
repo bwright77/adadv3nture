@@ -130,11 +130,11 @@ NEXT PRIORITY: Historic import — full Strava backfill, Peloton CSV, weight CSV
 ✓ 09. Withings OAuth — connect, sync metrics, weight + body-fat in trends
 ✓ 10. Daily check-in — mood entry (1–5 in WReview, drinks +/- already live)
 ✓ 18. Trends engine — sparkline charts, report card rows, weekly_summaries function
+✓ 23. Server-side dynamic location — client passes coords; weekend WEATHER + weekday LOCATION lines reflect actual place
 
   20. Historic import — Strava backfill, Peloton CSV, weight CSV  ← NEXT
   21. Polish — mobile empty states, event countdowns
   22. Briefing dispatch — scheduled (cron) regeneration + push notification
-  23. Server-side dynamic location — pass current coords from client; weekend briefing weather still hardcodes Denver
 ```
 
 ---

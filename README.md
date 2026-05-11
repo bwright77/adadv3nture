@@ -152,7 +152,6 @@ Geolocation snaps to a known place from a small `KNOWN_LOCATIONS` list (Denver, 
 1. **Historic import** — full Strava backfill beyond the 90-day window, Peloton CSV importer, weight CSV importer.
 2. **Polish pass** — mobile empty states for cold-start users, consistent event countdowns, mobile keyboard handling on long forms.
 3. **Briefing dispatch** — schedule the morning-briefing Edge Function via cron + push notification, instead of generating on app open.
-4. **Server-side dynamic location** — the weekend briefing weather call still hardcodes Denver lat/lon. Pass current coords from the client (or store the latest resolved location in `users`) so the briefing uses the same place the rest of the UI shows.
 
 ---
 
