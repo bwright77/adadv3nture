@@ -7,6 +7,7 @@ import { getProgram, type ProgramState } from '../../../lib/program-tracker'
 import { supabase } from '../../../lib/supabase'
 import { useAnchorEvent } from '../../../hooks/useAnchorEvent'
 import { daysUntilDate } from '../../../lib/anchorEvents'
+import { useLocation } from '../../../hooks/useLocation'
 
 interface WMorningHeroProps {
   dark?: boolean
@@ -120,6 +121,10 @@ export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMo
   const laborEvent = useAnchorEvent('labor_day')
   const wlwDays = daysUntilDate(wlwEvent.event_date)
   const laborDays = daysUntilDate(laborEvent.event_date)
+  const { location } = useLocation()
+  const locationStamp = location.elevationFt != null
+    ? `${location.name.toUpperCase()} ${location.elevationFt.toLocaleString()}FT`
+    : location.name.toUpperCase()
   const workoutTitle = program?.next_workout_title ?? 'TOTAL STRENGTH'
   const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()
 
@@ -132,7 +137,7 @@ export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMo
           <span className="mono" style={{
             fontSize: 'var(--fs-10)', letterSpacing: '0.14em',
             color: dark ? 'rgba(245,237,214,0.7)' : C.ink60,
-          }}>MORNING · DENVER 5,318FT</span>
+          }}>MORNING · {locationStamp}</span>
         </div>
         <span className="mono" style={{ fontSize: 'var(--fs-10)', color: dark ? 'rgba(245,237,214,0.45)' : C.ink40 }}>
           {today}
@@ -156,7 +161,7 @@ export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMo
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8 }}>
               <span style={{ width: 6, height: 6, background: tierColor, borderRadius: 1, flexShrink: 0 }} />
               <span className="mono" style={{ fontSize: 'var(--fs-10)', color: dark ? 'rgba(245,237,214,0.6)' : C.ink60 }}>
-                {tier === 'go_hard' ? 'FULL INTENSITY' : tier === 'moderate' ? 'STEADY EFFORT' : 'KEEP IT EASY'} · DENVER 5,318FT
+                {tier === 'go_hard' ? 'FULL INTENSITY' : tier === 'moderate' ? 'STEADY EFFORT' : 'KEEP IT EASY'} · {locationStamp}
               </span>
             </div>
           )}

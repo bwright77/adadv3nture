@@ -3,6 +3,7 @@ import { Ring } from '../components/ui/Ring'
 import { C } from '../tokens'
 import { useAuth } from '../contexts/AuthContext'
 import { getTrends, type TrendData } from '../lib/trends'
+import { useLocation } from '../hooks/useLocation'
 
 function weekNum(): string {
   const d = new Date()
@@ -30,7 +31,8 @@ export function TrendsPage({ bgPhoto }: TrendsPageProps) {
 
   const rows = data?.rows ?? []
   const r = data?.readiness
-  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() + ' · DENVER'
+  const { location } = useLocation()
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() + ' · ' + location.name.toUpperCase()
 
   return (
     <div style={{ position: 'relative', zIndex: 10, background: C.paper }}>

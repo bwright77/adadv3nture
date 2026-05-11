@@ -1,5 +1,6 @@
+import { DEFAULT_LOCATION, resolveLocation, type ResolvedLocation } from './locations'
+
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY as string
-const DENVER = { lat: 39.7392, lon: -104.9903, label: 'Denver · 5,318ft' }
 
 export interface DayForecast {
   date: string             // 'YYYY-MM-DD'
@@ -56,8 +57,7 @@ async function fetchJSON<T>(url: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
-export async function getWeather(coords?: { lat: number; lon: number; label: string }): Promise<WeatherData> {
-  const loc = coords ?? DENVER
+export async function getWeather(loc: ResolvedLocation = DEFAULT_LOCATION): Promise<WeatherData> {
 
   const base = `https://api.openweathermap.org/data/2.5`
   const params = `lat=${loc.lat}&lon=${loc.lon}&appid=${API_KEY}&units=imperial`
@@ -172,12 +172,8 @@ export function getLocationAndWeather(): Promise<WeatherData> {
     }
     navigator.geolocation.getCurrentPosition(
       pos => {
-        const coords = {
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
-          label: 'Current location',
-        }
-        getWeather(coords).then(resolve).catch(reject)
+        const loc = resolveLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude })
+        getWeather(loc).then(resolve).catch(reject)
       },
       () => getWeather().then(resolve).catch(reject),  // fall back to Denver
       { timeout: 5000 },

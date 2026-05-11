@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Header } from '../ui/Header'
 import { useAnchorEvent } from '../../hooks/useAnchorEvent'
 import { daysUntilDate } from '../../lib/anchorEvents'
+import { useLocation } from '../../hooks/useLocation'
 import { WMorningHero } from './widgets/WMorningHero'
 import { WWorkout } from './widgets/WWorkout'
 import { WThinkingPrompt } from './widgets/WThinkingPrompt'
@@ -33,16 +34,21 @@ function LockStrip({ userId }: { userId: string | undefined }) {
   const [recoveryScore, setRecoveryScore] = useState<number | null>(null)
   const wlw = useAnchorEvent('wlw')
   const wlwDays = daysUntilDate(wlw.event_date)
+  const { location } = useLocation()
 
   useEffect(() => {
     if (!userId) return
     loadRecovery(userId).then(r => setRecoveryScore(r.score)).catch(() => null)
   }, [userId])
 
+  const locationValue = location.elevationFt != null
+    ? `${location.elevationFt.toLocaleString()}FT`
+    : '—'
+
   return (
     <div style={{ padding: '4px 14px 8px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
       {[
-        { label: 'DENVER', value: '5,318FT' },
+        { label: location.name.toUpperCase(), value: locationValue },
         { label: 'WLW', value: `${wlwDays}D` },
         ...(recoveryScore !== null ? [{ label: 'REC', value: String(recoveryScore) }] : []),
       ].map(chip => (
