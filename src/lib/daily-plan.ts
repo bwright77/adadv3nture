@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { logicalToday } from './utils'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any
 
@@ -28,7 +29,7 @@ export async function updateReviewRow(
   done: boolean,
   note: string,
 ): Promise<void> {
-  const today = new Date().toISOString().substring(0, 10)
+  const today = logicalToday()
   await db.from('daily_plans').upsert(
     {
       user_id: userId,
@@ -41,7 +42,7 @@ export async function updateReviewRow(
 }
 
 export async function getTodayPlan(userId: string): Promise<DailyPlan | null> {
-  const today = new Date().toISOString().substring(0, 10)
+  const today = logicalToday()
   const { data } = await supabase
     .from('daily_plans')
     .select('id, plan_date, morning_briefing, briefing_generated_at, thinking_prompt, thinking_prompt_answer, drinks_today, family_creative_done, family_creative_note, home_done, home_note, career_done, career_note, projects_done, projects_note')
@@ -88,7 +89,7 @@ type ReviewRow = {
 const REVIEW_CATS = ['family_creative', 'home', 'career', 'projects'] as const
 
 export async function getReviewHistory(userId: string): Promise<ReviewHistory> {
-  const today = new Date().toISOString().substring(0, 10)
+  const today = logicalToday()
   const { data } = await supabase
     .from('daily_plans')
     .select('plan_date, family_creative_done, home_done, career_done, projects_done, family_creative_note, home_note, career_note, projects_note')
@@ -128,7 +129,7 @@ export async function getReviewHistory(userId: string): Promise<ReviewHistory> {
 }
 
 export async function saveThinkingAnswer(userId: string, answer: string): Promise<void> {
-  const today = new Date().toISOString().substring(0, 10)
+  const today = logicalToday()
   await db.from('daily_plans').upsert(
     { user_id: userId, plan_date: today, thinking_prompt_answer: answer },
     { onConflict: 'user_id,plan_date' },

@@ -4,6 +4,7 @@ import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getTodayPlan, updateReviewRow, getReviewHistory, type DailyPlan, type ReviewCategory, type PilotLights } from '../../../lib/daily-plan'
+import { logicalToday } from '../../../lib/utils'
 import { getRecentActivities } from '../../../lib/strava'
 import type { Database } from '../../../types/database'
 
@@ -42,8 +43,7 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
   const [saving, setSaving] = useState(false)
   const [pilotLights, setPilotLights] = useState<PilotLights | null>(null)
 
-  const d = new Date()
-  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const today = logicalToday()
 
   useEffect(() => {
     if (!user) return
