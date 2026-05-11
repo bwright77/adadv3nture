@@ -14,14 +14,14 @@ Every morning it surfaces my Most Important Tasks — not what's loudest, what a
 _Update this at the start of every Claude Code session._
 
 ```
-NEXT PRIORITY: Polish pass — empty states, countdown handling, mobile keyboard
+NEXT PRIORITY: Add VAPID keys to env (push opt-in is wired but inert without them)
 ```
 
 ---
 
 ## What's Live (as of May 11, 2026)
 
-**Migrations applied:** 001–025 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>`
+**Migrations applied:** 001–027 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>`
 
 | Area | Status |
 |------|--------|
@@ -54,7 +54,8 @@ NEXT PRIORITY: Polish pass — empty states, countdown handling, mobile keyboard
 | Morning briefing — anchor/family/profile-driven prompt (no hardcoded dates or narrative) | ✓ |
 | Briefing voice editor — Log page card edits `users.briefing_profile` JSONB | ✓ |
 | Mood entry — 1–5 row at top of WReview, upserts `recovery_signals.mood_score`; briefing reads it | ✓ |
-| Polish pass — mobile empty states, event countdowns, mobile keyboard handling | partial · in progress |
+| Polish pass — mobile empty states, event countdowns, mobile keyboard handling | ✓ |
+| Briefing dispatch — Apple Health webhook chains briefing + sends push notification on wake-up | ✓ (needs VAPID keys in env) |
 
 ---
 
@@ -109,7 +110,7 @@ NEXT PRIORITY: Polish pass — empty states, countdown handling, mobile keyboard
 
 ```
 ✓ 01. Project init — Vite + React 19 + TypeScript + Tailwind + Supabase
-✓ 02. Schema — migrations 001-025, RLS, seed data
+✓ 02. Schema — migrations 001-027, RLS, seed data
 ✓ 03. Auth — email + Google OAuth
 ✓ 04. Widget grid — time-aware views
 ✓ 05. Inbox — FAB, swipe triage
@@ -131,8 +132,10 @@ NEXT PRIORITY: Polish pass — empty states, countdown handling, mobile keyboard
 ✓ 18. Trends engine — sparkline charts, report card rows, weekly_summaries function
 ✓ 23. Server-side dynamic location — client passes coords; weekend WEATHER + weekday LOCATION lines reflect actual place
 
-  21. Polish — mobile empty states, event countdowns, mobile keyboard  ← IN PROGRESS
-  22. Briefing dispatch — scheduled (cron) regeneration + push notification
+✓ 21. Polish — mobile empty states, event countdowns, mobile keyboard
+✓ 22. Briefing dispatch — Apple Health webhook chains briefing + sends push notification
+
+  23. Add VAPID keys to env  ← NEXT (one-time setup; push is inert until done)
 ```
 
 ---

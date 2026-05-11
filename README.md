@@ -147,10 +147,13 @@ Geolocation snaps to a known place from a small `KNOWN_LOCATIONS` list (Denver, 
 
 ## Roadmap
 
-**What's left** (in rough priority order):
+**What's left:**
 
-1. **Polish pass** — mobile empty states for cold-start users, consistent event countdowns, mobile keyboard handling on long forms. *In progress.*
-2. **Briefing dispatch** — schedule the morning-briefing Edge Function via cron + push notification, instead of generating on app open.
+- **Add VAPID keys to env** to activate push. One-time:
+  ```bash
+  npx web-push generate-vapid-keys
+  ```
+  Set `VITE_VAPID_PUBLIC_KEY` in `.env.local` and Vercel; set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (mailto:) in the Supabase Edge Function env. Then tap "Enable" on the Log page briefing-push card.
 
 ---
 
@@ -181,6 +184,10 @@ STRAVA_CLIENT_ID / STRAVA_CLIENT_SECRET / VITE_STRAVA_REDIRECT_URI
 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / VITE_GOOGLE_REDIRECT_URI
 VITE_OPENWEATHER_API_KEY
 ANTHROPIC_API_KEY          # server-side Edge Function only — never expose to client
+VITE_VAPID_PUBLIC_KEY      # web push — client uses to subscribe
+VAPID_PUBLIC_KEY           # Supabase Edge Function env — same value as VITE_ counterpart
+VAPID_PRIVATE_KEY          # Supabase Edge Function env — keep secret
+VAPID_SUBJECT              # mailto:you@example.com — required by Web Push spec
 ```
 
 ---

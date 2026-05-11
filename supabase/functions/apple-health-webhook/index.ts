@@ -1,9 +1,17 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import webpush from 'npm:web-push@3.6.7'
 
 const WEBHOOK_SECRET = Deno.env.get('HEALTH_WEBHOOK_SECRET')!
 const WEBHOOK_USER_ID = Deno.env.get('HEALTH_WEBHOOK_USER_ID')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') ?? ''
+const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
+const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:benw21@gmail.com'
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+}
 
 interface HealthPayload {
   secret: string
@@ -108,7 +116,70 @@ async function triggerBriefing(supabase: any): Promise<void> {
   })
   if (!res.ok) {
     console.error('morning-briefing chain returned', res.status, await res.text())
-  } else {
-    console.log('morning-briefing chain ok')
+    return
   }
+
+  const data = await res.json() as { briefing?: string; thinking_prompt?: string | null }
+  console.log('morning-briefing chain ok')
+
+  // Push notification: turn the briefing's first sentence into a headline
+  // and send to every subscription the user has registered.
+  await sendPushToUser(supabase, WEBHOOK_USER_ID, headlineFromBriefing(data.briefing ?? ''))
+}
+
+function headlineFromBriefing(briefing: string): string {
+  if (!briefing) return 'Your morning briefing is ready'
+  // First sentence — handle ".!?" terminators, fall back to first 120 chars.
+  const match = briefing.match(/^[^.!?]+[.!?]/)
+  const first = (match ? match[0] : briefing).trim()
+  return first.length > 140 ? first.slice(0, 137) + '…' : first
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function sendPushToUser(supabase: any, userId: string, body: string): Promise<void> {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+    console.log('Skipping push: VAPID keys not configured')
+    return
+  }
+
+  const { data: subs } = await supabase
+    .from('push_subscriptions')
+    .select('id, endpoint, p256dh, auth')
+    .eq('user_id', userId) as { data: { id: string; endpoint: string; p256dh: string; auth: string }[] | null }
+
+  if (!subs || subs.length === 0) {
+    console.log('No push subscriptions to notify')
+    return
+  }
+
+  const payload = JSON.stringify({
+    title: 'Morning briefing',
+    body,
+    url: '/',
+  })
+
+  // Send to each subscription independently. Stale subscriptions (410/404)
+  // get cleaned up so the table doesn't accumulate dead endpoints.
+  const results = await Promise.allSettled(subs.map(s =>
+    webpush.sendNotification(
+      { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+      payload,
+    ),
+  ))
+
+  await Promise.all(results.map(async (r, i) => {
+    if (r.status === 'fulfilled') {
+      await supabase.from('push_subscriptions')
+        .update({ last_used_at: new Date().toISOString() })
+        .eq('id', subs[i].id)
+      return
+    }
+    const err = r.reason as { statusCode?: number; message?: string }
+    if (err?.statusCode === 404 || err?.statusCode === 410) {
+      console.log('Pruning stale push subscription', subs[i].endpoint)
+      await supabase.from('push_subscriptions').delete().eq('id', subs[i].id)
+    } else {
+      console.error('Push send failed', subs[i].endpoint, err?.statusCode, err?.message)
+    }
+  }))
 }
