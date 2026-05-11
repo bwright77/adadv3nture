@@ -137,7 +137,7 @@ export function CaptureSheet({ onClose, onSaved }: CaptureSheetProps) {
 
         <div style={{
           flex: 1, background: C.paper, borderRadius: 26,
-          padding: '20px 22px 18px',
+          padding: '20px 22px calc(18px + env(safe-area-inset-bottom, 0px))',
           display: 'flex', flexDirection: 'column',
           boxShadow: '0 -14px 50px rgba(0,0,0,0.4)',
           position: 'relative', overflow: 'hidden',

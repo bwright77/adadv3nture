@@ -149,9 +149,8 @@ Geolocation snaps to a known place from a small `KNOWN_LOCATIONS` list (Denver, 
 
 **What's left** (in rough priority order):
 
-1. **Historic import** — full Strava backfill beyond the 90-day window, Peloton CSV importer, weight CSV importer.
-2. **Polish pass** — mobile empty states for cold-start users, consistent event countdowns, mobile keyboard handling on long forms.
-3. **Briefing dispatch** — schedule the morning-briefing Edge Function via cron + push notification, instead of generating on app open.
+1. **Polish pass** — mobile empty states for cold-start users, consistent event countdowns, mobile keyboard handling on long forms. *In progress.*
+2. **Briefing dispatch** — schedule the morning-briefing Edge Function via cron + push notification, instead of generating on app open.
 
 ---
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
 import { getBriefingProfile, updateBriefingProfile, type BriefingProfile } from '../../lib/briefingProfile'
@@ -52,6 +52,18 @@ export function BriefingVoiceCard() {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const saveBtnRef = useRef<HTMLButtonElement | null>(null)
+
+  // When the form opens on small screens the Save button often lands below
+  // the iOS keyboard. Bring it into the bottom third of the viewport so the
+  // user can reach it without dismissing.
+  useEffect(() => {
+    if (!open) return
+    const t = setTimeout(() => {
+      saveBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 50)
+    return () => clearTimeout(t)
+  }, [open])
 
   useEffect(() => {
     if (!user) return
@@ -189,11 +201,13 @@ export function BriefingVoiceCard() {
                 Cancel
               </button>
               <button
+                ref={saveBtnRef}
                 onClick={handleSave}
                 disabled={saving}
                 style={{
                   background: C.rust, color: '#fff', border: 'none', borderRadius: 8,
                   padding: '6px 16px', fontSize: 'var(--fs-14)', fontWeight: 700, cursor: 'pointer',
+                  scrollMarginBottom: 'calc(env(safe-area-inset-bottom, 0px) + 120px)',
                 }}
               >
                 {saving ? 'Saving…' : 'Save'}

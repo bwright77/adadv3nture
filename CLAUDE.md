@@ -14,7 +14,7 @@ Every morning it surfaces my Most Important Tasks — not what's loudest, what a
 _Update this at the start of every Claude Code session._
 
 ```
-NEXT PRIORITY: Historic import — full Strava backfill, Peloton CSV, weight CSV
+NEXT PRIORITY: Polish pass — empty states, countdown handling, mobile keyboard
 ```
 
 ---
@@ -54,8 +54,7 @@ NEXT PRIORITY: Historic import — full Strava backfill, Peloton CSV, weight CSV
 | Morning briefing — anchor/family/profile-driven prompt (no hardcoded dates or narrative) | ✓ |
 | Briefing voice editor — Log page card edits `users.briefing_profile` JSONB | ✓ |
 | Mood entry — 1–5 row at top of WReview, upserts `recovery_signals.mood_score`; briefing reads it | ✓ |
-| Historic import — full Strava backfill, Peloton CSV, weight CSV | ✗ |
-| Polish pass — mobile empty states, event countdowns, mobile keyboard handling | partial |
+| Polish pass — mobile empty states, event countdowns, mobile keyboard handling | partial · in progress |
 
 ---
 
@@ -132,8 +131,7 @@ NEXT PRIORITY: Historic import — full Strava backfill, Peloton CSV, weight CSV
 ✓ 18. Trends engine — sparkline charts, report card rows, weekly_summaries function
 ✓ 23. Server-side dynamic location — client passes coords; weekend WEATHER + weekday LOCATION lines reflect actual place
 
-  20. Historic import — Strava backfill, Peloton CSV, weight CSV  ← NEXT
-  21. Polish — mobile empty states, event countdowns
+  21. Polish — mobile empty states, event countdowns, mobile keyboard  ← IN PROGRESS
   22. Briefing dispatch — scheduled (cron) regeneration + push notification
 ```
 
