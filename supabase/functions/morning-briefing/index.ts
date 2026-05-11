@@ -10,19 +10,20 @@ const CORS_HEADERS = {
 const WEEKDAY_SYSTEM_PROMPT = `You are Ben's personal daily briefing for adadv3nture.
 
 About Ben:
-- 48yo dad, Denver CO (5,318ft), kids: Chase (8.5), Ada (7), Sylvia (5)
-- Building Wright Adventures — software for good, working for himself
-- Labor Day 2026: WA income or get a real job. Fish or cut bait.
-- GLP-1 since Nov 2024. Target 178-182 lbs (currently ~187)
+- 48yo dad in Denver CO. Kids: Chase, Ada, Sylvia (current ages in context).
+- Building Wright Adventures — software for good, working for himself.
+- Career Anchor: WA income or get a real job. Fish or cut bait. (Date + days-away in context — use those numbers, do NOT compute or estimate.)
+- GLP-1 since Nov 2024. Target 178-182 lbs.
 - Drink ratio goal: ≤ 2/day average. Not a streak — a ratio.
-- West Line Winder 30K Sept 26 — birthday weekend anchor event
-- External accountability works better than abstract goals for Ben
-- "Why bother" creeps in when progress stalls — counter with specific action
+- West Line Winder 30K is his birthday-weekend anchor race. (Date + days-away in context.)
+- External accountability works better than abstract goals for Ben.
+- "Why bother" creeps in when progress stalls — counter with specific action.
 
-Portfolio categories: BODY (workout, non-negotiable), CAREER (WA block, non-negotiable),
-FAMILY/CREATIVE, HOME, PERSONAL. Pilot lights = days since each was last completed.
-When a category goes dark (3+ days), name it specifically — not "you've been neglecting family"
-but "Chase and Ada haven't had intentional time in 4 days."
+Portfolio categories (match the Lists tabs): CAREER (WA block, non-negotiable), FAMILY,
+HOME, PROJECTS. Body / workout is tracked separately via the program tracker, not the
+portfolio review. Pilot lights = days since each portfolio category was last completed.
+When a category goes dark (3+ days), name it specifically — not "you've been neglecting
+family" but "Chase and Ada haven't had intentional time in 4 days."
 MIT completion rate is the meta-metric — reference it when it's moving meaningfully.
 
 Tone: Direct. Warm. Specific. Never generic. Never wellness-app cheerful.
@@ -41,11 +42,11 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
 const WEEKEND_SYSTEM_PROMPT = `You are Ben's weekend mission briefing for adadv3nture.
 
 About Ben:
-- 48yo dad, Denver CO (5,318ft), kids: Chase (8.5), Ada (7), Sylvia (5)
-- GLP-1 since Nov 2024. Target 178-182 lbs (currently ~187)
+- 48yo dad in Denver CO. Kids: Chase, Ada, Sylvia (current ages in context).
+- GLP-1 since Nov 2024. Target 178-182 lbs.
 - Drink ratio goal: ≤ 2/day average. Not a streak — a ratio.
-- West Line Winder 30K Sept 26 — his birthday-weekend anchor race (Buena Vista)
-- Big rides, long hikes, 14ers, ski tours — this is who he is when work falls away
+- West Line Winder 30K is his birthday-weekend anchor race (Buena Vista). Date + days-away in context — use those numbers, do NOT compute or estimate.
+- Big rides, long hikes, 14ers, ski tours — this is who he is when work falls away.
 
 The organizing question is: "What's the move today?"
 Recovery gates the objective size. Weather determines the location. Family is the primary lens.
@@ -76,6 +77,70 @@ function prevDate(dateStr: string, daysBack: number): string {
   const d = new Date(dateStr + 'T12:00:00')
   d.setDate(d.getDate() - daysBack)
   return d.toISOString().substring(0, 10)
+}
+
+function daysBetween(today: string, target: string): number {
+  const t = new Date(today + 'T12:00:00')
+  const e = new Date(target + 'T12:00:00')
+  return Math.ceil((e.getTime() - t.getTime()) / 86_400_000)
+}
+
+function ageOnDate(birthday: string, today: string): number {
+  const b = new Date(birthday + 'T12:00:00')
+  const t = new Date(today + 'T12:00:00')
+  let age = t.getFullYear() - b.getFullYear()
+  const m = t.getMonth() - b.getMonth()
+  if (m < 0 || (m === 0 && t.getDate() < b.getDate())) age--
+  return age
+}
+
+interface AnchorRow { slug: string; title: string; event_date: string; location: string | null; notes: string | null }
+interface FamilyRow { name: string; role: string; birthday: string }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function loadAnchorsAndFamily(admin: any, userId: string, today: string): Promise<{
+  anchorBlock: string
+  familyBlock: string
+}> {
+  const [anchorsRes, familyRes] = await Promise.all([
+    admin.from('anchor_events')
+      .select('slug, title, event_date, location, notes')
+      .eq('user_id', userId),
+    admin.from('family_members')
+      .select('name, role, birthday')
+      .eq('user_id', userId)
+      .order('sort_order', { ascending: true }),
+  ])
+
+  const anchors = (anchorsRes.data ?? []) as AnchorRow[]
+  const family = (familyRes.data ?? []) as FamilyRow[]
+
+  const anchorLines = anchors.map(a => {
+    const days = daysBetween(today, a.event_date)
+    const parts = [
+      `${a.title}`,
+      `${a.event_date}`,
+      `${days} days away`,
+      a.location,
+      a.notes,
+    ].filter(Boolean)
+    return `- ${parts.join(' · ')}`
+  })
+  const anchorBlock = anchorLines.length > 0
+    ? `ANCHORS:\n${anchorLines.join('\n')}`
+    : 'ANCHORS: none configured'
+
+  const kids = family.filter(f => f.role === 'child')
+    .map(k => `${k.name} (${ageOnDate(k.birthday, today)})`)
+  const spouse = family.find(f => f.role === 'spouse')?.name
+  const familyLines: string[] = []
+  if (spouse) familyLines.push(`- Spouse: ${spouse}`)
+  if (kids.length) familyLines.push(`- Kids: ${kids.join(', ')}`)
+  const familyBlock = familyLines.length > 0
+    ? `FAMILY:\n${familyLines.join('\n')}`
+    : 'FAMILY: not configured'
+
+  return { anchorBlock, familyBlock }
 }
 
 async function fetchDenverWeather(owmKey: string): Promise<string | null> {
@@ -168,6 +233,8 @@ Deno.serve(async (req: Request) => {
     let contextMsg: string
     const systemPrompt = dayType === 'weekend' ? WEEKEND_SYSTEM_PROMPT : WEEKDAY_SYSTEM_PROMPT
 
+    const { anchorBlock, familyBlock } = await loadAnchorsAndFamily(admin, user.id, today)
+
     if (dayType === 'weekend') {
       // ── Weekend context ────────────────────────────────────────────────────
       const yesterday = prevDate(today, 1)
@@ -229,6 +296,10 @@ Deno.serve(async (req: Request) => {
 
       contextMsg = `Today is ${dayName}, ${today}. It's a weekend.
 
+${familyBlock}
+
+${anchorBlock}
+
 WEATHER (Denver 5,318ft):
 ${weatherStr ? `- ${weatherStr}` : '- No weather data'}
 
@@ -276,7 +347,7 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
           .limit(1)
           .maybeSingle(),
         admin.from('daily_plans')
-          .select('plan_date, family_creative_done, home_done, financial_done, personal_done, family_creative_note, home_note, financial_note, personal_note')
+          .select('plan_date, family_creative_done, home_done, career_done, projects_done, family_creative_note, home_note, career_note, projects_note')
           .eq('user_id', user.id)
           .lt('plan_date', today)
           .order('plan_date', { ascending: false })
@@ -303,14 +374,15 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
       type ReviewRow = {
         plan_date: string
         family_creative_done: boolean; home_done: boolean
-        financial_done: boolean; personal_done: boolean
+        career_done: boolean; projects_done: boolean
         family_creative_note: string | null; home_note: string | null
-        financial_note: string | null; personal_note: string | null
+        career_note: string | null; projects_note: string | null
       }
       const reviewRows = (reviewRes.data ?? []) as ReviewRow[]
-      const reviewCats = ['family_creative', 'home', 'financial', 'personal'] as const
+      const reviewCats = ['career', 'family_creative', 'home', 'projects'] as const
+      // Labels mirror the Lists tabs (Career, Family, Home, Projects).
       const catLabels: Record<string, string> = {
-        family_creative: 'FAMILY/CREATIVE', home: 'HOME', financial: 'CAREER/FINANCIAL', personal: 'PERSONAL',
+        career: 'CAREER', family_creative: 'FAMILY', home: 'HOME', projects: 'PROJECTS',
       }
       const pilotLights: Record<string, number> = {}
       for (const cat of reviewCats) {
@@ -344,6 +416,10 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
       const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
 
       contextMsg = `Today is ${dayName}, ${today}.
+
+${familyBlock}
+
+${anchorBlock}
 
 RECOVERY:
 - RHR: ${todaySignal?.rhr ?? 'no data'} bpm (baseline 63)
