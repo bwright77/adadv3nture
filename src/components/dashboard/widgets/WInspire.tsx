@@ -105,8 +105,8 @@ export function WInspire({ dark, span = 6 }: WInspireProps) {
           <span className="badge" style={{ fontSize: 'var(--fs-10)', opacity: 0.3, letterSpacing: '0.15em' }}>
             ON THIS DAY
           </span>
-          <span style={{ fontSize: 'var(--fs-12)', opacity: 0.25 }}>
-            run: npm run sync-photos
+          <span style={{ fontSize: 'var(--fs-12)', opacity: 0.4 }}>
+            No memories yet for this day
           </span>
         </div>
       </Glass>

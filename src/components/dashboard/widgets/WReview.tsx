@@ -44,6 +44,7 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
   const [saving, setSaving] = useState(false)
   const [pilotLights, setPilotLights] = useState<PilotLights | null>(null)
   const [mood, setMood] = useState<number | null>(null)
+  const [loaded, setLoaded] = useState(false)
 
   const today = logicalToday()
 
@@ -59,7 +60,8 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
       setTodayAct((acts as Activity[]).find(a => a.activity_date === today) ?? null)
       setPilotLights(history.pilotLights)
       setMood(m as number | null)
-    }).catch(() => null)
+      setLoaded(true)
+    }).catch(() => setLoaded(true))
   }, [user])
 
   async function handleMood(score: number) {
@@ -141,7 +143,7 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
         if (row.category === null) {
           const bodyText = todayAct
             ? `${todayAct.title ?? todayAct.activity_type}${todayAct.duration_seconds ? ` · ${Math.round(todayAct.duration_seconds / 60)}m` : ''} ✓`
-            : plan === undefined ? '…' : '—'
+            : !loaded ? '…' : '—'
           return (
             <div key={i} style={{
               display: 'flex', justifyContent: 'space-between', padding: '8px 0',

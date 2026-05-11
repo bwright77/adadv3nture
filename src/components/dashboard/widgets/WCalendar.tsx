@@ -67,7 +67,9 @@ export function WCalendar({ dark, span = 6, tomorrow = false }: WCalendarProps) 
       {!events ? (
         <div style={{ fontSize: 'var(--fs-13)', opacity: 0.4, marginTop: 8 }}>Loading…</div>
       ) : events.length === 0 ? (
-        <div style={{ fontSize: 'var(--fs-13)', opacity: 0.4, marginTop: 8 }}>Nothing on the calendar today.</div>
+        <div style={{ fontSize: 'var(--fs-13)', opacity: 0.4, marginTop: 8 }}>
+          Nothing on the calendar {tomorrow ? 'tomorrow' : 'today'}.
+        </div>
       ) : (
         events.map((e, i) => (
           <div key={e.id} style={{

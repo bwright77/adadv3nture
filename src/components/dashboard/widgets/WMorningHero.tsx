@@ -109,7 +109,13 @@ export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMo
       .in('signal_date', dates)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .then(({ data }: { data: any[] | null }) => {
-        const total = (data ?? []).reduce((s: number, r: any) => s + (r.drinks_consumed ?? 0), 0)
+        const rows = data ?? []
+        if (rows.length === 0) {
+          setDrinksAvg(null)         // no data yet — keep "—" rather than fake 0
+          return
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const total = rows.reduce((s: number, r: any) => s + (r.drinks_consumed ?? 0), 0)
         setDrinksAvg(Math.round((total / 7) * 10) / 10)
       })
   }, [user])
@@ -191,8 +197,8 @@ export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMo
         <MiniTile
           label="DRINKS 7D"
           value={drinksAvg != null ? String(drinksAvg) : '—'}
-          sub={drinksAvg != null && drinksAvg <= 2 ? '↓ ON TRACK' : '↑ HIGH'}
-          accent={drinksAvg != null && drinksAvg <= 2 ? '#2A6F6C' : C.rust}
+          sub={drinksAvg == null ? 'NO DATA' : drinksAvg <= 2 ? '↓ ON TRACK' : '↑ HIGH'}
+          accent={drinksAvg == null ? C.ink40 : drinksAvg <= 2 ? '#2A6F6C' : C.rust}
         />
         <MiniTile
           label="WLW 30K"

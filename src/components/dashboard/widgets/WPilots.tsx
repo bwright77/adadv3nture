@@ -41,7 +41,8 @@ function staleDaysLabel(days: number): string {
 export function WPilots({ dark, onNavigate }: WPilotsProps) {
   const { user } = useAuth()
   const [pilots, setPilots] = useState<PilotLights | null>(null)
-  const [bodyStale, setBodyStale] = useState<number>(7)
+  const [bodyStale, setBodyStale] = useState<number | null>(null)
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -58,8 +59,11 @@ export function WPilots({ dark, onNavigate }: WPilotsProps) {
         const todayDate = new Date(today + 'T12:00:00')
         const diffMs = todayDate.getTime() - actDate.getTime()
         setBodyStale(Math.round(diffMs / 86_400_000))
+      } else {
+        setBodyStale(null)
       }
-    }).catch(() => null)
+      setLoaded(true)
+    }).catch(() => setLoaded(true))
   }, [user])
 
   return (
@@ -67,11 +71,14 @@ export function WPilots({ dark, onNavigate }: WPilotsProps) {
       <CardLabel dark={dark}>Pilot lights · keep them all lit</CardLabel>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
         {PILOT_DEFS.map(def => {
-          const days = def.key === 'body'
+          // While loading: show neutral pilots, not the "extinguished after 4 days" state
+          const rawDays = def.key === 'body'
             ? bodyStale
-            : pilots ? pilots[def.key as keyof PilotLights] : 7
-          const v = staleDaysToV(days)
-          const label = staleDaysLabel(days)
+            : pilots ? pilots[def.key as keyof PilotLights] : null
+          const isLoading = !loaded || rawDays == null
+          const days = rawDays ?? 0
+          const v = isLoading ? 0.5 : staleDaysToV(days)
+          const label = isLoading ? '—' : staleDaysLabel(days)
 
           return (
             <button
