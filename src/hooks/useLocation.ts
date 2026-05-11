@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_LOCATION, resolveLocation, type ResolvedLocation } from '../lib/locations'
+import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 
 interface Cache {
   location: ResolvedLocation
@@ -23,7 +25,24 @@ function detect(): Promise<ResolvedLocation> {
   })
 }
 
+// Fire-and-forget: persist the resolved location so server-side flows
+// (apple-health-webhook → morning-briefing) can read where the user is.
+function persist(userId: string, loc: ResolvedLocation): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  db.from('users').update({
+    last_known_location: {
+      lat: loc.lat,
+      lon: loc.lon,
+      name: loc.name,
+      elevation_ft: loc.elevationFt,
+      resolved_at: new Date().toISOString(),
+    },
+  }).eq('id', userId).then(() => { /* swallow */ }).catch(() => { /* swallow */ })
+}
+
 export function useLocation(): { location: ResolvedLocation; loading: boolean } {
+  const { user } = useAuth()
   const [location, setLocation] = useState<ResolvedLocation>(
     () => cache?.location ?? DEFAULT_LOCATION,
   )
@@ -41,9 +60,10 @@ export function useLocation(): { location: ResolvedLocation; loading: boolean } 
       cache = { location: loc, fetchedAt: Date.now() }
       setLocation(loc)
       setLoading(false)
+      if (user) persist(user.id, loc)
     })
     return () => { cancelled = true }
-  }, [])
+  }, [user])
 
   return { location, loading }
 }

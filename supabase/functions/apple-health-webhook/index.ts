@@ -66,7 +66,49 @@ Deno.serve(async (req) => {
     })
   }
 
+  // ── Chain: kick off the morning briefing now that recovery data has
+  // landed. Fire-and-forget — we don't want the webhook response to fail
+  // (or wait on) the Anthropic round trip. Errors are logged but swallowed.
+  triggerBriefing(supabase).catch(err => console.error('triggerBriefing failed:', err))
+
   return new Response(JSON.stringify({ ok: true, date: payload.date, fields: Object.keys(row) }), {
     headers: { 'Content-Type': 'application/json' },
   })
 })
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function triggerBriefing(supabase: any): Promise<void> {
+  // Look up the user's last-known location so the briefing reflects where
+  // they actually are (Denver vs Howard) rather than the Denver default.
+  const { data: userRow } = await supabase
+    .from('users')
+    .select('last_known_location')
+    .eq('id', WEBHOOK_USER_ID)
+    .maybeSingle() as { data: { last_known_location: { lat: number; lon: number; name: string; elevation_ft: number | null } | null } | null }
+
+  const body: Record<string, unknown> = { user_id: WEBHOOK_USER_ID }
+  const loc = userRow?.last_known_location
+  if (loc && typeof loc.lat === 'number' && typeof loc.lon === 'number') {
+    body.location = {
+      lat: loc.lat,
+      lon: loc.lon,
+      name: loc.name,
+      elevation_ft: loc.elevation_ft,
+    }
+  }
+
+  const url = `${SUPABASE_URL}/functions/v1/morning-briefing`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+    },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    console.error('morning-briefing chain returned', res.status, await res.text())
+  } else {
+    console.log('morning-briefing chain ok')
+  }
+}

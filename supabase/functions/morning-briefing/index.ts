@@ -228,22 +228,42 @@ Deno.serve(async (req: Request) => {
     const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')!
     const owmKey = Deno.env.get('OPENWEATHER_API_KEY') ?? ''
 
-    // Verify user from JWT
+    // Two auth paths:
+    //   1. User JWT — the standard client-facing call
+    //   2. Service role + body.user_id — used by server-to-server flows
+    //      (e.g. apple-health-webhook chains briefing generation on wake-up
+    //      after recovery_signals lands). The webhook has no JWT; it
+    //      supplies SUPABASE_SERVICE_ROLE_KEY in the Authorization header
+    //      and the target user_id in the body.
     const authHeader = req.headers.get('Authorization') ?? ''
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    })
-    const { data: { user }, error: authError } = await userClient.auth.getUser()
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-      })
-    }
+    const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
 
-    // Determine day_type — client can override, otherwise detect from server date
+    // Parse body early so we can read user_id on the service-role path.
     let body: Record<string, unknown> = {}
     try { body = await req.json() } catch { /* no body */ }
+
+    let userId: string
+    if (bearer === serviceKey && typeof body.user_id === 'string') {
+      userId = body.user_id
+    } else {
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      })
+      const { data: { user }, error: authError } = await userClient.auth.getUser()
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        })
+      }
+      userId = user.id
+    }
+
+    // Synthesise the rest of the handler's expectations by exposing a
+    // `user` shape with the id the downstream code already uses.
+    const user = { id: userId }
+
+    // Determine day_type — client can override, otherwise detect from server date
     const serverDow = new Date().getDay()
     const serverIsWeekend = serverDow === 0 || serverDow === 6
     const dayType: 'weekday' | 'weekend' =
