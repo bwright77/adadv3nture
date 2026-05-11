@@ -1,9 +1,18 @@
 # Database Schema
 
-**Migrations applied:** 001–024 (run `npx supabase db push` to apply new ones — no Docker needed)
+**Migrations applied:** 001–025 (run `npx supabase db push` to apply new ones — no Docker needed)
 
 ```sql
 -- USERS
+-- briefing_profile (added in 025) is read by the morning-briefing Edge Function
+-- to assemble the "About Ben" block of the system prompt. Shape:
+--   identity?          string   — one-line identity
+--   current_focus?     string   — what he's actively building
+--   health_context?    string[] — durable medical / fitness facts
+--   goals?             string[] — durable goals
+--   tone_notes?        string[] — weekday voice nudges
+--   weekend_identity?  string   — weekend voice/identity sentence
+-- Edited via LogPage → "◆ BRIEFING VOICE" card.
 create table users (
   id uuid primary key default gen_random_uuid(),
   email text unique not null,
@@ -16,6 +25,7 @@ create table users (
   height_inches integer default 71,
   timezone text default 'America/Denver',
   preferences jsonb default '{}',
+  briefing_profile jsonb not null default '{}'::jsonb,
   created_at timestamptz default now()
 );
 

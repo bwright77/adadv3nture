@@ -19,9 +19,9 @@ NEXT PRIORITY: Trends engine — sparkline charts + weekly summary report card
 
 ---
 
-## What's Live (as of May 11, 2026)
+## What's Live (as of May 11, 2026, evening)
 
-**Migrations applied:** 001–024 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main)
+**Migrations applied:** 001–025 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>`
 
 | Area | Status |
 |------|--------|
@@ -51,6 +51,8 @@ NEXT PRIORITY: Trends engine — sparkline charts + weekly summary report card
 | Family source of truth — `family_members` (Ben/Tangier + 3 kids, birthdays → computed ages) | ✓ |
 | Anchor events — `anchor_events` (WLW + Career Anchor), editable in Career panel | ✓ |
 | Dynamic location — snap to Denver / Howard from geolocation; falls through to Denver | ✓ |
+| Morning briefing — anchor/family/profile-driven prompt (no hardcoded dates or narrative) | ✓ |
+| Briefing voice editor — Log page card edits `users.briefing_profile` JSONB | ✓ |
 | Daily check-in — mood, MIT portfolio check | ✗ |
 
 ---
@@ -106,7 +108,7 @@ NEXT PRIORITY: Trends engine — sparkline charts + weekly summary report card
 
 ```
 ✓ 01. Project init — Vite + React 19 + TypeScript + Tailwind + Supabase
-✓ 02. Schema — migrations 001-024, RLS, seed data
+✓ 02. Schema — migrations 001-025, RLS, seed data
 ✓ 03. Auth — email + Google OAuth
 ✓ 04. Widget grid — time-aware views
 ✓ 05. Inbox — FAB, swipe triage
