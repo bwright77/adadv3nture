@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Header } from '../ui/Header'
+import { useAnchorEvent } from '../../hooks/useAnchorEvent'
+import { daysUntilDate } from '../../lib/anchorEvents'
 import { WMorningHero } from './widgets/WMorningHero'
 import { WWorkout } from './widgets/WWorkout'
 import { WThinkingPrompt } from './widgets/WThinkingPrompt'
@@ -29,7 +31,8 @@ interface BriefingData {
 
 function LockStrip({ userId }: { userId: string | undefined }) {
   const [recoveryScore, setRecoveryScore] = useState<number | null>(null)
-  const wlwDays = Math.ceil((new Date('2026-09-26').getTime() - Date.now()) / 86_400_000)
+  const wlw = useAnchorEvent('wlw')
+  const wlwDays = daysUntilDate(wlw.event_date)
 
   useEffect(() => {
     if (!userId) return

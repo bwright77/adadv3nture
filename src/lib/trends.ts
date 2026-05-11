@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getAnchorEvent } from './anchorEvents'
 
 function toDateStr(d: Date): string {
   return d.toISOString().substring(0, 10)
@@ -45,13 +46,13 @@ export interface TrendData {
   computedAt: string
 }
 
-const RACE_DATE = new Date('2026-09-26T12:00:00')
 const TRAIN_START = new Date('2026-05-08T12:00:00')
 const PEAK_LONG_RUN = 18.6
 const STARTING_LONG_RUN = 6.2
 
-function targetLongRunMiles(today: Date): number {
-  const peakDate = new Date('2026-09-12T12:00:00')
+// Peak long-run target is two weeks before the race (taper window).
+function targetLongRunMiles(today: Date, raceDate: Date): number {
+  const peakDate = new Date(raceDate.getTime() - 14 * 86_400_000)
   const totalMs = peakDate.getTime() - TRAIN_START.getTime()
   const elapsedMs = Math.max(0, today.getTime() - TRAIN_START.getTime())
   const progress = Math.min(1, elapsedMs / totalMs)
@@ -77,6 +78,9 @@ export async function getTrends(userId: string): Promise<TrendData> {
   const d14 = subDays(14)
   const d30 = subDays(30)
   const d90 = subDays(90)
+
+  const raceAnchor = await getAnchorEvent(userId, 'wlw')
+  const raceDate = new Date(raceAnchor.event_date + 'T12:00:00')
 
   const [metricsRes, activitiesRes, recoveryRes] = await Promise.all([
     supabase
@@ -167,7 +171,7 @@ export async function getTrends(userId: string): Promise<TrendData> {
   const dkDelta = dkCurr != null && dkPrev != null ? dkCurr - dkPrev : null
 
   // ── Race readiness ────────────────────────────────────────────
-  const daysUntil = Math.ceil((RACE_DATE.getTime() - today.getTime()) / 86400000)
+  const daysUntil = Math.ceil((raceDate.getTime() - today.getTime()) / 86400000)
   const runs30d = activities.filter(a =>
     (a.activity_type === 'run' || a.activity_type === 'trail_run') && a.activity_date >= d30
   )
@@ -188,7 +192,7 @@ export async function getTrends(userId: string): Promise<TrendData> {
     ? weeklyMilesArr.reduce((a, b) => a + b, 0) / weeklyMilesArr.length
     : null
 
-  const targetLR = targetLongRunMiles(today)
+  const targetLR = targetLongRunMiles(today, raceDate)
   const avgRecovery = avg(recovery.map(r => r.recovery_score)) ?? 70
   const volScore = weeklyMilesAvg != null ? Math.min(100, (weeklyMilesAvg / 20) * 100) : 50
   const lrScore = longestRun != null ? Math.min(100, (longestRun / targetLR) * 100) : 50

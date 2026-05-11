@@ -5,6 +5,8 @@ import { useAuth } from '../../../contexts/AuthContext'
 import { loadRecovery, type RecoveryResult } from '../../../lib/recovery'
 import { getProgram, type ProgramState } from '../../../lib/program-tracker'
 import { supabase } from '../../../lib/supabase'
+import { useAnchorEvent } from '../../../hooks/useAnchorEvent'
+import { daysUntilDate } from '../../../lib/anchorEvents'
 
 interface WMorningHeroProps {
   dark?: boolean
@@ -23,10 +25,6 @@ const TIER_LABEL: Record<string, string> = {
   moderate: 'MODERATE',
   recovery: 'RECOVERY',
   unknown: 'NO DATA',
-}
-
-function daysUntil(dateStr: string): number {
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86_400_000)
 }
 
 function RecoveryGauge({ score, tier, size = 104 }: { score: number; tier: string; size?: number }) {
@@ -118,8 +116,10 @@ export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMo
   const score = recovery?.score ?? 0
   const tier = recovery?.tier ?? 'unknown'
   const tierColor = TIER_COLOR[tier]
-  const wlwDays = daysUntil('2026-09-26')
-  const laborDays = daysUntil('2026-09-01')
+  const wlwEvent = useAnchorEvent('wlw')
+  const laborEvent = useAnchorEvent('labor_day')
+  const wlwDays = daysUntilDate(wlwEvent.event_date)
+  const laborDays = daysUntilDate(laborEvent.event_date)
   const workoutTitle = program?.next_workout_title ?? 'TOTAL STRENGTH'
   const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()
 

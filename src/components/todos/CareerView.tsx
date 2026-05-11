@@ -5,6 +5,7 @@ import {
   getProjects, getProjectWithMilestones, addProject,
   type Project, type ProjectMilestone, type ProjectUpdate, type ProjectContact,
 } from '../../lib/projects'
+import { getAnchorEvent, updateAnchorEvent, daysUntilDate, type AnchorEvent } from '../../lib/anchorEvents'
 import { ProjectDetail } from './ProjectDetail'
 
 function daysUntil(dateStr: string | null): number | null {
@@ -102,6 +103,103 @@ interface DetailState {
   milestones: ProjectMilestone[]
   updates: ProjectUpdate[]
   contacts: ProjectContact[]
+}
+
+function DecisionDateCard() {
+  const { user } = useAuth()
+  const [anchor, setAnchor] = useState<AnchorEvent | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    getAnchorEvent(user.id, 'labor_day').then(setAnchor).catch(() => null)
+  }, [user])
+
+  if (!anchor) return null
+
+  const days = daysUntilDate(anchor.event_date)
+  const weeks = Math.floor(days / 7)
+  const urgent = days < 60 ? C.rust : days < 90 ? C.sand : C.ink40
+  const formatted = new Date(anchor.event_date + 'T12:00:00')
+    .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+
+  async function handleSave() {
+    if (!user || !draft) return
+    setSaving(true)
+    try {
+      await updateAnchorEvent(user.id, 'labor_day', { event_date: draft, title: anchor!.title })
+      const fresh = await getAnchorEvent(user.id, 'labor_day')
+      setAnchor(fresh)
+      setEditing(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function startEdit() {
+    setDraft(anchor!.event_date)
+    setEditing(true)
+  }
+
+  return (
+    <div style={{
+      background: '#fff', border: `0.5px solid ${C.ink20}`, borderRadius: 12,
+      padding: '12px 14px', marginBottom: 14,
+    }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.12em', color: C.ink40, marginBottom: 6 }}>
+        ◆ DECISION DATE · {anchor.title.toUpperCase()}
+      </div>
+      {editing ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="date"
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            style={{
+              border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '6px 10px',
+              fontSize: 'var(--fs-14)', background: '#fff', color: C.dark, fontFamily: 'inherit', outline: 'none',
+            }}
+          />
+          <button
+            onClick={handleSave}
+            disabled={saving || !draft}
+            style={{
+              background: C.rust, color: '#fff', border: 'none', borderRadius: 8,
+              padding: '6px 14px', fontSize: 'var(--fs-13)', fontWeight: 700, cursor: 'pointer',
+              opacity: !draft ? 0.5 : 1,
+            }}
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+          <button
+            onClick={() => setEditing(false)}
+            style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-13)', cursor: 'pointer' }}
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 'var(--fs-16)', fontWeight: 600, color: C.dark }}>
+              {formatted}
+            </div>
+            <div className="mono" style={{ fontSize: 'var(--fs-12)', color: urgent, marginTop: 2 }}>
+              {weeks}wk · {days}d
+            </div>
+          </div>
+          <button
+            onClick={startEdit}
+            style={{ background: 'none', border: 'none', color: C.rust, fontSize: 'var(--fs-13)', fontWeight: 700, cursor: 'pointer', padding: '2px 0' }}
+          >
+            Edit
+          </button>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function AddOpportunityForm({ onSave, onCancel }: { onSave: (p: Project) => void; onCancel: () => void }) {
@@ -217,6 +315,7 @@ export function CareerView() {
 
   return (
     <div style={{ padding: '0 0 140px' }}>
+      <DecisionDateCard />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40 }}>
           ◆ ACTIVE OPPORTUNITIES
