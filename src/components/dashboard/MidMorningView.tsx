@@ -30,8 +30,8 @@ export function MidMorningView({ activeTod, isOverride, onSetOverride, onOpenCar
         <WMIT dark />
         <WDrinks dark />
         <WSteps dark />
-        <WWeather dark />
-        <WInspire dark span={8} />
+        <WWeather dark span={6} />
+        <WInspire dark span={6} />
       </div>
     </>
   )

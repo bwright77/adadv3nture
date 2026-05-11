@@ -3,7 +3,7 @@ import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useWeather } from '../../../hooks/useWeather'
 
-interface WWeatherProps { dark?: boolean }
+interface WWeatherProps { dark?: boolean; span?: number }
 
 function conditionIcon(condition: string, isRaining: boolean, isSnowing: boolean): string {
   if (isSnowing) return '❄'
@@ -13,12 +13,12 @@ function conditionIcon(condition: string, isRaining: boolean, isSnowing: boolean
   return '◎'
 }
 
-export function WWeather({ dark }: WWeatherProps) {
+export function WWeather({ dark, span = 4 }: WWeatherProps) {
   const { weather, loading } = useWeather()
 
   if (loading || !weather) {
     return (
-      <Glass dark={dark} span={4} pad={14}>
+      <Glass dark={dark} span={span} pad={14}>
         <CardLabel dark={dark}>Weather</CardLabel>
         <div style={{ opacity: 0.4, fontSize: 'var(--fs-13)', marginTop: 8 }}>Loading…</div>
       </Glass>
@@ -39,7 +39,7 @@ export function WWeather({ dark }: WWeatherProps) {
   ].join(' · ')
 
   return (
-    <Glass dark={dark} span={4} pad={14}>
+    <Glass dark={dark} span={span} pad={14}>
       <CardLabel dark={dark}>{weather.label}</CardLabel>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
         <span style={{ fontSize: 'var(--fs-15)' }}>{icon}</span>

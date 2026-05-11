@@ -96,7 +96,7 @@ export function WInspire({ dark, span = 6 }: WInspireProps) {
 
   if (!photo) {
     return (
-      <Glass dark={dark} span={span} pad={0} style={{ height: 148, padding: 0 }}>
+      <Glass dark={dark} span={span} pad={0} style={{ minHeight: 148, padding: 0 }}>
         <div style={{
           position: 'absolute', inset: 0,
           display: 'flex', flexDirection: 'column',
@@ -127,7 +127,7 @@ export function WInspire({ dark, span = 6 }: WInspireProps) {
       dark={dark}
       span={span}
       pad={0}
-      style={{ height: 148, padding: 0, cursor: 'pointer' }}
+      style={{ minHeight: 148, padding: 0, cursor: 'pointer' }}
       onClick={() => photo && setShowDetail(true)}
     >
       <div style={{
