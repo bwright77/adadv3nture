@@ -24,7 +24,7 @@ function categoryFromContent(content: string): { label: string; color: string } 
   return { label: 'PROJECTS', color: C.tealDk }
 }
 
-interface InboxPageProps { bgPhoto?: string }
+interface InboxPageProps { bgPhoto?: string; version?: number }
 
 function SwipeableItem({ item, i, onDelete, onRoute }: {
   item: InboxItem, i: number,
@@ -120,7 +120,7 @@ function SwipeableItem({ item, i, onDelete, onRoute }: {
   )
 }
 
-export function InboxPage({ bgPhoto }: InboxPageProps) {
+export function InboxPage({ bgPhoto, version = 0 }: InboxPageProps) {
   const { user } = useAuth()
   const [items, setItems] = useState<InboxItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -134,7 +134,7 @@ export function InboxPage({ bgPhoto }: InboxPageProps) {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [user])
+  useEffect(() => { load() }, [user, version])
 
   async function handleDelete(id: string) {
     setItems(prev => prev.filter(i => i.id !== id))

@@ -42,7 +42,8 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
   const [saving, setSaving] = useState(false)
   const [pilotLights, setPilotLights] = useState<PilotLights | null>(null)
 
-  const today = new Date().toISOString().substring(0, 10)
+  const d = new Date()
+  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
   useEffect(() => {
     if (!user) return

@@ -11,9 +11,10 @@ const DOT_COLORS = [C.rust, C.rustDk, C.tealDk, C.sand, C.ink60]
 
 interface CaptureSheetProps {
   onClose: () => void
+  onSaved?: () => void
 }
 
-export function CaptureSheet({ onClose }: CaptureSheetProps) {
+export function CaptureSheet({ onClose, onSaved }: CaptureSheetProps) {
   const { user } = useAuth()
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
@@ -77,6 +78,7 @@ export function CaptureSheet({ onClose }: CaptureSheetProps) {
     setSaving(true)
     try {
       await addInboxItem(user.id, text)
+      onSaved?.()
       onClose()
     } catch {
       setSaving(false)

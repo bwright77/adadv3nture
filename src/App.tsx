@@ -64,6 +64,7 @@ function Dashboard() {
     return 'home'
   })
   const [capture, setCapture] = useState(false)
+  const [inboxVersion, setInboxVersion] = useState(0)
   const [listsInitialTab, setListsInitialTab] = useState<ListsTab | undefined>(undefined)
 
   function openCareer() {
@@ -108,14 +109,14 @@ function Dashboard() {
 
         {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} />}
         {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} initialTab={listsInitialTab} />}
-        {tab === 'inbox'  && <InboxPage  bgPhoto={bgPhoto || undefined} />}
+        {tab === 'inbox'  && <InboxPage  bgPhoto={bgPhoto || undefined} version={inboxVersion} />}
         {tab === 'log'    && <LogPage />}
       </div>
 
       <TabBar active={tab} dark={isDark} onChange={setTab} />
       <FAB onClick={() => setCapture(true)} />
 
-      {capture && <CaptureSheet onClose={() => setCapture(false)} />}
+      {capture && <CaptureSheet onClose={() => setCapture(false)} onSaved={() => setInboxVersion(v => v + 1)} />}
     </div>
   )
 }
