@@ -101,7 +101,14 @@ export function WConditions({ dark }: Props) {
 
   useEffect(() => {
     Promise.allSettled(
-      LOCATIONS.map(loc => getWeather({ lat: loc.lat, lon: loc.lon, label: loc.label }))
+      LOCATIONS.map(loc => getWeather({
+        lat: loc.lat,
+        lon: loc.lon,
+        name: loc.label,
+        elevationFt: parseInt(loc.elev.replace(/[^\d]/g, ''), 10) || null,
+        label: `${loc.label} · ${loc.elev}`,
+        isKnown: true,
+      }))
     ).then(results => {
       setConditions(results.map(r => r.status === 'fulfilled' ? r.value : null))
       setLoading(false)

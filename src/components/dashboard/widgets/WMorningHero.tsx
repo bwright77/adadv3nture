@@ -6,7 +6,7 @@ import { loadRecovery, type RecoveryResult } from '../../../lib/recovery'
 import { getProgram, type ProgramState } from '../../../lib/program-tracker'
 import { supabase } from '../../../lib/supabase'
 import { useAnchorEvent } from '../../../hooks/useAnchorEvent'
-import { daysUntil, formatCountdownChip } from '../../../lib/countdown'
+import { daysUntil } from '../../../lib/countdown'
 import { useLocation } from '../../../hooks/useLocation'
 
 interface WMorningHeroProps {
