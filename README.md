@@ -50,9 +50,9 @@ iOS-style widget grid built from composable Glass cards:
 | Inbox | Unprocessed capture count + quick entry |
 | On This Day | Adventure photo from this date in past years |
 | Pilot Lights | Days since last activity per life category |
-| Day Review | Evening check-in for each life portfolio category |
+| Day Review | Evening check-in for each life portfolio category + 1–5 mood selector |
 | Tomorrow | Next day workout + weather + focus areas |
-| Wright Adventures Countdown | Weeks + days to Sept 1 · "Time to build." |
+| Career Anchor Countdown | Weeks + days to the editable Career Anchor date (default Sept 1) — "Time to build." |
 | Adventure Today | Weekend hero — plan the day, lock in departure time |
 | Long Effort | This week's big outdoor effort + WLW countdown |
 | Family Day | Chase / Ada / Sylvia cards + age-appropriate spot suggestions |
@@ -61,13 +61,13 @@ iOS-style widget grid built from composable Glass cards:
 | 50 Hikes | Progress tracker + seasonal suggestion + log completions |
 
 ### Morning Briefing
-AI-generated daily briefing via Anthropic claude-sonnet-4-6 (server-side Edge Function only). Weekday: pulls recovery signals, portfolio review, pilot light staleness — ends with one specific next action. Weekend: "What's the move?" voice — weather, family, recovery, no career urgency.
+AI-generated daily briefing via Anthropic claude-sonnet-4-6 (server-side Edge Function only). Personal narrative ("About Ben") lives in `users.briefing_profile` JSONB — editable from a card on the Log page — so identity, current focus, health context, goals, and tone notes change without touching code. Anchor dates and family ages are pulled per request from `anchor_events` and `family_members`; the function pre-computes "days away" and injects them so the model never has to do date math. Weekday: recovery signals, mood, portfolio review, pilot light staleness — ends with one specific next action. Weekend: "What's the move?" voice — weather, family, recovery, no career urgency.
 
 ### Recovery Score
 Composite score from RHR delta, sleep duration, drinks yesterday, and days since rest. Tiers: **Go Hard** (>80), **Moderate** (60–80), **Recovery** (<60). Confidence rating based on how many signals are available.
 
 ### MIT Framework
-Four rotating categories — Family, Home, Career, Projects. MITs surface from the highest-neglected categories. Evening is protected, never colonized. Persistent reminders surface daily until done.
+Four rotating categories — Family, Home, Career, Projects. MITs surface from the highest-neglected categories. Evening is protected, never colonized. Persistent reminders surface daily until done. The MIT widget computes the live 7-day completion rate from `daily_plans` review history with a ±vs-prior-week delta and a 5-day dot strip — not a literal.
 
 ### Inbox
 Brain dump capture with floating action button on every screen. Zero categorization at capture. Morning triage routes items to: todo lists, MITs, reminders, project milestones, or delete.
@@ -87,6 +87,12 @@ Tracks progress through *50 Hikes with Kids: Colorado* (Gorton & Tillack). Surfa
 ### Inspiration Widget
 Adventure photos from Supabase Storage surfaced by date proximity — "5 years ago today." Tap to expand into full-screen swipe gallery. Reminds you who you are when "why bother" creeps in.
 
+### Trends Report Card
+A newspaper-style report card per metric (Weight, Body fat %, Miles run, Workouts, RHR, Drinks/day) with a 7-vs-14-day delta, a direction arrow, and an inline sparkline showing the recent shape. Race readiness ring up top — weighted blend of weekly mileage, longest run vs taper target, weekly consistency, and average recovery — countdowns to the West Line Winder anchor event.
+
+### Dynamic Location
+Geolocation snaps to a known place from a small `KNOWN_LOCATIONS` list (Denver, Howard) and labels propagate everywhere — weather widget, lock strip, morning hero stamp, trends masthead. Outside the radii, the label falls back to "Current location" rather than asserting somewhere wrong. HR-zone baselines stay calibrated for Denver elevation even when the rest of the UI shows Howard.
+
 ---
 
 ## Architecture
@@ -101,9 +107,10 @@ Adventure photos from Supabase Storage surfaced by date proximity — "5 years a
 | Deployment | Vercel (auto-deploy from `main`) |
 | AI Briefing | Anthropic API — claude-sonnet-4-6, server-side only |
 | Fitness | Strava OAuth2 — activity sync |
+| Body Metrics | Withings OAuth2 — weight, body fat, muscle mass |
 | Calendar | Google Calendar OAuth2 — read events |
 | Health | Apple Health via Health Auto Export → Supabase webhook |
-| Weather | OpenWeatherMap — geolocation-first, Denver fallback |
+| Weather | OpenWeatherMap — geolocation-first, snaps to Denver / Howard, "Current location" fallback |
 
 ### Key Patterns
 
@@ -118,8 +125,10 @@ Adventure photos from Supabase Storage surfaced by date proximity — "5 years a
 **RLS everywhere** — Row-level security on all tables from day one. Single-user v1 but multi-tenant ready — all policies use `auth.uid() = user_id`.
 
 ### Database Schema (key tables)
+- `users` — includes `briefing_profile` JSONB (identity, focus, health context, goals, tone notes, weekend identity)
 - `activities` — unified Strava + manual workouts
-- `recovery_signals` — daily RHR, sleep, drinks, steps from Apple Health
+- `body_metrics` — Withings weight / body fat / muscle mass
+- `recovery_signals` — daily RHR, sleep, drinks, steps, mood (1–5) from Apple Health + in-app
 - `program_tracker` — current strength program position
 - `daily_plans` — day review, MIT completion, weekday + weekend briefing cache
 - `todos` — career/family/home with urgency
@@ -127,10 +136,23 @@ Adventure photos from Supabase Storage surfaced by date proximity — "5 years a
 - `inspiration_photos` — adventure photos with Supabase Storage
 - `training_goals` + `training_weeks` — event targets and weekly actuals
 - `projects` + `project_milestones` — active projects
-- `oauth_tokens` — Strava, Google OAuth tokens
+- `oauth_tokens` — Strava, Withings, Google OAuth tokens
 - `hikes_50` — 50 Hikes with Kids tracker (done, rating, notes per hike)
 - `weekend_plans` — one-row-per-day adventure planning
 - `weekend_spots` — curated family/adventure destinations
+- `family_members` — Ben/Tangier + 3 kids (birthdays, role, emoji, vibe) — source of truth for kid ages
+- `anchor_events` — race day + Career Anchor with stable slugs (`wlw`, `labor_day`); editable in app
+
+---
+
+## Roadmap
+
+**What's left** (in rough priority order):
+
+1. **Historic import** — full Strava backfill beyond the 90-day window, Peloton CSV importer, weight CSV importer.
+2. **Polish pass** — mobile empty states for cold-start users, consistent event countdowns, mobile keyboard handling on long forms.
+3. **Briefing dispatch** — schedule the morning-briefing Edge Function via cron + push notification, instead of generating on app open.
+4. **Server-side dynamic location** — the weekend briefing weather call still hardcodes Denver lat/lon. Pass current coords from the client (or store the latest resolved location in `users`) so the briefing uses the same place the rest of the UI shows.
 
 ---
 

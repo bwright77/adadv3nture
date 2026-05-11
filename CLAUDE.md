@@ -14,12 +14,12 @@ Every morning it surfaces my Most Important Tasks — not what's loudest, what a
 _Update this at the start of every Claude Code session._
 
 ```
-NEXT PRIORITY: Trends engine — sparkline charts + weekly summary report card
+NEXT PRIORITY: Historic import — full Strava backfill, Peloton CSV, weight CSV
 ```
 
 ---
 
-## What's Live (as of May 11, 2026, evening)
+## What's Live (as of May 11, 2026)
 
 **Migrations applied:** 001–025 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>`
 
@@ -46,14 +46,16 @@ NEXT PRIORITY: Trends engine — sparkline charts + weekly summary report card
 | Weekend Mode — 4 views (Dawn/Day/Sat Eve/Sun Eve), weekend briefing variant | ✓ |
 | 50 Hikes with Kids tracker — seasonal suggestion, log, expanded list | ✓ |
 | Withings OAuth + body metrics — connect + sync to body_metrics, weight/body-fat in trends | ✓ |
-| Trends engine — report card rows + weekly_summaries Edge Function (sparkline charts pending) | partial |
+| Trends engine — report card rows + weekly_summaries Edge Function + per-row sparklines | ✓ |
 | MIT widget — 7d completion rate from daily_plans, ±vs-prior-week, last 5 days dotted | ✓ |
 | Family source of truth — `family_members` (Ben/Tangier + 3 kids, birthdays → computed ages) | ✓ |
 | Anchor events — `anchor_events` (WLW + Career Anchor), editable in Career panel | ✓ |
 | Dynamic location — snap to Denver / Howard from geolocation; falls through to Denver | ✓ |
 | Morning briefing — anchor/family/profile-driven prompt (no hardcoded dates or narrative) | ✓ |
 | Briefing voice editor — Log page card edits `users.briefing_profile` JSONB | ✓ |
-| Daily check-in — mood, MIT portfolio check | ✗ |
+| Mood entry — 1–5 row at top of WReview, upserts `recovery_signals.mood_score`; briefing reads it | ✓ |
+| Historic import — full Strava backfill, Peloton CSV, weight CSV | ✗ |
+| Polish pass — mobile empty states, event countdowns, mobile keyboard handling | partial |
 
 ---
 
@@ -126,11 +128,13 @@ NEXT PRIORITY: Trends engine — sparkline charts + weekly summary report card
   +. Training tab, Projects tab, Career tab, design system
 ✓ WM. Weekend Mode — 4 views, 8 widgets, briefing variant, 50 Hikes tracker
 ✓ 09. Withings OAuth — connect, sync metrics, weight + body-fat in trends
+✓ 10. Daily check-in — mood entry (1–5 in WReview, drinks +/- already live)
+✓ 18. Trends engine — sparkline charts, report card rows, weekly_summaries function
 
-  10. Daily check-in — mood entry (drinks +/- already live)
-  18. Trends engine — sparkline charts (rows + weekly_summaries function live)  ← NEXT
-  20. Historic import — Strava backfill, Peloton CSV, weight CSV
+  20. Historic import — Strava backfill, Peloton CSV, weight CSV  ← NEXT
   21. Polish — mobile empty states, event countdowns
+  22. Briefing dispatch — scheduled (cron) regeneration + push notification
+  23. Server-side dynamic location — pass current coords from client; weekend briefing weather still hardcodes Denver
 ```
 
 ---
