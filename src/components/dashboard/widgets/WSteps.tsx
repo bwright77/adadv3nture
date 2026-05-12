@@ -23,18 +23,43 @@ export function WSteps({ dark, span = 4 }: WStepsProps) {
     getLast7DaysSteps(user.id).then(setDays).catch(() => null)
   }, [user])
 
+  // Apple Health steps lag a day — the most recent populated entry is
+  // typically yesterday. We render it as a reflection: how did the
+  // most recent complete day land vs. the user's own 7-day baseline?
   const latest = [...days].reverse().find((d: { date: string; count: number | null }) => d.count !== null) ?? null
   const yesterday = latest?.count ?? null
   const sparkData = days.map(d => d.count ?? 0)
   const hasData = days.some(d => d.count !== null)
 
+  // Goal coloring still useful as a "was that a strong day?" signal,
+  // but we drop the "X to go" copy because yesterday is over.
   const onTrack = yesterday !== null && yesterday >= GOAL
-  const close    = yesterday !== null && yesterday >= 7500 && yesterday < GOAL
-  const color    = yesterday === null ? C.ink40 : onTrack ? C.teal : close ? C.sand : C.rust
+  const close   = yesterday !== null && yesterday >= 7500 && yesterday < GOAL
+  const color   = yesterday === null ? C.ink40 : onTrack ? C.teal : close ? C.sand : C.rust
 
-  const avg = hasData
-    ? Math.round(days.filter(d => d.count !== null).reduce((s, d) => s + d.count!, 0) / days.filter(d => d.count !== null).length)
+  const populated = days.filter(d => d.count !== null)
+  const avg = populated.length > 0
+    ? Math.round(populated.reduce((s, d) => s + d.count!, 0) / populated.length)
     : null
+
+  // Reflective subtitle: where did yesterday sit relative to the
+  // rolling average? Positive = above baseline, negative = below.
+  let subtitle = 'no data'
+  let subtitleColor: string | undefined = undefined
+  if (yesterday !== null && avg !== null && populated.length >= 2) {
+    const delta = yesterday - avg
+    if (Math.abs(delta) < 250) {
+      subtitle = '= 7d avg'
+    } else if (delta > 0) {
+      subtitle = `↑ ${formatSteps(delta)} vs 7d avg`
+      subtitleColor = C.teal
+    } else {
+      subtitle = `↓ ${formatSteps(-delta)} vs 7d avg`
+      subtitleColor = C.rust
+    }
+  } else if (yesterday !== null) {
+    subtitle = onTrack ? 'hit 10k goal' : `${formatSteps(yesterday)} steps`
+  }
 
   return (
     <Glass dark={dark} span={span} pad={14}>
@@ -42,10 +67,8 @@ export function WSteps({ dark, span = 4 }: WStepsProps) {
       <div className="mono" style={{ fontSize: 'var(--fs-26)', fontWeight: 700, lineHeight: 1, color }}>
         {yesterday !== null ? formatSteps(yesterday) : '—'}
       </div>
-      <div className="mono" style={{ fontSize: 'var(--fs-12)', marginTop: 2, opacity: 0.7, color }}>
-        {yesterday === null ? 'no data'
-          : onTrack ? `goal ✓`
-          : `${formatSteps(GOAL - yesterday)} to go`}
+      <div className="mono" style={{ fontSize: 'var(--fs-12)', marginTop: 2, opacity: 0.8, color: subtitleColor }}>
+        {subtitle}
       </div>
       {hasData && (
         <div style={{ marginTop: 8 }}>
