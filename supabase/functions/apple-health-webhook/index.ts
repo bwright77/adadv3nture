@@ -56,8 +56,27 @@ Deno.serve(async (req) => {
   // Only set fields that were actually provided — nulls mean watch wasn't worn, not zero
   if (payload.rhr != null)           row.rhr = Math.round(payload.rhr)
   if (payload.hrv_ms != null)        row.hrv_ms = Math.round(payload.hrv_ms * 10) / 10
-  if (payload.sleep_seconds != null) row.sleep_duration_hours = Math.round((payload.sleep_seconds / 3600) * 10) / 10
   if (payload.steps != null)         row.steps_count = Math.round(payload.steps)
+
+  // Sleep clamp: anything over 12h is almost certainly the Shortcut's
+  // category filter double-counting overlapping samples (parent + stages,
+  // or naps stacked on the main session). Store null and log so the
+  // briefing reads "Sleep: no data" instead of a fictional 13h.
+  if (payload.sleep_seconds != null) {
+    const hours = payload.sleep_seconds / 3600
+    if (hours > 12) {
+      console.warn(`Sleep clamp: ${hours.toFixed(2)}h exceeds 12h ceiling — storing null. payload.date=${payload.date}`)
+      row.sleep_duration_hours = null
+    } else if (hours < 0.5) {
+      // Sub-30-minute "sleep" likely means the Shortcut filtered to a
+      // value that doesn't exist this night (e.g., Source filter
+      // missing the watch's actual source name). Treat as no data.
+      console.warn(`Sleep floor: ${hours.toFixed(2)}h below 30min — storing null. payload.date=${payload.date}`)
+      row.sleep_duration_hours = null
+    } else {
+      row.sleep_duration_hours = Math.round(hours * 10) / 10
+    }
+  }
 
   // Log raw sleep data so we can inspect the structure and determine how to parse it
   if (payload.sleep_raw != null) console.log('sleep_raw:', JSON.stringify(payload.sleep_raw))
