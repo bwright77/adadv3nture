@@ -94,7 +94,13 @@ async function triggerBriefing(supabase: any): Promise<void> {
     .eq('id', WEBHOOK_USER_ID)
     .maybeSingle() as { data: { last_known_location: { lat: number; lon: number; name: string; elevation_ft: number | null } | null } | null }
 
-  const body: Record<string, unknown> = { user_id: WEBHOOK_USER_ID }
+  // force_regenerate so that a briefing generated earlier today (before
+  // this wake-up sync) gets overwritten with one that sees the just-
+  // landed RHR / sleep / drinks / mood data.
+  const body: Record<string, unknown> = {
+    user_id: WEBHOOK_USER_ID,
+    force_regenerate: true,
+  }
   const loc = userRow?.last_known_location
   if (loc && typeof loc.lat === 'number' && typeof loc.lon === 'number') {
     body.location = {

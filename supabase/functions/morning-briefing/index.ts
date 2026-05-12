@@ -301,33 +301,40 @@ Deno.serve(async (req: Request) => {
     const admin = createClient(supabaseUrl, serviceKey)
     const today = todayInAppTimezone()
 
-    // Return cached briefing if already generated today
-    const { data: existing } = await admin
-      .from('daily_plans')
-      .select('morning_briefing, thinking_prompt, weekend_briefing, weekend_thinking_prompt')
-      .eq('user_id', user.id)
-      .eq('plan_date', today)
-      .maybeSingle()
+    // Force regeneration when the caller explicitly asks — used by the
+    // apple-health-webhook chain so that a briefing generated earlier
+    // (before recovery_signals landed) gets overwritten with fresh data.
+    const forceRegenerate = body.force_regenerate === true
 
-    if (dayType === 'weekend' && existing?.weekend_briefing) {
-      return new Response(
-        JSON.stringify({
-          briefing: existing.weekend_briefing,
-          thinking_prompt: existing.weekend_thinking_prompt,
-          cached: true,
-        }),
-        { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
-      )
-    }
-    if (dayType === 'weekday' && existing?.morning_briefing) {
-      return new Response(
-        JSON.stringify({
-          briefing: existing.morning_briefing,
-          thinking_prompt: existing.thinking_prompt,
-          cached: true,
-        }),
-        { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
-      )
+    // Return cached briefing if already generated today and not forced.
+    if (!forceRegenerate) {
+      const { data: existing } = await admin
+        .from('daily_plans')
+        .select('morning_briefing, thinking_prompt, weekend_briefing, weekend_thinking_prompt')
+        .eq('user_id', user.id)
+        .eq('plan_date', today)
+        .maybeSingle()
+
+      if (dayType === 'weekend' && existing?.weekend_briefing) {
+        return new Response(
+          JSON.stringify({
+            briefing: existing.weekend_briefing,
+            thinking_prompt: existing.weekend_thinking_prompt,
+            cached: true,
+          }),
+          { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
+        )
+      }
+      if (dayType === 'weekday' && existing?.morning_briefing) {
+        return new Response(
+          JSON.stringify({
+            briefing: existing.morning_briefing,
+            thinking_prompt: existing.thinking_prompt,
+            cached: true,
+          }),
+          { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
+        )
+      }
     }
 
     let contextMsg: string
