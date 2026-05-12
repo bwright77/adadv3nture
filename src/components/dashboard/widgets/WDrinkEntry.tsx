@@ -43,7 +43,6 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
     setSaving(false)
   }
 
-  const past = history.filter(d => d.date !== today)
   const sevenDayAvg = avg(history.map(d => d.count))
   const onTrack = parseFloat(sevenDayAvg) <= 2.0
 
@@ -83,48 +82,61 @@ export function WDrinkEntry({ dark }: WDrinkEntryProps) {
         7d avg {sevenDayAvg}/d · goal ≤ 2.0 · {onTrack ? '✓ on track' : '↑ over goal'}
       </div>
 
-      {/* Past 6 days */}
-      {past.length > 0 && (
+      {/* 7-day strip — ends with today on the far right */}
+      {history.length > 0 && (
         <div style={{ marginTop: 14, paddingTop: 12, borderTop: `0.5px dashed ${dark ? 'rgba(255,255,255,0.1)' : C.ink20}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            {past.map(d => (
-              <div key={d.date} style={{ textAlign: 'center', flex: 1 }}>
-                <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.5, marginBottom: 4 }}>{dayLabel(d.date)}</div>
-                {editing === d.date ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                    <button
-                      onClick={() => updateCount(d.date, d.count + 1)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--fs-12)', opacity: 0.6, padding: '0 4px' }}
-                    >▲</button>
-                    <div className="mono" style={{
-                      fontSize: 'var(--fs-16)', fontWeight: 700,
-                      color: d.count > 2 ? C.rust : d.count === 2 ? C.sand : C.teal,
-                    }}>{d.count}</div>
-                    <button
-                      onClick={() => updateCount(d.date, d.count - 1)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--fs-12)', opacity: 0.6, padding: '0 4px' }}
-                    >▼</button>
-                    <button
-                      onClick={() => setEditing(null)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--fs-10)', opacity: 0.4, marginTop: 2 }}
-                    >done</button>
+            {history.map(d => {
+              const isToday = d.date === today
+              // Today's strip entry shows the live `count` so +/- updates here in lockstep.
+              const value = isToday ? count : d.count
+              const color = value > 2 ? C.rust : value === 2 ? C.sand : C.teal
+              return (
+                <div key={d.date} style={{ textAlign: 'center', flex: 1 }}>
+                  <div className="mono" style={{
+                    fontSize: 'var(--fs-11)',
+                    opacity: isToday ? 0.85 : 0.5,
+                    color: isToday ? C.rust : undefined,
+                    marginBottom: 4,
+                    letterSpacing: '0.05em',
+                  }}>
+                    {isToday ? 'TODAY' : dayLabel(d.date)}
                   </div>
-                ) : (
-                  <button
-                    onClick={() => setEditing(d.date)}
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer', padding: 4,
-                      borderRadius: 6,
-                    }}
-                  >
+                  {isToday ? (
                     <div className="mono" style={{
-                      fontSize: 'var(--fs-16)', fontWeight: 700,
-                      color: d.count > 2 ? C.rust : d.count === 2 ? C.sand : C.teal,
-                    }}>{d.count}</div>
-                  </button>
-                )}
-              </div>
-            ))}
+                      fontSize: 'var(--fs-16)', fontWeight: 700, padding: 4,
+                      color,
+                    }}>{value}</div>
+                  ) : editing === d.date ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                      <button
+                        onClick={() => updateCount(d.date, d.count + 1)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--fs-12)', opacity: 0.6, padding: '0 4px' }}
+                      >▲</button>
+                      <div className="mono" style={{ fontSize: 'var(--fs-16)', fontWeight: 700, color }}>{value}</div>
+                      <button
+                        onClick={() => updateCount(d.date, d.count - 1)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--fs-12)', opacity: 0.6, padding: '0 4px' }}
+                      >▼</button>
+                      <button
+                        onClick={() => setEditing(null)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--fs-10)', opacity: 0.4, marginTop: 2 }}
+                      >done</button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setEditing(d.date)}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+                        borderRadius: 6,
+                      }}
+                    >
+                      <div className="mono" style={{ fontSize: 'var(--fs-16)', fontWeight: 700, color }}>{value}</div>
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
