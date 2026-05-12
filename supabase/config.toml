@@ -386,6 +386,16 @@ deno_version = 2
 # authorization header" before the function code even sees it.
 verify_jwt = false
 
+[functions.morning-briefing]
+# The function does its own auth (two paths: user JWT for client calls,
+# service-role bearer + body.user_id for the webhook → briefing chain).
+# Supabase's edge JWT pre-check was rejecting the service role token with
+# "UNAUTHORIZED_INVALID_JWT_FORMAT" so the chain never reached the
+# function. Letting the function code handle auth itself is safe — the
+# user-JWT path still calls userClient.auth.getUser() and 401s on invalid
+# tokens.
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
