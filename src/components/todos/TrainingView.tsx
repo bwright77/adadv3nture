@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, addTrainingWeek, updateTrainingGoalNotes, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
 import { getAllPrograms, addProgram, advanceProgram, setProgramPosition, deactivateProgram, syncProgramFromStrava, updateProgramImageUrl, type ProgramState } from '../../lib/program-tracker'
 import { updateTrainingGoalImageUrl, updateTrainingGoalWebsiteUrl } from '../../lib/training'
+import { isDerivedWeek } from '../../lib/trainingPlan'
 import { daysUntil as daysUntilDate } from '../../lib/countdown'
 
 function CardImageBanner({ url, color, radius = '0 14px 0 0' }: { url: string; color: string; radius?: string }) {
@@ -267,7 +268,7 @@ function EventDetail({ goal, onClose, onUpdate }: {
   )
 }
 
-function WeekCard({ week }: { week: TrainingWeek }) {
+function WeekCard({ week, derived }: { week: TrainingWeek; derived?: boolean }) {
   const items: { label: string; target: number | null; actual: number | null; unit: string }[] = [
     { label: 'RUN',      target: week.target_run_miles,        actual: week.actual_run_miles,         unit: 'MI' },
     { label: 'LONG RUN', target: week.target_long_run_miles,   actual: null,                          unit: 'MI' },
@@ -284,6 +285,15 @@ function WeekCard({ week }: { week: TrainingWeek }) {
           <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em' }}>THIS WEEK</div>
           <div className="badge" style={{ fontSize: 'var(--fs-16)', color: C.dark, letterSpacing: '0.04em' }}>{week.phase_label}</div>
         </div>
+        {derived && (
+          <div className="mono" style={{
+            fontSize: 'var(--fs-10)', letterSpacing: '0.12em',
+            color: C.teal, padding: '3px 8px', borderRadius: 999,
+            background: 'rgba(91,188,184,0.12)', border: `0.5px solid ${C.teal}`,
+          }}>
+            DERIVED
+          </div>
+        )}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${items.length}, 1fr)`, gap: 8 }}>
         {items.map(item => {
@@ -748,19 +758,9 @@ export function TrainingView() {
         />
       )}
 
-      {/* This week's targets */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40 }}>
-          ◆ THIS WEEK
-        </div>
-        {!addingWeek && (
-          <button onClick={() => setAddingWeek(true)} style={{
-            background: 'none', border: 'none', color: C.teal, fontSize: 'var(--fs-13)',
-            fontWeight: 700, cursor: 'pointer', padding: '2px 0',
-          }}>
-            {week ? 'Edit week' : '+ Add week'}
-          </button>
-        )}
+      {/* This week's targets — derived from upcoming events by default */}
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40, marginBottom: 10 }}>
+        ◆ THIS WEEK
       </div>
 
       {addingWeek && (
@@ -772,7 +772,7 @@ export function TrainingView() {
       )}
 
       {week ? (
-        <WeekCard week={week} />
+        <WeekCard week={week} derived={isDerivedWeek(week)} />
       ) : (
         !addingWeek && (
           <div style={{
@@ -780,9 +780,25 @@ export function TrainingView() {
             padding: '14px 16px', marginBottom: 10,
             fontSize: 'var(--fs-13)', color: C.ink60,
           }}>
-            No targets set this week — set run, long-run, cycling and strength counts above.
+            No upcoming events yet — add one below and weekly targets derive automatically.
           </div>
         )
+      )}
+
+      {/* Discreet manual override — collapsed under the derived card */}
+      {!addingWeek && week && (
+        <div style={{ marginBottom: 14, marginTop: -2, textAlign: 'right' }}>
+          <button
+            onClick={() => setAddingWeek(true)}
+            style={{
+              background: 'none', border: 'none', color: C.ink40,
+              fontSize: 'var(--fs-11)', cursor: 'pointer', padding: '2px 0',
+              textDecoration: 'underline', textUnderlineOffset: 2,
+            }}
+          >
+            {isDerivedWeek(week) ? 'Override this week' : 'Edit override'}
+          </button>
+        </div>
       )}
 
       {/* Programs */}

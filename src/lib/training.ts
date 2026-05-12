@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+import { deriveTrainingWeek } from './trainingPlan'
+import { getProgram } from './program-tracker'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any
 
@@ -54,6 +56,8 @@ export async function getCurrentTrainingWeek(userId: string): Promise<TrainingWe
   monday.setDate(today.getDate() - ((today.getDay() + 6) % 7))
   const weekStart = monday.toISOString().substring(0, 10)
 
+  // 1. Manual override wins. A row in training_weeks for this Monday means
+  //    the user explicitly customised this week — use it.
   const { data, error } = await supabase
     .from('training_weeks')
     .select('*')
@@ -61,7 +65,14 @@ export async function getCurrentTrainingWeek(userId: string): Promise<TrainingWe
     .eq('week_start', weekStart)
     .maybeSingle()
   if (error) throw new Error(error.message)
-  return data as TrainingWeek | null
+  if (data) return data as TrainingWeek
+
+  // 2. No override — derive targets from upcoming events + active program.
+  const [events, program] = await Promise.all([
+    getTrainingGoals(userId),
+    getProgram(userId).catch(() => null),
+  ])
+  return deriveTrainingWeek(userId, events, program, today)
 }
 
 export async function addTrainingGoal(

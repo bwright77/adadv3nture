@@ -63,6 +63,16 @@ function nextPosition(programName: string, sessionsCompleted: number): { week: n
   return null // program finished
 }
 
+// How many strength sessions the active program prescribes for the current
+// calendar week. Returns 3 as a baseline when no program is active.
+export function weeklyStrengthSessions(program: ProgramState | null): number {
+  if (!program) return 3
+  const schedule = SCHEDULES[program.program_name]
+  if (!schedule) return 3
+  const idx = Math.max(0, Math.min(schedule.workoutsPerWeek.length - 1, program.current_week - 1))
+  return schedule.workoutsPerWeek[idx] ?? 3
+}
+
 function totalWorkouts(programName: string): number {
   const schedule = SCHEDULES[programName]
   return schedule
