@@ -350,9 +350,9 @@ Deno.serve(async (req: Request) => {
       // ── Weekend context ────────────────────────────────────────────────────
       const yesterday = prevDate(today, 1)
 
-      const [recoveryRes, weightRes, lastEffortRes, weekendPlanRes, weatherStr] = await Promise.all([
+      const [recoveryRes, weightRes, lastEffortRes, weekendPlanRes, weatherStr, moodRes] = await Promise.all([
         admin.from('recovery_signals')
-          .select('rhr, sleep_duration_hours, drinks_consumed, recovery_score, recovery_tier, mood_score')
+          .select('rhr, sleep_duration_hours, drinks_consumed, recovery_score, recovery_tier')
           .eq('user_id', user.id)
           .in('signal_date', [today, yesterday])
           .order('signal_date', { ascending: false })
@@ -377,6 +377,11 @@ Deno.serve(async (req: Request) => {
           .eq('plan_date', today)
           .maybeSingle(),
         owmKey ? fetchWeather(owmKey, location.lat, location.lon) : Promise.resolve(null),
+        admin.from('daily_plans')
+          .select('mood_score')
+          .eq('user_id', user.id)
+          .eq('plan_date', yesterday)
+          .maybeSingle(),
       ])
 
       const signal = recoveryRes.data?.[0] as {
@@ -385,9 +390,9 @@ Deno.serve(async (req: Request) => {
         drinks_consumed: number
         recovery_score: number | null
         recovery_tier: string | null
-        mood_score: number | null
       } | undefined
       const yDrinks = (recoveryRes.data?.[1] as { drinks_consumed: number } | undefined)?.drinks_consumed ?? 0
+      const yMood = (moodRes.data as { mood_score: number | null } | null)?.mood_score
 
       const weight = (weightRes.data as { weight_lbs: number | null } | null)?.weight_lbs
 
@@ -420,7 +425,7 @@ RECOVERY:
 - RHR: ${signal?.rhr ?? 'no data'} bpm (baseline 63)
 - Sleep: ${signal?.sleep_duration_hours != null ? `${signal.sleep_duration_hours.toFixed(1)}h` : 'no data'}
 - Drinks yesterday: ${yDrinks}
-- Mood (1-5): ${signal?.mood_score ?? 'not logged'}
+- Mood yesterday (1-5): ${yMood ?? 'not logged'}
 
 LAST BIG EFFORT:${effort
   ? `
@@ -439,7 +444,7 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
       const yesterday = prevDate(today, 1)
       const [recoveryRes, programRes, inboxRes, weightRes, reviewRes] = await Promise.all([
         admin.from('recovery_signals')
-          .select('signal_date, rhr, sleep_duration_hours, drinks_consumed, recovery_score, recovery_tier, mood_score')
+          .select('signal_date, rhr, sleep_duration_hours, drinks_consumed, recovery_score, recovery_tier')
           .eq('user_id', user.id)
           .in('signal_date', [today, yesterday])
           .order('signal_date', { ascending: false }),
@@ -460,7 +465,7 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
           .limit(1)
           .maybeSingle(),
         admin.from('daily_plans')
-          .select('plan_date, family_creative_done, home_done, career_done, projects_done, family_creative_note, home_note, career_note, projects_note')
+          .select('plan_date, family_creative_done, home_done, career_done, projects_done, family_creative_note, home_note, career_note, projects_note, mood_score')
           .eq('user_id', user.id)
           .lt('plan_date', today)
           .order('plan_date', { ascending: false })
@@ -473,11 +478,9 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
         drinks_consumed: number
         recovery_score: number | null
         recovery_tier: string | null
-        mood_score: number | null
       } | undefined
       const ySignal = recoveryRes.data?.find((r: { signal_date: string }) => r.signal_date === yesterday) as {
         drinks_consumed: number
-        mood_score: number | null
       } | undefined
       const program = programRes.data as {
         program_name: string; current_week: number; current_day: number
@@ -492,6 +495,7 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
         career_done: boolean; projects_done: boolean
         family_creative_note: string | null; home_note: string | null
         career_note: string | null; projects_note: string | null
+        mood_score: number | null
       }
       const reviewRows = (reviewRes.data ?? []) as ReviewRow[]
       const reviewCats = ['career', 'family_creative', 'home', 'projects'] as const
@@ -541,7 +545,7 @@ RECOVERY:
 - RHR: ${todaySignal?.rhr ?? 'no data'} bpm (baseline 63)
 - Sleep: ${todaySignal?.sleep_duration_hours != null ? `${todaySignal.sleep_duration_hours.toFixed(1)}h` : 'no data'}
 - Drinks yesterday: ${ySignal?.drinks_consumed ?? 0}
-- Mood yesterday (1-5): ${ySignal?.mood_score ?? 'not logged'}
+- Mood yesterday (1-5): ${yReview?.mood_score ?? 'not logged'}
 - Recovery score: ${todaySignal?.recovery_score != null ? Math.round(todaySignal.recovery_score) : 'unknown'}/100${todaySignal?.recovery_tier ? ` · ${todaySignal.recovery_tier}` : ''}
 
 WORKOUT:
