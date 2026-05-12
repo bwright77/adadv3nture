@@ -479,16 +479,29 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
           .limit(14),
       ])
 
-      const todaySignal = recoveryRes.data?.find((r: { signal_date: string }) => r.signal_date === today) as {
+      // Apple Health attributes overnight sleep / HRV / RHR to the date the
+      // sleep STARTED — so the Tuesday-morning wake-up data lands in the
+      // Monday signal_date row. Prefer today's row if the user's Shortcut
+      // sends today's date, otherwise fall back to yesterday's row for the
+      // wake-up state.
+      type Signal = {
+        signal_date: string
         rhr: number | null
         sleep_duration_hours: number | null
         drinks_consumed: number
         recovery_score: number | null
         recovery_tier: string | null
-      } | undefined
-      const ySignal = recoveryRes.data?.find((r: { signal_date: string }) => r.signal_date === yesterday) as {
-        drinks_consumed: number
-      } | undefined
+      }
+      const signals = (recoveryRes.data ?? []) as Signal[]
+      const todayRow = signals.find(r => r.signal_date === today)
+      const yesterdayRow = signals.find(r => r.signal_date === yesterday)
+      const wakeupSignal = (
+        todayRow && (todayRow.rhr != null || todayRow.sleep_duration_hours != null)
+          ? todayRow
+          : yesterdayRow
+      ) as Signal | undefined
+      const todaySignal = wakeupSignal       // alias used by template below
+      const ySignal = yesterdayRow as { drinks_consumed: number } | undefined
       const program = programRes.data as {
         program_name: string; current_week: number; current_day: number
         total_weeks: number | null; next_workout_title: string | null; last_completed_date: string | null
