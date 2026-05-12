@@ -93,7 +93,7 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
     <Glass dark={dark} span={12} pad={16}>
       <CardLabel dark={dark}>Day review</CardLabel>
 
-      {/* MOOD — 1 (rough) → 5 (great), tap same value to clear */}
+      {/* MOOD — weep → big smile (1-5). Tap the selected face to clear. */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '8px 0',
@@ -107,28 +107,37 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
         }}>
           MOOD
         </span>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {[1, 2, 3, 4, 5].map(n => {
+        <div style={{ display: 'flex', gap: 4 }}>
+          {[
+            { n: 1, emoji: '😭', label: 'Weeping' },
+            { n: 2, emoji: '😢', label: 'Sad' },
+            { n: 3, emoji: '😐', label: 'Neutral' },
+            { n: 4, emoji: '🙂', label: 'Good' },
+            { n: 5, emoji: '😄', label: 'Great' },
+          ].map(({ n, emoji, label }) => {
             const selected = mood === n
             return (
               <button
                 key={n}
                 onClick={() => handleMood(n)}
-                aria-label={`Mood ${n}`}
+                aria-label={label}
+                title={label}
                 style={{
-                  width: 22, height: 22, borderRadius: '50%',
+                  width: 30, height: 30, borderRadius: '50%',
                   background: selected
-                    ? C.rust
-                    : (dark ? 'rgba(255,255,255,0.08)' : 'rgba(26,18,8,0.06)'),
+                    ? (dark ? 'rgba(196,82,42,0.25)' : 'rgba(196,82,42,0.15)')
+                    : 'transparent',
                   border: `1px solid ${selected
                     ? C.rust
-                    : (dark ? 'rgba(255,255,255,0.18)' : 'rgba(26,18,8,0.18)')}`,
-                  color: selected ? C.cream : (dark ? 'rgba(245,237,214,0.55)' : C.ink60),
-                  fontFamily: 'inherit', fontSize: 'var(--fs-11)', fontWeight: 700,
+                    : (dark ? 'rgba(255,255,255,0.10)' : 'rgba(26,18,8,0.10)')}`,
                   cursor: 'pointer', padding: 0, lineHeight: 1,
+                  fontSize: 16,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: mood == null || selected ? 1 : 0.55,
+                  transition: 'opacity 0.15s, background 0.15s',
                 }}
               >
-                {n}
+                {emoji}
               </button>
             )
           })}
