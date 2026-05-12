@@ -182,6 +182,21 @@ const DEFAULT_BRIEFING_LOCATION = {
   lat: 39.7392, lon: -104.9903, name: 'Denver', elevation_ft: 5318,
 }
 
+const APP_TIMEZONE = 'America/Denver'
+
+// Returns today's date as YYYY-MM-DD in the app's timezone (NOT UTC).
+// `new Date().toISOString().substring(0, 10)` rolled the date forward to
+// tomorrow on any Edge Function call made past 6pm Denver — that bug was
+// stamping Sunday-evening briefing rows with Monday's plan_date.
+function todayInAppTimezone(): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: APP_TIMEZONE,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date())
+  const get = (type: string) => parts.find(p => p.type === type)?.value ?? ''
+  return `${get('year')}-${get('month')}-${get('day')}`
+}
+
 interface BriefingLocation {
   lat: number
   lon: number
@@ -284,7 +299,7 @@ Deno.serve(async (req: Request) => {
         : DEFAULT_BRIEFING_LOCATION
 
     const admin = createClient(supabaseUrl, serviceKey)
-    const today = new Date().toISOString().substring(0, 10)
+    const today = todayInAppTimezone()
 
     // Return cached briefing if already generated today
     const { data: existing } = await admin
