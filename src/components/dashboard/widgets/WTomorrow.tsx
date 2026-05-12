@@ -9,7 +9,9 @@ import { loadRecovery } from '../../../lib/recovery'
 import { useWeather } from '../../../hooks/useWeather'
 import { supabase } from '../../../lib/supabase'
 
-interface WTomorrowProps { dark?: boolean }
+type ListTab = 'training' | 'career' | 'family' | 'home' | 'projects'
+
+interface WTomorrowProps { dark?: boolean; onNavigate?: (tab: ListTab) => void }
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DOW_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
@@ -133,7 +135,7 @@ const REC_ICON: Record<Rec['type'], string> = {
   long_run: '🏃', run: '🏃', ride: '🚴', strength: '🏋️', rest: '🛌',
 }
 
-export function WTomorrow({ dark }: WTomorrowProps) {
+export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
   const { user } = useAuth()
   const [week, setWeek] = useState<TrainingWeek | null>(null)
   const [actuals, setActuals] = useState<WeekSummary>({ runMiles: 0, rideMiles: 0, strengthSessions: 0, longRunMiles: 0 })
@@ -213,10 +215,30 @@ export function WTomorrow({ dark }: WTomorrowProps) {
           </span>
         </div>
 
-        {/* Why line */}
-        <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.55, marginLeft: 24 }}>
-          {rec.why}
-        </div>
+        {/* Why line — clickable when it's the "no training week set" empty state */}
+        {(() => {
+          const noWeek = rec.headline === 'No targets set this week' && !!onNavigate
+          if (noWeek) {
+            return (
+              <button
+                onClick={() => onNavigate?.('training')}
+                style={{
+                  marginLeft: 24, padding: 0, background: 'none', border: 'none',
+                  textAlign: 'left', cursor: 'pointer', color: C.teal,
+                  fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-11)',
+                  textDecoration: 'underline', textUnderlineOffset: 2,
+                }}
+              >
+                {rec.why} ↗
+              </button>
+            )
+          }
+          return (
+            <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.55, marginLeft: 24 }}>
+              {rec.why}
+            </div>
+          )
+        })()}
 
         {/* Program detail when strength is the rec */}
         {rec.program && (

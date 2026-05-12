@@ -39,7 +39,7 @@ export function WeekendSundayEveningView({ weekendBlock, isOverride, onSetWeeken
         <WWeekAhead dark />
         <WReview dark hideCareer />
         <WDrinkEntry dark />
-        <WTomorrow dark />
+        <WTomorrow dark onNavigate={onOpenListTab} />
         <WCalendar dark span={12} />
         <WInspire dark />
         <WForecast dark />

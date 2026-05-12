@@ -115,6 +115,34 @@ export async function updateTrainingGoalWebsiteUrl(id: string, url: string): Pro
   await db.from('training_goals').update({ website_url: url.trim() || null }).eq('id', id)
 }
 
+export async function addTrainingWeek(
+  userId: string,
+  weekStart: string,                  // YYYY-MM-DD — should be a Monday
+  phaseLabel: string,
+  targets: {
+    target_run_miles?: number | null
+    target_long_run_miles?: number | null
+    target_cycling_miles?: number | null
+    target_strength_sessions?: number | null
+  },
+): Promise<TrainingWeek> {
+  const { data, error } = await db
+    .from('training_weeks')
+    .upsert({
+      user_id: userId,
+      week_start: weekStart,
+      phase_label: phaseLabel,
+      target_run_miles:         targets.target_run_miles ?? null,
+      target_long_run_miles:    targets.target_long_run_miles ?? null,
+      target_cycling_miles:     targets.target_cycling_miles ?? null,
+      target_strength_sessions: targets.target_strength_sessions ?? null,
+    }, { onConflict: 'user_id,week_start' })
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data as TrainingWeek
+}
+
 export async function updateTrainingActuals(
   id: string,
   actuals: Partial<Pick<TrainingWeek, 'actual_run_miles' | 'actual_cycling_miles' | 'actual_strength_sessions'>>

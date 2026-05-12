@@ -35,7 +35,7 @@ export function WeekendEveningView({ weekendBlock, isOverride, onSetWeekendBlock
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, padding: '0 14px 100px' }}>
         <WReview dark hideCareer />
         <WDrinkEntry dark />
-        <WTomorrow dark />
+        <WTomorrow dark onNavigate={onOpenListTab} />
         <WCalendar dark span={12} />
         <WInspire dark />
         <WForecast dark />

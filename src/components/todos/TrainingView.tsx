@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
-import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, updateTrainingGoalNotes, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
+import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, addTrainingWeek, updateTrainingGoalNotes, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
 import { getAllPrograms, addProgram, advanceProgram, setProgramPosition, deactivateProgram, syncProgramFromStrava, updateProgramImageUrl, type ProgramState } from '../../lib/program-tracker'
 import { updateTrainingGoalImageUrl, updateTrainingGoalWebsiteUrl } from '../../lib/training'
 import { daysUntil as daysUntilDate } from '../../lib/countdown'
@@ -591,6 +591,103 @@ function AddEventForm({ onSave, onCancel }: { onSave: (g: TrainingGoal) => void;
   )
 }
 
+// Returns this week's Monday as YYYY-MM-DD in local time.
+function thisMonday(): string {
+  const today = new Date()
+  const d = new Date(today)
+  d.setDate(today.getDate() - ((today.getDay() + 6) % 7))
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function AddWeekForm({ defaultWeekStart, onSave, onCancel }: {
+  defaultWeekStart: string
+  onSave: (w: TrainingWeek) => void
+  onCancel: () => void
+}) {
+  const { user } = useAuth()
+  const [weekStart, setWeekStart] = useState(defaultWeekStart)
+  const [phase, setPhase] = useState('Build')
+  const [runMi, setRunMi] = useState('')
+  const [longRunMi, setLongRunMi] = useState('')
+  const [cyclingMi, setCyclingMi] = useState('')
+  const [strength, setStrength] = useState('')
+  const [saving, setSaving] = useState(false)
+  const phaseRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { phaseRef.current?.focus() }, [])
+
+  async function handleSave() {
+    if (!user || !phase.trim() || !weekStart) return
+    setSaving(true)
+    try {
+      const w = await addTrainingWeek(user.id, weekStart, phase.trim(), {
+        target_run_miles:         runMi.trim()     ? Number(runMi)     : null,
+        target_long_run_miles:    longRunMi.trim() ? Number(longRunMi) : null,
+        target_cycling_miles:     cyclingMi.trim() ? Number(cyclingMi) : null,
+        target_strength_sessions: strength.trim()  ? Number(strength)  : null,
+      })
+      onSave(w)
+    } catch {
+      setSaving(false)
+    }
+  }
+
+  const inputStyle = {
+    border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px',
+    fontSize: 'var(--fs-14)', background: '#fff', color: C.dark,
+    fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' as const, outline: 'none',
+  }
+
+  return (
+    <div style={{
+      background: '#fff', border: `1.5px solid ${C.teal}`, borderRadius: 14,
+      padding: '14px 16px', marginBottom: 10,
+    }}>
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.teal, letterSpacing: '0.12em', marginBottom: 10 }}>
+        NEW WEEK · TARGETS
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, minWidth: 0 }}>
+          <input
+            ref={phaseRef}
+            style={{ ...inputStyle, minWidth: 0 }}
+            placeholder="Phase (Base, Build, Peak, Taper)"
+            value={phase}
+            onChange={e => setPhase(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Escape') onCancel() }}
+          />
+          <input style={{ ...inputStyle, minWidth: 0 }} type="date" value={weekStart} onChange={e => setWeekStart(e.target.value)} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, minWidth: 0 }}>
+          <input style={{ ...inputStyle, minWidth: 0 }} inputMode="decimal" placeholder="Run miles" value={runMi} onChange={e => setRunMi(e.target.value)} />
+          <input style={{ ...inputStyle, minWidth: 0 }} inputMode="decimal" placeholder="Long run miles" value={longRunMi} onChange={e => setLongRunMi(e.target.value)} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, minWidth: 0 }}>
+          <input style={{ ...inputStyle, minWidth: 0 }} inputMode="decimal" placeholder="Cycling miles" value={cyclingMi} onChange={e => setCyclingMi(e.target.value)} />
+          <input style={{ ...inputStyle, minWidth: 0 }} inputMode="numeric"  placeholder="Strength sessions" value={strength} onChange={e => setStrength(e.target.value)} />
+        </div>
+        <div className="mono" style={{ fontSize: 'var(--fs-11)', color: C.ink40, marginTop: 2 }}>
+          Leave any target blank to skip it. Re-saving the same week overwrites its targets.
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 2 }}>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-14)', cursor: 'pointer', padding: '6px 10px' }}>Cancel</button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !phase.trim() || !weekStart}
+            style={{
+              background: C.teal, color: '#fff', border: 'none', borderRadius: 8,
+              padding: '6px 16px', fontSize: 'var(--fs-14)', fontWeight: 700, cursor: 'pointer',
+              opacity: (!phase.trim() || !weekStart) ? 0.5 : 1,
+            }}
+          >
+            {saving ? 'Saving…' : 'Save Week'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function TrainingView() {
   const { user } = useAuth()
   const [goals, setGoals] = useState<TrainingGoal[]>([])
@@ -599,6 +696,7 @@ export function TrainingView() {
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
   const [addingProgram, setAddingProgram] = useState(false)
+  const [addingWeek, setAddingWeek] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -650,7 +748,42 @@ export function TrainingView() {
         />
       )}
 
-      {week && <WeekCard week={week} />}
+      {/* This week's targets */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40 }}>
+          ◆ THIS WEEK
+        </div>
+        {!addingWeek && (
+          <button onClick={() => setAddingWeek(true)} style={{
+            background: 'none', border: 'none', color: C.teal, fontSize: 'var(--fs-13)',
+            fontWeight: 700, cursor: 'pointer', padding: '2px 0',
+          }}>
+            {week ? 'Edit week' : '+ Add week'}
+          </button>
+        )}
+      </div>
+
+      {addingWeek && (
+        <AddWeekForm
+          defaultWeekStart={week?.week_start ?? thisMonday()}
+          onSave={w => { setWeek(w); setAddingWeek(false) }}
+          onCancel={() => setAddingWeek(false)}
+        />
+      )}
+
+      {week ? (
+        <WeekCard week={week} />
+      ) : (
+        !addingWeek && (
+          <div style={{
+            background: '#fff', border: `0.5px dashed ${C.ink20}`, borderRadius: 14,
+            padding: '14px 16px', marginBottom: 10,
+            fontSize: 'var(--fs-13)', color: C.ink60,
+          }}>
+            No targets set this week — set run, long-run, cycling and strength counts above.
+          </div>
+        )
+      )}
 
       {/* Programs */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: week ? 20 : 0 }}>

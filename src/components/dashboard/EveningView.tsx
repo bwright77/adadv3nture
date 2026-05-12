@@ -27,7 +27,7 @@ export function EveningView({ activeTod, isOverride, onSetOverride, onOpenListTa
       }}>
         <WReview dark />
         <WDrinkEntry dark />
-        <WTomorrow dark />
+        <WTomorrow dark onNavigate={onOpenListTab} />
         <WCalendar dark span={12} />
         <WInspire dark />
         <WForecast dark />
