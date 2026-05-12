@@ -52,7 +52,12 @@ html, body, #root {
   padding: 0;
   min-height: 100dvh;
   overscroll-behavior: none;
-  overflow-x: hidden;
+  /* `overflow-x: clip` clips horizontal overflow without turning the element
+     into a scroll container. Using `hidden` here silently coerced
+     overflow-y to auto on html/body/#root (per spec), which combined with
+     the inner div's explicit overflow-y: auto created a stack of phantom
+     scroll containers that swallowed trackpad wheel events. */
+  overflow-x: clip;
   max-width: 100%;
 }
 

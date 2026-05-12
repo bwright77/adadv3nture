@@ -80,7 +80,7 @@ function Dashboard() {
   const isDark = tab === 'home'
 
   return (
-    <div style={{ position: 'relative', minHeight: '100dvh', background: C.dark, overflowX: 'hidden' }}>
+    <div style={{ position: 'relative', minHeight: '100dvh', background: C.dark, overflowX: 'clip' }}>
 
       {tab === 'home' && (
         <>
@@ -92,7 +92,7 @@ function Dashboard() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: C.paper }} />
       )}
 
-      <div style={{ position: 'relative', zIndex: 2, overflowY: 'auto', overflowX: 'hidden', minHeight: '100dvh' }}>
+      <div style={{ position: 'relative', zIndex: 2, overflowX: 'clip', minHeight: '100dvh' }}>
         {tab === 'home' && <div style={{ height: 'calc(env(safe-area-inset-top, 16px) + 28px)' }} />}
 
         {/* Weekday views */}
