@@ -10,19 +10,22 @@ export interface AnchorEvent {
   location: string | null
   notes: string | null
   category: string | null
+  // Optional FK to a row in `training_goals` so consumers can deep-link
+  // from a countdown card to the event's detail view. Migration 028.
+  training_goal_id?: string | null
 }
 
 // Fallbacks used when the DB row is missing (pre-migration or new user).
 // Keeps the UI alive instead of crashing on null.
 export const ANCHOR_FALLBACKS: Record<AnchorSlug, Omit<AnchorEvent, 'id'>> = {
-  wlw:       { slug: 'wlw',       title: 'West Line Winder 30K', event_date: '2026-09-26', location: 'Buena Vista', notes: '18.6mi · 48th bday wknd', category: 'training' },
-  labor_day: { slug: 'labor_day', title: 'Wright Adventures',    event_date: '2026-09-01', location: null,          notes: 'WA income or get a real job', category: 'career' },
+  wlw:       { slug: 'wlw',       title: 'West Line Winder 30K', event_date: '2026-09-26', location: 'Buena Vista', notes: '18.6mi · 48th bday wknd', category: 'training', training_goal_id: null },
+  labor_day: { slug: 'labor_day', title: 'Wright Adventures',    event_date: '2026-09-01', location: null,          notes: 'WA income or get a real job', category: 'career',   training_goal_id: null },
 }
 
 export async function getAnchorEvent(userId: string, slug: AnchorSlug): Promise<AnchorEvent> {
   const { data } = await supabase
     .from('anchor_events')
-    .select('id, slug, title, event_date, location, notes, category')
+    .select('id, slug, title, event_date, location, notes, category, training_goal_id')
     .eq('user_id', userId)
     .eq('slug', slug)
     .maybeSingle() as unknown as { data: AnchorEvent | null }

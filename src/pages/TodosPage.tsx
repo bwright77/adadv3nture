@@ -90,9 +90,16 @@ const TABS: { id: TabId; label: string; color: string }[] = [
 ]
 
 
-interface TodosPageProps { bgPhoto?: string; initialTab?: TabId }
+interface TodosPageProps {
+  bgPhoto?: string
+  initialTab?: TabId
+  // Versioned event-id from App.tsx — set by deep links (e.g. tapping
+  // the anchor event card on Trends). TrainingView auto-opens its
+  // EventDetail when this changes.
+  initialTrainingEvent?: { id: string; version: number }
+}
 
-export function TodosPage({ bgPhoto, initialTab }: TodosPageProps) {
+export function TodosPage({ bgPhoto, initialTab, initialTrainingEvent }: TodosPageProps) {
   const { user } = useAuth()
   const [tab, setTab] = useState<TabId>(initialTab ?? 'training')
 
@@ -334,7 +341,7 @@ export function TodosPage({ bgPhoto, initialTab }: TodosPageProps) {
         </div>
 
         {/* Special views */}
-        {tab === 'training' && <TrainingView />}
+        {tab === 'training' && <TrainingView initialEvent={initialTrainingEvent} />}
         {tab === 'career'   && <CareerView />}
         {tab === 'projects' && <ProjectsView />}
 

@@ -67,11 +67,22 @@ function Dashboard() {
   const [inboxVersion, setInboxVersion] = useState(0)
   const [dataVersion, setDataVersion] = useState(0)
   const [listsInitialTab, setListsInitialTab] = useState<ListsTab | undefined>(undefined)
+  // When set, the Training tab opens this event's EventDetail on mount.
+  // Bumped each time openTrainingEvent fires so subsequent clicks to the
+  // same event still re-open the modal (TrainingView clears its own copy
+  // once it consumes the value).
+  const [initialTrainingEventId, setInitialTrainingEventId] = useState<{ id: string; version: number } | undefined>(undefined)
 
   // Bumped after a Strava / Withings sync — components that derive from
   // those data sources (TrendsPage, anything reading activities or
   // body_metrics) include this in their effect deps to refetch.
   const bumpData = () => setDataVersion(v => v + 1)
+
+  function openTrainingEvent(goalId: string) {
+    setTab('lists')
+    setListsInitialTab('training')
+    setInitialTrainingEventId(prev => ({ id: goalId, version: (prev?.version ?? 0) + 1 }))
+  }
 
   function openCareer() {
     setTab('lists')
@@ -113,8 +124,8 @@ function Dashboard() {
         {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sat' && <WeekendEveningView     weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
         {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sun' && <WeekendSundayEveningView weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
 
-        {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} version={dataVersion} />}
-        {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} initialTab={listsInitialTab} />}
+        {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} version={dataVersion} onOpenTrainingEvent={openTrainingEvent} />}
+        {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} initialTab={listsInitialTab} initialTrainingEvent={initialTrainingEventId} />}
         {tab === 'inbox'  && <InboxPage  bgPhoto={bgPhoto || undefined} version={inboxVersion} />}
         {tab === 'log'    && <LogPage onDataSynced={bumpData} />}
       </div>

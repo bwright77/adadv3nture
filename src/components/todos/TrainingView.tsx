@@ -698,7 +698,11 @@ function AddWeekForm({ defaultWeekStart, onSave, onCancel }: {
   )
 }
 
-export function TrainingView() {
+interface TrainingViewProps {
+  initialEvent?: { id: string; version: number }
+}
+
+export function TrainingView({ initialEvent }: TrainingViewProps = {}) {
   const { user } = useAuth()
   const [goals, setGoals] = useState<TrainingGoal[]>([])
   const [week, setWeek] = useState<TrainingWeek | null>(null)
@@ -730,6 +734,16 @@ export function TrainingView() {
       }
     }).catch(() => null).finally(() => setLoading(false))
   }, [user])
+
+  // Deep-link from elsewhere in the app (e.g. Trends anchor card) —
+  // when `initialEvent.version` changes, open that goal's EventDetail
+  // if it's present in the loaded goals.
+  useEffect(() => {
+    if (!initialEvent) return
+    if (goals.some(g => g.id === initialEvent.id)) {
+      setSelectedId(initialEvent.id)
+    }
+  }, [initialEvent?.version, goals])
 
   async function handleProgramAdvance() {
     if (!user) return

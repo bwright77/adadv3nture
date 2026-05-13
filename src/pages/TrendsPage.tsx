@@ -5,6 +5,7 @@ import { C } from '../tokens'
 import { useAuth } from '../contexts/AuthContext'
 import { getTrends, type TrendData } from '../lib/trends'
 import { useLocation } from '../hooks/useLocation'
+import { useAnchorEvent } from '../hooks/useAnchorEvent'
 
 function weekNum(): string {
   const d = new Date()
@@ -15,12 +16,21 @@ function weekNum(): string {
 
 const DIRECTION_LABEL: Record<string, string> = { up: '↑', down: '↓', flat: '→' }
 
-interface TrendsPageProps { bgPhoto?: string; version?: number }
+interface TrendsPageProps {
+  bgPhoto?: string
+  version?: number
+  onOpenTrainingEvent?: (goalId: string) => void
+}
 
-export function TrendsPage({ bgPhoto, version = 0 }: TrendsPageProps) {
+export function TrendsPage({ bgPhoto, version = 0, onOpenTrainingEvent }: TrendsPageProps) {
   const { user } = useAuth()
   const [data, setData] = useState<TrendData | null>(null)
   const [loading, setLoading] = useState(true)
+  // Used solely for the deep-link target on the anchor event card. The
+  // race-readiness math comes from getTrends(); this hook gives us the
+  // FK to the linked training_goal so the card can navigate to its
+  // EventDetail in the Training tab.
+  const wlw = useAnchorEvent('wlw')
 
   // `version` is bumped from App.tsx after a Strava / Withings sync so
   // this page refetches the moment fresh data lands rather than waiting
@@ -182,14 +192,28 @@ export function TrendsPage({ bgPhoto, version = 0 }: TrendsPageProps) {
           })}
         </div>
 
-        {/* Anchor event — rust gradient with mountain silhouette */}
+        {/* Anchor event — rust gradient with mountain silhouette.
+            Click navigates to the linked training_goal's EventDetail in
+            the Training tab when the FK is set on the anchor row. */}
         {r && (
-          <div style={{
-            marginTop: 14, padding: 18, borderRadius: 18,
-            background: `linear-gradient(135deg, ${C.rust} 0%, ${C.rustDk} 100%)`,
-            color: C.cream, position: 'relative', overflow: 'hidden',
-            boxShadow: '0 10px 30px rgba(196,82,42,0.3)',
-          }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (wlw.training_goal_id && onOpenTrainingEvent) {
+                onOpenTrainingEvent(wlw.training_goal_id)
+              }
+            }}
+            disabled={!wlw.training_goal_id || !onOpenTrainingEvent}
+            style={{
+              display: 'block', width: '100%', textAlign: 'left',
+              marginTop: 14, padding: 18, borderRadius: 18,
+              background: `linear-gradient(135deg, ${C.rust} 0%, ${C.rustDk} 100%)`,
+              color: C.cream, position: 'relative', overflow: 'hidden',
+              boxShadow: '0 10px 30px rgba(196,82,42,0.3)',
+              border: 'none', fontFamily: 'inherit',
+              cursor: wlw.training_goal_id && onOpenTrainingEvent ? 'pointer' : 'default',
+            }}
+          >
             {/* Mountain silhouette */}
             <svg viewBox="0 0 300 60" preserveAspectRatio="none" style={{
               position: 'absolute', bottom: 0, left: 0, right: 0, width: '100%', height: 60, opacity: 0.22,
@@ -247,7 +271,7 @@ export function TrendsPage({ bgPhoto, version = 0 }: TrendsPageProps) {
                 May 8→Jul 1 (run) · Jul 1→Aug 15 (cycle) · Aug 15→Sep 20 (trail)
               </div>
             </div>
-          </div>
+          </button>
         )}
 
         {/* Baselines — compact */}
