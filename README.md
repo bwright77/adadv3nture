@@ -40,8 +40,8 @@ iOS-style widget grid built from composable Glass cards:
 | Workout | Today's program session (Total Strength W1D1, etc.) |
 | Thinking Prompt | One question to chew on during the workout |
 | Recovery | Score + tier (Go Hard / Moderate / Recovery) |
-| Steps | Yesterday's step count + 7-day sparkline |
-| Drinks | Today's count + 7-day average, ratio not streak |
+| Steps | Yesterday's step count + 7-day sparkline + reflective subtitle (`↑1.4k vs 7d avg`) |
+| Drinks | Today's count + 7-day average + 7-day strip ending in TODAY (live as you tap +/-) |
 | Weather | Current conditions + today's high/low |
 | Forecast | 5-day forecast with activity recommendations |
 | Conditions | Denver road + Howard trail conditions side-by-side |
@@ -50,7 +50,7 @@ iOS-style widget grid built from composable Glass cards:
 | Inbox | Unprocessed capture count + quick entry |
 | On This Day | Adventure photo from this date in past years |
 | Pilot Lights | Days since last activity per life category |
-| Day Review | Evening check-in for each life portfolio category + 1–5 mood selector |
+| Day Review | Evening check-in per portfolio category + emoji-face mood row (😭😢😐🙂😄, stored 1–5) |
 | Tomorrow | Next day workout + weather + focus areas |
 | Career Anchor Countdown | Weeks + days to the editable Career Anchor date (default Sept 1) — "Time to build." |
 | Adventure Today | Weekend hero — plan the day, lock in departure time |
@@ -91,7 +91,22 @@ Adventure photos from Supabase Storage surfaced by date proximity — "5 years a
 A newspaper-style report card per metric (Weight, Body fat %, Miles run, Workouts, RHR, Drinks/day) with a 7-vs-14-day delta, a direction arrow, and an inline sparkline showing the recent shape. Race readiness ring up top — weighted blend of weekly mileage, longest run vs taper target, weekly consistency, and average recovery — countdowns to the West Line Winder anchor event.
 
 ### Dynamic Location
-Geolocation snaps to a known place from a small `KNOWN_LOCATIONS` list (Denver, Howard) and labels propagate everywhere — weather widget, lock strip, morning hero stamp, trends masthead. Outside the radii, the label falls back to "Current location" rather than asserting somewhere wrong. HR-zone baselines stay calibrated for Denver elevation even when the rest of the UI shows Howard.
+Geolocation snaps to a known place from a small `KNOWN_LOCATIONS` list (Denver, Howard) and labels propagate everywhere — weather widget, lock strip, morning hero stamp, trends masthead. Outside the radii, the label falls back to "Current location" rather than asserting somewhere wrong. HR-zone baselines stay calibrated for Denver elevation even when the rest of the UI shows Howard. Server-side: `useLocation()` persists the resolved place to `users.last_known_location` so the Apple Health webhook chain can pass real coords to the briefing without a client roundtrip.
+
+### Smart Trainer
+This week's training targets (run, long run, cycling, strength) auto-derive from `training_goals`. Each upcoming event contributes a linear ramp from 30% of distance at the start of a 12-week build to 100% at peak (2 weeks before race), then a 2-week taper. Same-discipline events take the MAX of long workout and total miles; run + cycling targets stay independent. Strength comes from the active `program_tracker` schedule (3× in W1-2 of Total Strength, 4× in W3-4). A discreet "Override this week" link still lets you author a manual `training_weeks` row when life demands it; the override wins.
+
+### Briefing Dispatch (Web Push)
+When the iOS Health Auto Export Shortcut fires on wake-up, the webhook upserts `recovery_signals`, then chains the `morning-briefing` Edge Function with `force_regenerate: true` so any earlier-this-morning briefing gets overwritten with one that sees the just-landed RHR / sleep / HRV / mood. Subscribers in `push_subscriptions` get a VAPID-signed Web Push with the briefing's first sentence as the body. Tap the lock-screen notification → opens the PWA with the briefing already cached. Sleep is clamped (>12h or <30m → null) to keep a misbehaving Shortcut from poisoning the briefing data.
+
+### Trends Auto-Refresh
+TrendsPage takes a `version` prop bumped from App.tsx after Strava / Withings sync. The page refetches without needing a tab remount — synced activities and body metrics show up in the report card and sparklines the moment they land.
+
+### Anchor Deep-Link
+The rust anchor-event card on Trends is a button. Tap it → switches to Lists → Training and auto-opens that event's EventDetail. Wired via a real FK on `anchor_events.training_goal_id` — no string matching at runtime.
+
+### Data Export → Claude
+Log page ◆ EXPORT card downloads a Markdown brief of everything (identity, anchors, training plan, projects, recent body metrics, recovery signals, activities, daily plan reviews, recent briefings, thinking prompts). Two windows: last 90 days (default) or all-time. Upload the file into a Claude conversation and ask for trend analysis, training adjustments, project prioritization, career moves — the prompt header at the top frames Claude as your cross-domain coach and tells it not to invent missing data.
 
 ---
 
@@ -147,13 +162,14 @@ Geolocation snaps to a known place from a small `KNOWN_LOCATIONS` list (Denver, 
 
 ## Roadmap
 
-**What's left:**
+**Open:**
 
-- **Add VAPID keys to env** to activate push. One-time:
-  ```bash
-  npx web-push generate-vapid-keys
-  ```
-  Set `VITE_VAPID_PUBLIC_KEY` in `.env.local` and Vercel; set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (mailto:) in the Supabase Edge Function env. Then tap "Enable" on the Log page briefing-push card.
+- **Apple Health sleep filter** — the iOS Shortcut currently over-counts sleep when summing samples (parent + stage values overlap). Webhook defends with a >12h / <30m clamp + manual overrides. Real fix is in the Shortcut config; tracked separately.
+
+**Latent / nice-to-have:**
+
+- Multi-year data archiving once `recovery_signals` / `activities` get heavy; the export's "all-time" toggle will need replacing with fixed windows.
+- Inbox triage refinements, mobile keyboard handling on a few less-used long forms.
 
 ---
 

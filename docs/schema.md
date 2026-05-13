@@ -1,6 +1,6 @@
 # Database Schema
 
-**Migrations applied:** 001–025 (run `npx supabase db push` to apply new ones — no Docker needed)
+**Migrations applied:** 001–028 (run `npx supabase db push` to apply new ones — no Docker needed)
 
 ```sql
 -- USERS
@@ -13,6 +13,11 @@
 --   tone_notes?        string[] — weekday voice nudges
 --   weekend_identity?  string   — weekend voice/identity sentence
 -- Edited via LogPage → "◆ BRIEFING VOICE" card.
+--
+-- last_known_location (added in 026) is written by useLocation() on each
+-- client-side resolve so server-side flows (apple-health-webhook → morning-
+-- briefing chain) can read where the user actually is. Shape:
+--   { lat, lon, name, elevation_ft, resolved_at: ISO-timestamp }
 create table users (
   id uuid primary key default gen_random_uuid(),
   email text unique not null,
@@ -26,6 +31,7 @@ create table users (
   timezone text default 'America/Denver',
   preferences jsonb default '{}',
   briefing_profile jsonb not null default '{}'::jsonb,
+  last_known_location jsonb,
   created_at timestamptz default now()
 );
 
@@ -441,10 +447,14 @@ create table family_members (
 );
 create index family_members_user_role_idx on family_members(user_id, role);
 
--- ANCHOR EVENTS (migration 024)
+-- ANCHOR EVENTS (migration 024 · training_goal_id added in 028)
 -- Dated lifeplan anchors (race day, career decision date, milestones).
 -- Slug is a stable code-side identifier; date/title/notes are user-editable.
 -- Code references known slugs: 'wlw' (West Line Winder), 'labor_day' (Career Anchor).
+-- training_goal_id is an optional FK to the matching training_goals row so
+-- the Trends anchor card can deep-link straight to that event's EventDetail
+-- in the Training tab. ON DELETE SET NULL — countdown survives if the goal
+-- is deleted; the deep-link button just stops rendering.
 create table anchor_events (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references users(id) on delete cascade,
@@ -454,9 +464,28 @@ create table anchor_events (
   location text,
   notes text,
   category text,
+  training_goal_id uuid references training_goals(id) on delete set null,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   unique(user_id, slug)
 );
 create index anchor_events_user_date_idx on anchor_events(user_id, event_date);
+create index anchor_events_training_goal_idx on anchor_events(training_goal_id);
+
+-- PUSH SUBSCRIPTIONS (migration 027)
+-- One row per browser/PWA install opted in to briefing notifications.
+-- Inserted by the client after pushManager.subscribe(); read by the
+-- apple-health-webhook chain to send the post-wake briefing push.
+create table push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  endpoint text not null,
+  p256dh text not null,           -- subscription public key
+  auth text not null,             -- subscription auth secret
+  user_agent text,
+  created_at timestamptz default now(),
+  last_used_at timestamptz,
+  unique(endpoint)
+);
+create index push_subscriptions_user_idx on push_subscriptions(user_id);
 ```

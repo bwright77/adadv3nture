@@ -14,14 +14,18 @@ Every morning it surfaces my Most Important Tasks — not what's loudest, what a
 _Update this at the start of every Claude Code session._
 
 ```
-NEXT PRIORITY: Add VAPID keys to env (push opt-in is wired but inert without them)
+NEXT PRIORITY: Verify the Apple Health Shortcut's sleep filter — currently
+              relying on server-side clamp (>12h → null) + manual overrides
+              because the iOS Shortcut UI doesn't expose the value/category
+              filter cleanly. Watch is logging stages correctly; pipeline
+              just needs to dedupe overlapping samples.
 ```
 
 ---
 
-## What's Live (as of May 11, 2026)
+## What's Live (as of May 13, 2026)
 
-**Migrations applied:** 001–027 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>`
+**Migrations applied:** 001–028 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
 
 | Area | Status |
 |------|--------|
@@ -53,9 +57,15 @@ NEXT PRIORITY: Add VAPID keys to env (push opt-in is wired but inert without the
 | Dynamic location — snap to Denver / Howard from geolocation; falls through to Denver | ✓ |
 | Morning briefing — anchor/family/profile-driven prompt (no hardcoded dates or narrative) | ✓ |
 | Briefing voice editor — Log page card edits `users.briefing_profile` JSONB | ✓ |
-| Mood entry — 1–5 row at top of WReview, upserts `recovery_signals.mood_score`; briefing reads it | ✓ |
+| Mood entry — emoji-face row (😭😢😐🙂😄) in WReview, writes `daily_plans.mood_score`; briefing reads it | ✓ |
 | Polish pass — mobile empty states, event countdowns, mobile keyboard handling | ✓ |
-| Briefing dispatch — Apple Health webhook chains briefing + sends push notification on wake-up | ✓ (needs VAPID keys in env) |
+| Briefing dispatch — Apple Health webhook chains briefing + sends push (VAPID keys set) | ✓ |
+| Smart trainer — `deriveTrainingWeek()` computes weekly targets from upcoming events; manual override still available | ✓ |
+| Editable opportunity deadlines — tap soft/deadline pills in Career → inline date picker | ✓ |
+| Anchor deep-link — Trends anchor card → linked `training_goal` EventDetail in Training tab | ✓ |
+| Data export — Log page ◆ EXPORT downloads a Markdown brief for upload into a Claude conversation | ✓ |
+| Trends auto-refresh — Strava / Withings sync bumps a `dataVersion` so TrendsPage refetches without remount | ✓ |
+| Health webhook hardening — sleep clamp (>12h or <30m → null), force-regenerate briefing on each sync | ✓ |
 
 ---
 
@@ -110,7 +120,7 @@ NEXT PRIORITY: Add VAPID keys to env (push opt-in is wired but inert without the
 
 ```
 ✓ 01. Project init — Vite + React 19 + TypeScript + Tailwind + Supabase
-✓ 02. Schema — migrations 001-027, RLS, seed data
+✓ 02. Schema — migrations 001-028, RLS, seed data
 ✓ 03. Auth — email + Google OAuth
 ✓ 04. Widget grid — time-aware views
 ✓ 05. Inbox — FAB, swipe triage
@@ -134,8 +144,11 @@ NEXT PRIORITY: Add VAPID keys to env (push opt-in is wired but inert without the
 
 ✓ 21. Polish — mobile empty states, event countdowns, mobile keyboard
 ✓ 22. Briefing dispatch — Apple Health webhook chains briefing + sends push notification
+✓ 24. Smart trainer — auto-derive weekly targets from upcoming training_goals
+✓ 25. Anchor deep-link — Trends → Training EventDetail via `training_goal_id` FK
+✓ 26. Data export — Markdown brief for Claude analysis
 
-  23. Add VAPID keys to env  ← NEXT (one-time setup; push is inert until done)
+  27. Apple Health sleep filter — Shortcut still over-counts; webhook clamps as defense  ← OPEN
 ```
 
 ---
@@ -155,4 +168,4 @@ NEXT PRIORITY: Add VAPID keys to env (push opt-in is wired but inert without the
 
 ---
 
-*Last updated: May 11, 2026*
+*Last updated: May 13, 2026*
