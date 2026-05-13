@@ -25,7 +25,7 @@ NEXT PRIORITY: Verify the Apple Health Shortcut's sleep filter — currently
 
 ## What's Live (as of May 13, 2026)
 
-**Migrations applied:** 001–028 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
+**Migrations applied:** 001–029 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
 
 | Area | Status |
 |------|--------|
@@ -120,7 +120,7 @@ NEXT PRIORITY: Verify the Apple Health Shortcut's sleep filter — currently
 
 ```
 ✓ 01. Project init — Vite + React 19 + TypeScript + Tailwind + Supabase
-✓ 02. Schema — migrations 001-028, RLS, seed data
+✓ 02. Schema — migrations 001-029, RLS (full coverage after 029 fix), seed data
 ✓ 03. Auth — email + Google OAuth
 ✓ 04. Widget grid — time-aware views
 ✓ 05. Inbox — FAB, swipe triage

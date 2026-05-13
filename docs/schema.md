@@ -1,6 +1,15 @@
 # Database Schema
 
-**Migrations applied:** 001–028 (run `npx supabase db push` to apply new ones — no Docker needed)
+**Migrations applied:** 001–029 (run `npx supabase db push` to apply new ones — no Docker needed)
+
+> **RLS note** — migration 029 plugs an RLS hole on `projects`,
+> `project_milestones`, `project_updates`, `training_goals`, and
+> `training_weeks`. All five were created in 010 / 011 without an
+> `enable row level security` line and were therefore public-readable
+> for anyone with the project URL. Owner-only policies now match the
+> pattern used elsewhere; child tables (`project_milestones`,
+> `project_updates`) verify ownership via a join to the parent
+> `projects` row, same as `project_contacts`.
 
 ```sql
 -- USERS
