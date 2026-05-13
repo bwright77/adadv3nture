@@ -87,11 +87,25 @@ function ConnectCard({
   )
 }
 
-export function LogPage() {
+interface LogPageProps { onDataSynced?: () => void }
+
+export function LogPage({ onDataSynced }: LogPageProps = {}) {
   const strava = useStrava()
   const withings = useWithings()
 
   const latestMetric = withings.metrics[0]
+
+  // Each sync runs its own hook; after either completes, tell the parent
+  // so anything reading activities or body_metrics (TrendsPage today)
+  // can refetch.
+  async function handleStravaSync() {
+    await strava.sync()
+    onDataSynced?.()
+  }
+  async function handleWithingsSync() {
+    await withings.sync()
+    onDataSynced?.()
+  }
 
   return (
     <div style={{ padding: '20px 16px 100px', maxWidth: 600, margin: '0 auto' }}>
@@ -109,7 +123,7 @@ export function LogPage() {
         syncing={strava.syncing}
         syncCount={strava.syncCount}
         onConnect={strava.connect}
-        onSync={strava.sync}
+        onSync={handleStravaSync}
       />
       <ConnectCard
         label="Withings"
@@ -117,7 +131,7 @@ export function LogPage() {
         syncing={withings.syncing}
         syncCount={withings.syncCount}
         onConnect={withings.connect}
-        onSync={withings.sync}
+        onSync={handleWithingsSync}
       />
 
       {/* Latest body metrics */}

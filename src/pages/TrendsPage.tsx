@@ -15,20 +15,24 @@ function weekNum(): string {
 
 const DIRECTION_LABEL: Record<string, string> = { up: '↑', down: '↓', flat: '→' }
 
-interface TrendsPageProps { bgPhoto?: string }
+interface TrendsPageProps { bgPhoto?: string; version?: number }
 
-export function TrendsPage({ bgPhoto }: TrendsPageProps) {
+export function TrendsPage({ bgPhoto, version = 0 }: TrendsPageProps) {
   const { user } = useAuth()
   const [data, setData] = useState<TrendData | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // `version` is bumped from App.tsx after a Strava / Withings sync so
+  // this page refetches the moment fresh data lands rather than waiting
+  // for the user to remount the tab.
   useEffect(() => {
     if (!user) return
+    setLoading(true)
     getTrends(user.id)
       .then(setData)
       .catch(() => null)
       .finally(() => setLoading(false))
-  }, [user])
+  }, [user, version])
 
   const rows = data?.rows ?? []
   const r = data?.readiness

@@ -65,7 +65,13 @@ function Dashboard() {
   })
   const [capture, setCapture] = useState(false)
   const [inboxVersion, setInboxVersion] = useState(0)
+  const [dataVersion, setDataVersion] = useState(0)
   const [listsInitialTab, setListsInitialTab] = useState<ListsTab | undefined>(undefined)
+
+  // Bumped after a Strava / Withings sync — components that derive from
+  // those data sources (TrendsPage, anything reading activities or
+  // body_metrics) include this in their effect deps to refetch.
+  const bumpData = () => setDataVersion(v => v + 1)
 
   function openCareer() {
     setTab('lists')
@@ -107,10 +113,10 @@ function Dashboard() {
         {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sat' && <WeekendEveningView     weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
         {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sun' && <WeekendSundayEveningView weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
 
-        {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} />}
+        {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} version={dataVersion} />}
         {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} initialTab={listsInitialTab} />}
         {tab === 'inbox'  && <InboxPage  bgPhoto={bgPhoto || undefined} version={inboxVersion} />}
-        {tab === 'log'    && <LogPage />}
+        {tab === 'log'    && <LogPage onDataSynced={bumpData} />}
       </div>
 
       <TabBar active={tab} dark={isDark} onChange={setTab} />
