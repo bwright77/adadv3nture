@@ -67,7 +67,7 @@ export function WForecast({ dark }: WForecastProps) {
 
   if (loading || !weather) {
     return (
-      <Glass dark={dark} span={6} style={{ height: 148 }} pad={14}>
+      <Glass dark={dark} span={6} style={{ height: 164 }} pad={14}>
         <CardLabel dark={dark}>Forecast</CardLabel>
         <div style={{ opacity: 0.4, fontSize: 'var(--fs-13)', marginTop: 8 }}>Loading…</div>
       </Glass>
@@ -80,7 +80,7 @@ export function WForecast({ dark }: WForecastProps) {
   const tomorrowBikeOk = tomorrow ? (tomorrow.highF < 90 && !tomorrow.isRaining && !tomorrow.isSnowing) : null
 
   return (
-    <Glass dark={dark} span={6} style={{ height: 148 }} pad={12}>
+    <Glass dark={dark} span={6} style={{ height: 164 }} pad={12}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
         <CardLabel dark={dark}>Forecast</CardLabel>
         {tomorrow && (
