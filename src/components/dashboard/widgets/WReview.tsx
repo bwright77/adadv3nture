@@ -60,8 +60,11 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
       // BODY MIT: catch workouts in the logical-today window — 6am today
       // through 6am tomorrow. Falls back to activity_date string match for
       // manual entries that don't carry a start_time.
+      // Skip sub-10-minute activities (warm-ups, stretches) — same floor
+      // program-tracker uses when counting strength sessions.
       setTodayAct(
         (acts as Activity[]).find(a => {
+          if ((a.duration_seconds ?? 0) <= 600) return false
           if (a.start_time) return isInLogicalToday(a.start_time)
           return a.activity_date === today
         }) ?? null,

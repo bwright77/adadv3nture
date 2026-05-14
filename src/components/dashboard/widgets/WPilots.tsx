@@ -52,8 +52,11 @@ export function WPilots({ dark, onNavigate }: WPilotsProps) {
       getRecentActivities(user.id, 7),
     ]).then(([history, acts]) => {
       setPilots(history.pilotLights)
-      // Find most recent activity and count days since
-      const latestAct = (acts as Activity[]).find(a => a.activity_date <= today)
+      // Find most recent real workout — exclude <=10min warm-ups/stretches
+      // so a quick mobility session doesn't read as "BODY done today".
+      const latestAct = (acts as Activity[]).find(a =>
+        a.activity_date <= today && (a.duration_seconds ?? 0) > 600,
+      )
       if (latestAct) {
         const actDate = new Date(latestAct.activity_date + 'T12:00:00')
         const todayDate = new Date(today + 'T12:00:00')
