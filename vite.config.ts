@@ -10,7 +10,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       srcDir: 'src',
       filename: 'sw.ts',
-      includeAssets: ['adadv3nture.png', 'adadv3nture_transparent.png', 'aDADv3nture_badge.png', 'icons/*.png'],
+      includeAssets: ['adadv3nture.png', 'adadv3nture_transparent.png', 'icons/*.png'],
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
       },

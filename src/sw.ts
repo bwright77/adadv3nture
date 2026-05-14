@@ -59,7 +59,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(title, {
       body,
       icon: '/icons/icon-192.png',
-      badge: '/aDADv3nture_badge.png',
+      badge: '/icons/icon-192.png',
       tag: 'morning-briefing',
       data: { url },
     }),
