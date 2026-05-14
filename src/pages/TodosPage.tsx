@@ -10,6 +10,7 @@ import {
   type Reminder,
 } from '../lib/reminders'
 import { TrainingView } from '../components/todos/TrainingView'
+import { Hikes50View } from '../components/todos/Hikes50View'
 import { ProjectsView } from '../components/todos/ProjectsView'
 import { CareerView } from '../components/todos/CareerView'
 
@@ -469,6 +470,9 @@ export function TodosPage({ bgPhoto, initialTab, initialTrainingEvent }: TodosPa
               ))}
             </div>
           )}
+
+          {/* 50 Hikes with Kids — only on the Family tab, below all todos */}
+          {cat === 'family' && <Hikes50View />}
         </div>}
       </div>
     </div>
