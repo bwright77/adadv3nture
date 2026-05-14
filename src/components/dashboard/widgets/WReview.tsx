@@ -5,7 +5,7 @@ import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getTodayPlan, updateReviewRow, getReviewHistory, type DailyPlan, type ReviewCategory, type PilotLights } from '../../../lib/daily-plan'
 import { getTodayMood, setTodayMood } from '../../../lib/mood'
-import { logicalToday } from '../../../lib/utils'
+import { logicalToday, isInLogicalToday } from '../../../lib/utils'
 import { getRecentActivities } from '../../../lib/strava'
 import type { Database } from '../../../types/database'
 
@@ -57,7 +57,15 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
       getTodayMood(user.id),
     ]).then(([p, acts, history, m]) => {
       setPlan(p as DailyPlan | null)
-      setTodayAct((acts as Activity[]).find(a => a.activity_date === today) ?? null)
+      // BODY MIT: catch workouts in the logical-today window — 6am today
+      // through 6am tomorrow. Falls back to activity_date string match for
+      // manual entries that don't carry a start_time.
+      setTodayAct(
+        (acts as Activity[]).find(a => {
+          if (a.start_time) return isInLogicalToday(a.start_time)
+          return a.activity_date === today
+        }) ?? null,
+      )
       setPilotLights(history.pilotLights)
       setMood(m as number | null)
       setLoaded(true)

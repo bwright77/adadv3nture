@@ -34,6 +34,39 @@ export function logicalToday(): string {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
+/** True when the given ISO timestamp falls inside the current logical-today
+ *  window — from 6am of `logicalToday()` to 6am the next calendar day, both
+ *  evaluated in America/Denver. Use this for "did this happen today?"
+ *  questions when you have an event's exact start_time and want late-night
+ *  bleed-over (e.g. an 11pm Tuesday workout AND a 12:30am Wednesday workout
+ *  both count as "Tuesday's BODY MIT" if logicalToday is Tuesday). */
+export function isInLogicalToday(isoTimestamp: string | null | undefined): boolean {
+  if (!isoTimestamp) return false
+  const t = new Date(isoTimestamp)
+  if (!isFinite(t.getTime())) return false
+
+  // Render the timestamp in Denver as a string we can lexicographically order.
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: APP_TIMEZONE,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  })
+  const parts = Object.fromEntries(fmt.formatToParts(t).map(p => [p.type, p.value]))
+  const denverHour = parseInt(parts.hour, 10) % 24
+  const denverStamp = `${parts.year}-${parts.month}-${parts.day}T${String(denverHour).padStart(2, '0')}:${parts.minute}`
+
+  // Window bounds: [today @ 6am, tomorrow @ 6am)
+  const today = logicalToday()
+  const next = new Date(today + 'T12:00:00Z')
+  next.setUTCDate(next.getUTCDate() + 1)
+  const nextDate = `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-${String(next.getUTCDate()).padStart(2, '0')}`
+
+  const startBound = `${today}T${String(MORNING_HOUR).padStart(2, '0')}:00`
+  const endBound = `${nextDate}T${String(MORNING_HOUR).padStart(2, '0')}:00`
+
+  return denverStamp >= startBound && denverStamp < endBound
+}
+
 function ordinalSuffix(n: number): string {
   const s = ['th', 'st', 'nd', 'rd']
   const v = n % 100
