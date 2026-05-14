@@ -9,7 +9,13 @@
       "WebFetch(domain:peloton.readthedocs.io)",
       "Bash(git revert *)",
       "Bash(node scripts/seed-hikes.js)",
-      "Bash(node scripts/seed-weekend-spots.js)"
+      "Bash(node scripts/seed-weekend-spots.js)",
+      "Bash(git pull *)",
+      "Bash(gh api *)",
+      "Bash(git rm *)",
+      "Bash(npx --yes web-push generate-vapid-keys)",
+      "Bash(npx --yes sharp-cli@4 --input public/icons/icon-512.png)",
+      "Bash(node -e \"const s=require\\('sharp'\\);s\\('public/icons/icon-512.png'\\).metadata\\(\\).then\\(m=>console.log\\(JSON.stringify\\(m,null,2\\)\\)\\)\")"
     ]
   }
 }
