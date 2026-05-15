@@ -3,7 +3,7 @@ import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
-import { getTodayPlan, updateReviewRow, getReviewHistory, type DailyPlan, type ReviewCategory, type PilotLights } from '../../../lib/daily-plan'
+import { getPlanForDate, updateReviewRow, getReviewHistory, type DailyPlan, type ReviewCategory, type PilotLights } from '../../../lib/daily-plan'
 import { getTodayMood, setTodayMood } from '../../../lib/mood'
 import { logicalToday, isInLogicalToday } from '../../../lib/utils'
 import { getRecentActivities } from '../../../lib/strava'
@@ -11,7 +11,13 @@ import type { Database } from '../../../types/database'
 
 type Activity = Database['public']['Tables']['activities']['Row']
 
-interface WReviewProps { dark?: boolean; hideCareer?: boolean }
+interface WReviewProps {
+  dark?: boolean
+  hideCareer?: boolean
+  forDate?: string
+  labelOverride?: string
+  onSaved?: () => void
+}
 
 interface RowConfig {
   label: string
@@ -35,7 +41,7 @@ const CAT_TO_PILOT: Record<string, keyof PilotLights> = {
   projects: 'projects',
 }
 
-export function WReview({ dark, hideCareer }: WReviewProps) {
+export function WReview({ dark, hideCareer, forDate, labelOverride, onSaved }: WReviewProps) {
   const { user } = useAuth()
   const [plan, setPlan] = useState<DailyPlan | null>(null)
   const [todayAct, setTodayAct] = useState<Activity | null>(null)
@@ -47,50 +53,56 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
   const [loaded, setLoaded] = useState(false)
 
   const today = logicalToday()
+  const targetDate = forDate ?? today
+  const isToday = targetDate === today
 
   useEffect(() => {
     if (!user) return
     Promise.all([
-      getTodayPlan(user.id),
-      getRecentActivities(user.id, 3),
+      getPlanForDate(user.id, targetDate),
+      getRecentActivities(user.id, 7),
       getReviewHistory(user.id),
-      getTodayMood(user.id),
+      getTodayMood(user.id, targetDate),
     ]).then(([p, acts, history, m]) => {
       setPlan(p as DailyPlan | null)
-      // BODY MIT: catch workouts in the logical-today window — 6am today
-      // through 6am tomorrow. Falls back to activity_date string match for
-      // manual entries that don't carry a start_time.
+      // BODY MIT: when reviewing today, catch workouts in the logical-today
+      // window (6am today through 6am tomorrow) so late-night activities
+      // pick up. For prior days just match activity_date.
       // Skip sub-10-minute activities (warm-ups, stretches) — same floor
       // program-tracker uses when counting strength sessions.
       setTodayAct(
         (acts as Activity[]).find(a => {
           if ((a.duration_seconds ?? 0) <= 600) return false
-          if (a.start_time) return isInLogicalToday(a.start_time)
-          return a.activity_date === today
+          if (isToday) {
+            if (a.start_time) return isInLogicalToday(a.start_time)
+            return a.activity_date === targetDate
+          }
+          return a.activity_date === targetDate
         }) ?? null,
       )
       setPilotLights(history.pilotLights)
       setMood(m as number | null)
       setLoaded(true)
     }).catch(() => setLoaded(true))
-  }, [user])
+  }, [user, targetDate, isToday])
 
   async function handleMood(score: number) {
     if (!user) return
     // Tap the same value to clear.
     const next = mood === score ? null : score
     setMood(next)
-    try { await setTodayMood(user.id, next) } catch { /* ignore */ }
+    try { await setTodayMood(user.id, next, targetDate) } catch { /* ignore */ }
   }
 
   async function handleSave(category: ReviewCategory, done: boolean) {
     if (!user) return
     setSaving(true)
-    await updateReviewRow(user.id, category, done, draftNote)
-    const updated = await getTodayPlan(user.id)
+    await updateReviewRow(user.id, category, done, draftNote, targetDate)
+    const updated = await getPlanForDate(user.id, targetDate)
     setPlan(updated)
     setEditing(null)
     setSaving(false)
+    onSaved?.()
   }
 
   function openEdit(category: ReviewCategory) {
@@ -102,7 +114,7 @@ export function WReview({ dark, hideCareer }: WReviewProps) {
 
   return (
     <Glass dark={dark} span={12} pad={16}>
-      <CardLabel dark={dark}>Day review</CardLabel>
+      <CardLabel dark={dark}>{labelOverride ?? 'Day review'}</CardLabel>
 
       {/* MOOD — weep → big smile (1-5). Tap the selected face to clear. */}
       <div style={{

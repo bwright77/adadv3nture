@@ -28,12 +28,13 @@ export async function updateReviewRow(
   category: ReviewCategory,
   done: boolean,
   note: string,
+  date?: string,
 ): Promise<void> {
-  const today = logicalToday()
+  const planDate = date ?? logicalToday()
   await db.from('daily_plans').upsert(
     {
       user_id: userId,
-      plan_date: today,
+      plan_date: planDate,
       [`${category}_done`]: done,
       [`${category}_note`]: note || null,
     },
@@ -42,14 +43,35 @@ export async function updateReviewRow(
 }
 
 export async function getTodayPlan(userId: string): Promise<DailyPlan | null> {
-  const today = logicalToday()
+  return getPlanForDate(userId, logicalToday())
+}
+
+export async function getPlanForDate(userId: string, date: string): Promise<DailyPlan | null> {
   const { data } = await supabase
     .from('daily_plans')
     .select('id, plan_date, morning_briefing, briefing_generated_at, thinking_prompt, thinking_prompt_answer, drinks_today, family_creative_done, family_creative_note, home_done, home_note, career_done, career_note, projects_done, projects_note')
     .eq('user_id', userId)
-    .eq('plan_date', today)
+    .eq('plan_date', date)
     .maybeSingle() as unknown as { data: DailyPlan | null }
   return data
+}
+
+/**
+ * A review row is "empty" when none of the user-controlled MIT categories
+ * (career/family/home/projects) have a done flag or a note. BODY is excluded
+ * because it's auto-derived from Strava.
+ */
+export function isPlanReviewEmpty(plan: DailyPlan | null, hideCareer = false): boolean {
+  if (!plan) return true
+  const cats: ReviewCategory[] = hideCareer
+    ? ['family_creative', 'home', 'projects']
+    : ['family_creative', 'home', 'career', 'projects']
+  for (const cat of cats) {
+    if (plan[`${cat}_done` as keyof DailyPlan]) return false
+    const note = plan[`${cat}_note` as keyof DailyPlan]
+    if (typeof note === 'string' && note.trim().length > 0) return false
+  }
+  return true
 }
 
 export interface PilotLights {

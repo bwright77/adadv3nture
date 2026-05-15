@@ -67,6 +67,14 @@ export function isInLogicalToday(isoTimestamp: string | null | undefined): boole
   return denverStamp >= startBound && denverStamp < endBound
 }
 
+/** YYYY-MM-DD of the day before `logicalToday()`. */
+export function logicalYesterday(): string {
+  const today = logicalToday()
+  const d = new Date(today + 'T12:00:00Z')
+  d.setUTCDate(d.getUTCDate() - 1)
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
+}
+
 function ordinalSuffix(n: number): string {
   const s = ['th', 'st', 'nd', 'rd']
   const v = n % 100

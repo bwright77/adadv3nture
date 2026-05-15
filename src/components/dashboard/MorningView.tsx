@@ -14,9 +14,13 @@ import { WInspire } from './widgets/WInspire'
 import { WForecast } from './widgets/WForecast'
 import { WLaborDay } from './widgets/WLaborDay'
 import { WCalendar } from './widgets/WCalendar'
+import { WReview } from './widgets/WReview'
 import { useAuth } from '../../contexts/AuthContext'
 import { loadRecovery } from '../../lib/recovery'
 import { supabase } from '../../lib/supabase'
+import { getPlanForDate, isPlanReviewEmpty } from '../../lib/daily-plan'
+import { logicalYesterday, formatFullDate } from '../../lib/utils'
+import { C } from '../../tokens'
 import type { TimeOfDay } from '../../hooks/useTimeOfDay'
 
 interface MorningViewProps {
@@ -76,9 +80,23 @@ export function MorningView({ activeTod, isOverride, onSetOverride }: MorningVie
   const { location, loading: locationLoading } = useLocation()
   const [briefingData, setBriefingData] = useState<BriefingData | null>(null)
   const [briefingLoading, setBriefingLoading] = useState(true)
+  // null while we check; true means yesterday is unreviewed → block briefing.
+  const [yesterdayGate, setYesterdayGate] = useState<boolean | null>(null)
+  const yesterday = logicalYesterday()
 
+  // Check yesterday's MIT row once on mount (and after a save clears it).
   useEffect(() => {
-    if (!user || locationLoading) return
+    if (!user) return
+    let cancelled = false
+    getPlanForDate(user.id, yesterday)
+      .then(p => { if (!cancelled) setYesterdayGate(isPlanReviewEmpty(p)) })
+      .catch(() => { if (!cancelled) setYesterdayGate(false) })
+    return () => { cancelled = true }
+  }, [user, yesterday])
+
+  // Fire the briefing only once yesterday's gate is cleared.
+  useEffect(() => {
+    if (!user || locationLoading || yesterdayGate !== false) return
     setBriefingLoading(true)
     supabase.functions.invoke<BriefingData>('morning-briefing', {
       body: {
@@ -94,7 +112,39 @@ export function MorningView({ activeTod, isOverride, onSetOverride }: MorningVie
         if (!error && data) setBriefingData(data)
       })
       .finally(() => setBriefingLoading(false))
-  }, [user, locationLoading, location.lat, location.lon])
+  }, [user, locationLoading, location.lat, location.lon, yesterdayGate])
+
+  async function recheckYesterday() {
+    if (!user) return
+    const p = await getPlanForDate(user.id, yesterday)
+    setYesterdayGate(isPlanReviewEmpty(p))
+  }
+
+  if (yesterdayGate) {
+    return (
+      <>
+        <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
+        <LockStrip userId={user?.id} />
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+          gap: 10, padding: '0 14px 100px',
+        }}>
+          <div style={{ gridColumn: 'span 12', padding: '8px 4px 0' }}>
+            <div className="mono" style={{
+              fontSize: 'var(--fs-10)', letterSpacing: '0.15em',
+              color: 'rgba(245,237,214,0.55)', marginBottom: 4,
+            }}>
+              ◆ FIRST · LOG YESTERDAY
+            </div>
+            <div style={{ fontSize: 'var(--fs-14)', color: C.cream, lineHeight: 1.45, opacity: 0.85 }}>
+              Close out {formatFullDate(yesterday)} so the morning briefing has something honest to read. The briefing will run as soon as one entry lands.
+            </div>
+          </div>
+          <WReview dark forDate={yesterday} labelOverride={`Yesterday in review · ${formatFullDate(yesterday)}`} onSaved={recheckYesterday} />
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
