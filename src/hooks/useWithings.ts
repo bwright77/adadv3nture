@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import {
   isWithingsConnected, getWithingsAuthUrl,
-  syncBodyMetrics, getRecentBodyMetrics,
+  syncBodyMetrics, getRecentBodyMetrics, WithingsAuthError,
 } from '../lib/withings'
 
 export interface BodyMetric {
@@ -21,6 +21,7 @@ export function useWithings() {
   const [connected, setConnected] = useState<boolean | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [syncCount, setSyncCount] = useState<number | null>(null)
+  const [syncError, setSyncError] = useState<string | null>(null)
   const [metrics, setMetrics] = useState<BodyMetric[]>([])
 
   useEffect(() => {
@@ -45,14 +46,22 @@ export function useWithings() {
     if (!user) return
     setSyncing(true)
     setSyncCount(null)
+    setSyncError(null)
     try {
       const count = await syncBodyMetrics(user.id)
       setSyncCount(count)
       await loadMetrics(user.id)
+    } catch (err) {
+      if (err instanceof WithingsAuthError) {
+        setConnected(false)
+        setSyncError(err.message)
+      } else {
+        setSyncError(err instanceof Error ? err.message : 'Sync failed.')
+      }
     } finally {
       setSyncing(false)
     }
   }
 
-  return { connected, syncing, syncCount, metrics, connect, sync }
+  return { connected, syncing, syncCount, syncError, metrics, connect, sync }
 }

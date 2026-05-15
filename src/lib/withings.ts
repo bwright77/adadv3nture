@@ -14,7 +14,14 @@ export function getWithingsAuthUrl(userId: string): string {
   return `https://account.withings.com/oauth2_user/authorize2?${params}`
 }
 
-async function getValidToken(userId: string): Promise<string | null> {
+export class WithingsAuthError extends Error {
+  constructor(message = 'Withings session expired — please reconnect.') {
+    super(message)
+    this.name = 'WithingsAuthError'
+  }
+}
+
+async function getValidToken(userId: string): Promise<string> {
   const { data } = await supabase
     .from('oauth_tokens')
     .select('access_token, expires_at')
@@ -22,7 +29,7 @@ async function getValidToken(userId: string): Promise<string | null> {
     .eq('provider', 'withings')
     .maybeSingle() as unknown as { data: { access_token: string; expires_at: string } | null }
 
-  if (!data) return null
+  if (!data) throw new WithingsAuthError('Withings not connected.')
 
   if (new Date(data.expires_at) <= new Date(Date.now() + 5 * 60 * 1000)) {
     const res = await fetch('/api/withings/refresh', {
@@ -30,12 +37,28 @@ async function getValidToken(userId: string): Promise<string | null> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      // Refresh-token chain is dead (Withings rotates on every refresh and
+      // expires after a year). Clear the row so the UI flips to "Connect".
+      if (res.status === 401 || res.status === 400 || res.status === 404) {
+        await disconnectWithings(userId).catch(() => null)
+      }
+      throw new WithingsAuthError()
+    }
     const refreshed = await res.json() as { access_token: string }
     return refreshed.access_token
   }
 
   return data.access_token
+}
+
+export async function disconnectWithings(userId: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  await db.from('oauth_tokens')
+    .delete()
+    .eq('user_id', userId)
+    .eq('provider', 'withings')
 }
 
 interface WithingsMeasure {
@@ -75,7 +98,6 @@ export interface BodyMetricRow {
 
 export async function syncBodyMetrics(userId: string, daysBack = 90): Promise<number> {
   const token = await getValidToken(userId)
-  if (!token) throw new Error('No valid Withings token')
 
   const startdate = Math.floor((Date.now() - daysBack * 86400 * 1000) / 1000)
 
@@ -98,6 +120,10 @@ export async function syncBodyMetrics(userId: string, daysBack = 90): Promise<nu
   if (!res.ok) throw new Error('Withings API error')
 
   const json = await res.json() as { status: number; body: { measuregrps: WithingsMeasureGroup[] } }
+  if (json.status === 401 || json.status === 100 || json.status === 101) {
+    await disconnectWithings(userId).catch(() => null)
+    throw new WithingsAuthError()
+  }
   if (json.status !== 0) throw new Error(`Withings error: ${json.status}`)
 
   const groups = json.body?.measuregrps ?? []

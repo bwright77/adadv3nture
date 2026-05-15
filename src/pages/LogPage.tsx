@@ -25,12 +25,13 @@ const TYPE_ICON: Record<string, string> = {
 }
 
 function ConnectCard({
-  label, connected, syncing, syncCount, onConnect, onSync, syncLabel = 'Sync',
+  label, connected, syncing, syncCount, syncError, onConnect, onSync, syncLabel = 'Sync',
 }: {
   label: string
   connected: boolean | null
   syncing: boolean
   syncCount: number | null
+  syncError?: string | null
   onConnect: () => void
   onSync: () => void
   syncLabel?: string
@@ -46,15 +47,20 @@ function ConnectCard({
       alignItems: 'center',
       justifyContent: 'space-between',
     }}>
-      <div>
+      <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
         <div style={{ fontSize: 'var(--fs-15)', fontWeight: 600, color: C.dark }}>
           {connected === null ? `Checking ${label}…`
             : connected ? `✓ ${label} connected`
             : `${label} not connected`}
         </div>
-        {syncCount !== null && (
+        {syncCount !== null && !syncError && (
           <div style={{ fontSize: 'var(--fs-13)', color: C.ink60, marginTop: 2 }}>
             Synced {syncCount} {syncLabel === 'Sync' ? 'records' : syncLabel.toLowerCase()}
+          </div>
+        )}
+        {syncError && (
+          <div style={{ fontSize: 'var(--fs-13)', color: C.rust, marginTop: 2 }}>
+            {syncError}
           </div>
         )}
       </div>
@@ -131,6 +137,7 @@ export function LogPage({ onDataSynced }: LogPageProps = {}) {
         connected={withings.connected}
         syncing={withings.syncing}
         syncCount={withings.syncCount}
+        syncError={withings.syncError}
         onConnect={withings.connect}
         onSync={handleWithingsSync}
       />
