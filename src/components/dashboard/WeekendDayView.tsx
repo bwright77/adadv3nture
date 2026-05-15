@@ -17,9 +17,10 @@ interface Props {
   weekendBlock: WeekendBlock
   isOverride: boolean
   onSetWeekendBlock: (wb: WeekendBlock | null) => void
+  onOpenInbox?: () => void
 }
 
-export function WeekendDayView({ weekendBlock, isOverride, onSetWeekendBlock }: Props) {
+export function WeekendDayView({ weekendBlock, isOverride, onSetWeekendBlock, onOpenInbox }: Props) {
   const dummyTod: TimeOfDay = 'mid-morning'
 
   return (
@@ -37,7 +38,7 @@ export function WeekendDayView({ weekendBlock, isOverride, onSetWeekendBlock }: 
         <WAdventureToday dark />
         <WWorkout dark span={12} />
         <WCalendar dark span={12} />
-        <WInbox dark span={12} />
+        <WInbox dark span={12} onOpen={onOpenInbox} />
         <WDrinks dark span={6} />
         <WSteps dark span={6} />
         <WLongEffort dark />

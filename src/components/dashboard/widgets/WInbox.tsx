@@ -4,7 +4,7 @@ import { CardLabel } from '../../ui/CardLabel'
 import { getInboxItems, type InboxItem } from '../../../lib/inbox'
 import { useAuth } from '../../../contexts/AuthContext'
 
-interface WInboxProps { dark?: boolean; span?: number }
+interface WInboxProps { dark?: boolean; span?: number; onOpen?: () => void }
 
 function sinceLastNight(items: InboxItem[]): number {
   const cutoff = new Date()
@@ -13,7 +13,7 @@ function sinceLastNight(items: InboxItem[]): number {
   return items.filter(i => new Date(i.captured_at) >= cutoff).length
 }
 
-export function WInbox({ dark, span = 6 }: WInboxProps) {
+export function WInbox({ dark, span = 6, onOpen }: WInboxProps) {
   const { user } = useAuth()
   const [items, setItems] = useState<InboxItem[]>([])
 
@@ -27,7 +27,7 @@ export function WInbox({ dark, span = 6 }: WInboxProps) {
   const latest = items[0]
 
   return (
-    <Glass dark={dark} span={span} pad={14}>
+    <Glass dark={dark} span={span} pad={14} onClick={onOpen} style={onOpen ? { cursor: 'pointer' } : undefined}>
       <CardLabel dark={dark}>Inbox · captured</CardLabel>
       <div className="mono" style={{ fontSize: 'var(--fs-26)', fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0' }}>
         {count}

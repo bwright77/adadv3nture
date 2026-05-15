@@ -94,6 +94,8 @@ function Dashboard() {
     setListsInitialTab(subTab)
   }
 
+  const openInbox = () => setTab('inbox')
+
   const isDark = tab === 'home'
 
   return (
@@ -114,13 +116,13 @@ function Dashboard() {
 
         {/* Weekday views */}
         {tab === 'home' && dayType === 'weekday' && tod === 'morning'     && <MorningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
-        {tab === 'home' && dayType === 'weekday' && tod === 'mid-morning' && <MidMorningView  activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenCareer={openCareer} />}
+        {tab === 'home' && dayType === 'weekday' && tod === 'mid-morning' && <MidMorningView  activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenCareer={openCareer} onOpenInbox={openInbox} />}
         {tab === 'home' && dayType === 'weekday' && tod === 'afternoon'   && <AfternoonView   activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
         {tab === 'home' && dayType === 'weekday' && tod === 'evening'     && <EveningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenListTab={openListTab} />}
 
         {/* Weekend views */}
         {tab === 'home' && dayType === 'weekend' && wb === 'weekend-dawn'        && <WeekendDawnView        weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} />}
-        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-day'         && <WeekendDayView         weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} />}
+        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-day'         && <WeekendDayView         weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenInbox={openInbox} />}
         {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sat' && <WeekendEveningView     weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
         {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sun' && <WeekendSundayEveningView weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
 

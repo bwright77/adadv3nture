@@ -14,9 +14,10 @@ interface MidMorningViewProps {
   isOverride: boolean
   onSetOverride: (tod: TimeOfDay | null) => void
   onOpenCareer?: () => void
+  onOpenInbox?: () => void
 }
 
-export function MidMorningView({ activeTod, isOverride, onSetOverride, onOpenCareer }: MidMorningViewProps) {
+export function MidMorningView({ activeTod, isOverride, onSetOverride, onOpenCareer, onOpenInbox }: MidMorningViewProps) {
   return (
     <>
       <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
@@ -26,7 +27,7 @@ export function MidMorningView({ activeTod, isOverride, onSetOverride, onOpenCar
       }}>
         <WWA dark onOpenCareer={onOpenCareer} />
         <WCalendar dark span={6} />
-        <WInbox dark />
+        <WInbox dark onOpen={onOpenInbox} />
         <WMIT dark />
         <WDrinks dark />
         <WSteps dark />
