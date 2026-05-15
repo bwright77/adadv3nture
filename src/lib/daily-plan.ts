@@ -57,21 +57,22 @@ export async function getPlanForDate(userId: string, date: string): Promise<Dail
 }
 
 /**
- * A review row is "empty" when none of the user-controlled MIT categories
- * (career/family/home/projects) have a done flag or a note. BODY is excluded
- * because it's auto-derived from Strava.
+ * A review is "incomplete" if any user-controlled MIT row is missing both a
+ * done flag and a note. Each row needs at least one to count as filled.
+ * BODY is excluded because it's auto-derived from Strava.
  */
-export function isPlanReviewEmpty(plan: DailyPlan | null, hideCareer = false): boolean {
-  if (!plan) return true
+export function isPlanReviewIncomplete(plan: DailyPlan | null, hideCareer = false): boolean {
   const cats: ReviewCategory[] = hideCareer
     ? ['family_creative', 'home', 'projects']
     : ['family_creative', 'home', 'career', 'projects']
+  if (!plan) return true
   for (const cat of cats) {
-    if (plan[`${cat}_done` as keyof DailyPlan]) return false
+    const done = plan[`${cat}_done` as keyof DailyPlan]
     const note = plan[`${cat}_note` as keyof DailyPlan]
-    if (typeof note === 'string' && note.trim().length > 0) return false
+    const hasNote = typeof note === 'string' && note.trim().length > 0
+    if (!done && !hasNote) return true
   }
-  return true
+  return false
 }
 
 export interface PilotLights {

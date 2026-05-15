@@ -18,7 +18,7 @@ import { supabase } from '../../lib/supabase'
 import { useAnchorEvent } from '../../hooks/useAnchorEvent'
 import { daysUntil, formatCountdownChip } from '../../lib/countdown'
 import { useLocation } from '../../hooks/useLocation'
-import { getPlanForDate, isPlanReviewEmpty } from '../../lib/daily-plan'
+import { getPlanForDate, isPlanReviewIncomplete } from '../../lib/daily-plan'
 import { logicalYesterday, formatFullDate } from '../../lib/utils'
 import { C } from '../../tokens'
 import type { WeekendBlock } from '../../hooks/useDayType'
@@ -84,7 +84,7 @@ export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }:
     if (!user) return
     let cancelled = false
     getPlanForDate(user.id, yesterday)
-      .then(p => { if (!cancelled) setYesterdayGate(isPlanReviewEmpty(p, true)) })
+      .then(p => { if (!cancelled) setYesterdayGate(isPlanReviewIncomplete(p, true)) })
       .catch(() => { if (!cancelled) setYesterdayGate(false) })
     return () => { cancelled = true }
   }, [user, yesterday])
@@ -110,42 +110,11 @@ export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }:
   async function recheckYesterday() {
     if (!user) return
     const p = await getPlanForDate(user.id, yesterday)
-    setYesterdayGate(isPlanReviewEmpty(p, true))
+    setYesterdayGate(isPlanReviewIncomplete(p, true))
   }
 
   // Header needs activeTod prop; pass a dummy since weekend header uses weekendBlock
   const dummyTod: TimeOfDay = 'morning'
-
-  if (yesterdayGate) {
-    return (
-      <>
-        <Header
-          activeTod={dummyTod}
-          isOverride={false}
-          onSetOverride={() => null}
-          weekendBlock={weekendBlock}
-          isWeekendOverride={isOverride}
-          onSetWeekendBlock={onSetWeekendBlock}
-          dark
-        />
-        <LockStrip userId={user?.id} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, padding: '0 14px 100px' }}>
-          <div style={{ gridColumn: 'span 12', padding: '8px 4px 0' }}>
-            <div className="mono" style={{
-              fontSize: 'var(--fs-10)', letterSpacing: '0.15em',
-              color: 'rgba(245,237,214,0.55)', marginBottom: 4,
-            }}>
-              ◆ FIRST · LOG YESTERDAY
-            </div>
-            <div style={{ fontSize: 'var(--fs-14)', color: C.cream, lineHeight: 1.45, opacity: 0.85 }}>
-              Close out {formatFullDate(yesterday)} so the morning briefing has something honest to read. The briefing will run as soon as one entry lands.
-            </div>
-          </div>
-          <WReview dark hideCareer forDate={yesterday} labelOverride={`Yesterday in review · ${formatFullDate(yesterday)}`} onSaved={recheckYesterday} />
-        </div>
-      </>
-    )
-  }
 
   return (
     <>
@@ -160,9 +129,28 @@ export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }:
       />
       <LockStrip userId={user?.id} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, padding: '0 14px 100px' }}>
-        <WMorningHero dark briefingText={briefingData?.briefing ?? null} briefingLoading={briefingLoading} />
-        <WWorkout dark />
-        <WThinkingPrompt dark prompt={briefingData?.thinking_prompt ?? null} loading={briefingLoading} />
+        {yesterdayGate ? (
+          <>
+            <div style={{ gridColumn: 'span 12', padding: '8px 4px 0' }}>
+              <div className="mono" style={{
+                fontSize: 'var(--fs-10)', letterSpacing: '0.15em',
+                color: 'rgba(245,237,214,0.55)', marginBottom: 4,
+              }}>
+                ◆ FIRST · LOG YESTERDAY
+              </div>
+              <div style={{ fontSize: 'var(--fs-14)', color: C.cream, lineHeight: 1.45, opacity: 0.85 }}>
+                Close out {formatFullDate(yesterday)} so the morning briefing has something honest to read. Every row needs a note or a ✓ before the briefing runs.
+              </div>
+            </div>
+            <WReview dark hideCareer forDate={yesterday} labelOverride={`Yesterday in review · ${formatFullDate(yesterday)}`} onSaved={recheckYesterday} />
+          </>
+        ) : (
+          <>
+            <WMorningHero dark briefingText={briefingData?.briefing ?? null} briefingLoading={briefingLoading} />
+            <WWorkout dark />
+            <WThinkingPrompt dark prompt={briefingData?.thinking_prompt ?? null} loading={briefingLoading} />
+          </>
+        )}
         <WDrinks dark span={6} />
         <WSteps dark span={6} />
         <WCalendar dark span={12} />
