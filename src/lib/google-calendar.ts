@@ -16,7 +16,23 @@ export function getGoogleAuthUrl(userId: string): string {
   return `https://accounts.google.com/o/oauth2/v2/auth?${params}`
 }
 
-async function getValidToken(userId: string): Promise<string | null> {
+export class GoogleAuthError extends Error {
+  constructor(message = 'Google session expired — please reconnect.') {
+    super(message)
+    this.name = 'GoogleAuthError'
+  }
+}
+
+export async function disconnectGoogle(userId: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  await db.from('oauth_tokens')
+    .delete()
+    .eq('user_id', userId)
+    .eq('provider', 'google')
+}
+
+async function getValidToken(userId: string): Promise<string> {
   const { data } = await supabase
     .from('oauth_tokens')
     .select('access_token, expires_at')
@@ -24,7 +40,7 @@ async function getValidToken(userId: string): Promise<string | null> {
     .eq('provider', 'google')
     .maybeSingle() as unknown as { data: { access_token: string; expires_at: string } | null }
 
-  if (!data) return null
+  if (!data) throw new GoogleAuthError('Google not connected.')
 
   if (new Date(data.expires_at) <= new Date(Date.now() + 5 * 60 * 1000)) {
     const res = await fetch('/api/google/refresh', {
@@ -32,7 +48,15 @@ async function getValidToken(userId: string): Promise<string | null> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
     })
-    if (!res.ok) return null
+    if (!res.ok) {
+      // Google refresh tokens expire after 6 months of inactivity, get revoked
+      // when the user pulls third-party access, or 400 when the consent record
+      // is gone. Clear the dead row so the UI flips back to "Connect".
+      if (res.status === 401 || res.status === 400 || res.status === 404) {
+        await disconnectGoogle(userId).catch(() => null)
+      }
+      throw new GoogleAuthError()
+    }
     const refreshed = await res.json() as { access_token: string }
     return refreshed.access_token
   }
@@ -51,7 +75,6 @@ export interface CalendarEvent {
 
 export async function getTodayEvents(userId: string, offsetDays = 0): Promise<CalendarEvent[]> {
   const token = await getValidToken(userId)
-  if (!token) return []
 
   const now = new Date()
   now.setDate(now.getDate() + offsetDays)
@@ -71,6 +94,10 @@ export async function getTodayEvents(userId: string, offsetDays = 0): Promise<Ca
     { headers: { Authorization: `Bearer ${token}` } },
   )
 
+  if (res.status === 401 || res.status === 403) {
+    await disconnectGoogle(userId).catch(() => null)
+    throw new GoogleAuthError()
+  }
   if (!res.ok) return []
 
   const data = await res.json() as {

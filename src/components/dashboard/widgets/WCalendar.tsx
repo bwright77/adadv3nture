@@ -3,7 +3,7 @@ import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
-import { getTodayEvents, isGoogleConnected, getGoogleAuthUrl, type CalendarEvent } from '../../../lib/google-calendar'
+import { getTodayEvents, isGoogleConnected, getGoogleAuthUrl, GoogleAuthError, type CalendarEvent } from '../../../lib/google-calendar'
 
 interface WCalendarProps { dark?: boolean; span?: number; tomorrow?: boolean }
 
@@ -20,13 +20,25 @@ export function WCalendar({ dark, span = 6, tomorrow = false }: WCalendarProps) 
 
   useEffect(() => {
     if (!user) return
+    let cancelled = false
     isGoogleConnected(user.id).then(async c => {
+      if (cancelled) return
       setConnected(c)
-      if (c) {
+      if (!c) return
+      try {
         const evts = await getTodayEvents(user.id, tomorrow ? 1 : 0)
-        setEvents(evts)
+        if (!cancelled) setEvents(evts)
+      } catch (err) {
+        if (cancelled) return
+        if (err instanceof GoogleAuthError) {
+          // Token chain is dead — getTodayEvents already cleared the row.
+          setConnected(false)
+        } else {
+          setEvents([])
+        }
       }
-    }).catch(() => setConnected(false))
+    }).catch(() => { if (!cancelled) setConnected(false) })
+    return () => { cancelled = true }
   }, [user, tomorrow])
 
   function handleConnect() {
