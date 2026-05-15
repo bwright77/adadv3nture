@@ -52,6 +52,17 @@ function mpsToSecondsPerMile(mps: number): number {
   return mps > 0 ? Math.round(1609.34 / mps) : 0
 }
 
+/**
+ * Quantise a workout into a coarse signature so two bridge-introduced
+ * duplicates collapse to the same key: start_time rounded to 5 minutes,
+ * duration rounded to 30 seconds, plus the normalized activity type.
+ */
+function fingerprint(startTime: string, durationSeconds: number | null, type: string): string {
+  const startMin = Math.round(new Date(startTime).getTime() / 60_000 / 5) * 5
+  const durBucket = durationSeconds != null ? Math.round(durationSeconds / 30) : 0
+  return `${type}|${startMin}|${durBucket}`
+}
+
 function stravaTypeToLocal(type: string): string {
   const map: Record<string, string> = {
     Run: 'run', TrailRun: 'run',
@@ -68,7 +79,8 @@ export interface StravaActivity {
   name: string
   type: string
   sport_type: string
-  start_date: string
+  start_date: string          // UTC
+  start_date_local: string    // wall-clock in the activity's local tz
   elapsed_time: number
   distance: number
   total_elevation_gain: number
@@ -104,15 +116,36 @@ export async function syncActivities(userId: string, daysBack = 90): Promise<num
 
   if (!activities.length) return 0
 
-  // Fetch existing strava_ids so we only insert new ones
+  // Fetch existing rows for both ID-based dedupe (strava_id) and
+  // fingerprint-based dedupe — Peloton-style bridges can push the same
+  // workout to Strava twice under different strava_ids, so we also reject
+  // anything matching an existing (start_time, duration, type) tuple.
   const { data: existing } = await supabase
     .from('activities')
-    .select('strava_id')
-    .eq('user_id', userId)
-    .not('strava_id', 'is', null) as { data: { strava_id: number }[] | null }
+    .select('strava_id, start_time, duration_seconds, activity_type')
+    .eq('user_id', userId) as { data: {
+      strava_id: number | null
+      start_time: string | null
+      duration_seconds: number | null
+      activity_type: string
+    }[] | null }
 
-  const existingIds = new Set((existing ?? []).map(r => r.strava_id))
-  const newActivities = activities.filter(a => !existingIds.has(a.id))
+  const existingIds = new Set((existing ?? [])
+    .map(r => r.strava_id)
+    .filter((id): id is number => id !== null))
+  const existingFingerprints = new Set((existing ?? [])
+    .filter(r => r.start_time)
+    .map(r => fingerprint(r.start_time!, r.duration_seconds, r.activity_type)))
+
+  const seenFingerprints = new Set<string>()
+  const newActivities = activities.filter(a => {
+    if (existingIds.has(a.id)) return false
+    const fp = fingerprint(a.start_date, a.elapsed_time, stravaTypeToLocal(a.sport_type ?? a.type))
+    if (existingFingerprints.has(fp)) return false
+    if (seenFingerprints.has(fp)) return false  // collapse dupes inside this batch
+    seenFingerprints.add(fp)
+    return true
+  })
 
   if (!newActivities.length) return 0
 
@@ -122,7 +155,10 @@ export async function syncActivities(userId: string, daysBack = 90): Promise<num
     strava_id: a.id,
     activity_type: stravaTypeToLocal(a.sport_type ?? a.type),
     title: a.name,
-    activity_date: a.start_date.substring(0, 10),
+    // start_date_local is wall-clock — pinning activity_date to it keeps the
+    // workout grouped under the day the user experienced it, even when the
+    // upstream bridge stores UTC that crosses the Denver day boundary.
+    activity_date: (a.start_date_local ?? a.start_date).substring(0, 10),
     start_time: a.start_date,
     duration_seconds: a.elapsed_time,
     distance_miles: a.distance ? metersToMiles(a.distance) : null,
