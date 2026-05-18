@@ -35,7 +35,9 @@ export function WWeather({ dark, span = 4 }: WWeatherProps) {
     weather.runOk ? 'run ✓' : `run ✗ (${weather.tempF}°)`,
     weather.bikeOk
       ? 'bike ✓'
-      : (weather.isRaining || weather.isSnowing) ? 'bike ✗ (wet)' : `bike ✗ (${weather.tempF}°)`,
+      // The "too hot" branch only fires when temp is the binding constraint.
+      // Otherwise wetness blocked it (currently/recently/forecast-today).
+      : weather.tempF >= 90 ? `bike ✗ (${weather.tempF}°)` : 'bike ✗ (wet)',
   ].join(' · ')
 
   return (

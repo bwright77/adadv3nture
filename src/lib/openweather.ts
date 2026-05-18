@@ -38,6 +38,10 @@ interface OWMCurrent {
   weather: { main: string; description: string }[]
   wind: { speed: number }
   name: string
+  // OpenWeather only includes these when precipitation occurred recently.
+  // Volume in mm over the past hour / past three hours respectively.
+  rain?: { '1h'?: number; '3h'?: number }
+  snow?: { '1h'?: number; '3h'?: number }
 }
 
 interface OWMForecastItem {
@@ -74,11 +78,25 @@ export async function getWeather(loc: ResolvedLocation = DEFAULT_LOCATION): Prom
   const isRaining = ['Rain', 'Drizzle', 'Thunderstorm'].includes(condition)
   const isSnowing = condition === 'Snow'
 
+  // Recent precip — past 3 hours per OpenWeather's "current" payload. Even if
+  // it's dry right now, ground/trails are likely wet if it rained or snowed
+  // in the last few hours.
+  const recentlyWet =
+    (current.rain?.['3h'] ?? current.rain?.['1h'] ?? 0) > 0 ||
+    (current.snow?.['3h'] ?? current.snow?.['1h'] ?? 0) > 0
+
   // Today's high/low from forecast (next 24h slots)
   const todaySlots = forecast.list.slice(0, 8)
   const temps = todaySlots.map(s => s.main.temp)
   const forecastHigh = Math.round(Math.max(current.main.temp_max, ...temps))
   const forecastLow = Math.round(Math.min(current.main.temp_min, ...temps))
+
+  // Any wet weather forecast for the rest of today — bike is no-go if any
+  // slot until midnight shows rain/snow or > 30% probability.
+  const todayLocal = new Date().toDateString()
+  const todayRemainingWet = forecast.list
+    .filter(s => new Date(s.dt * 1000).toDateString() === todayLocal)
+    .some(s => s.pop > 0.3 || ['Rain', 'Drizzle', 'Thunderstorm', 'Snow'].includes(s.weather[0]?.main ?? ''))
 
   // Afternoon window: slots roughly 3pm–6pm local
   const afternoonSlots = forecast.list.filter(s => {
@@ -157,7 +175,9 @@ export async function getWeather(loc: ResolvedLocation = DEFAULT_LOCATION): Prom
     isRaining,
     isSnowing,
     runOk: tempF < 80,
-    bikeOk: tempF < 90 && !isRaining && !isSnowing,
+    // Bike is no-go if it's currently wet, recently was wet (past ~3h),
+    // or any wetness is forecast through end of today.
+    bikeOk: tempF < 90 && !isRaining && !isSnowing && !recentlyWet && !todayRemainingWet,
     afternoonWet,
     afternoonTempF: afternoonTempF ?? tempF,
     dailyForecast,
