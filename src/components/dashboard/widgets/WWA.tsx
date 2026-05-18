@@ -65,18 +65,33 @@ export function WWA({ dark, onOpenCareer }: WWAProps) {
   const primary = projects[0]
   const rest = projects.slice(1)
 
+  // Career is the standout tile — solid cream paper card on the dark dashboard,
+  // dark text. The dark prop is accepted for API compat but ignored: the card
+  // is always cream so child components render in light-mode treatment.
   return (
-    <Glass dark={dark} span={12} pad={14} onClick={onOpenCareer} style={onOpenCareer ? { cursor: 'pointer' } : undefined}>
-      <CardLabel dark={dark}>Wright adventures · career</CardLabel>
+    <Glass
+      dark={dark}
+      span={12}
+      pad={14}
+      flat
+      onClick={onOpenCareer}
+      style={{
+        background: C.cream,
+        border: 'none',
+        color: C.dark,
+        ...(onOpenCareer ? { cursor: 'pointer' } : {}),
+      }}
+    >
+      <CardLabel dark={false}>Wright adventures · career</CardLabel>
       {projects.length === 0 ? (
         <div className="mono" style={{ fontSize: 'var(--fs-13)', opacity: 0.4, marginTop: 6 }}>
           No active projects
         </div>
       ) : (
         <>
-          {primary && <ProjectRow project={primary} dark={dark} />}
+          {primary && <ProjectRow project={primary} dark={false} />}
           {rest.map(p => (
-            <ProjectRow key={p.id} project={p} dark={dark} border />
+            <ProjectRow key={p.id} project={p} dark={false} border />
           ))}
         </>
       )}
