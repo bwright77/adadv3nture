@@ -188,7 +188,9 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
   const dateLabel = `${DOW_FULL[dow]} · ${MONTHS[tmrw.getMonth()]} ${tmrw.getDate()}`
 
   const tomorrowForecast = weather?.dailyForecast.find(d => d.label === 'Tomorrow')
-  const runOk = tomorrowForecast ? tomorrowForecast.highF < 85 && !tomorrowForecast.isRaining : null
+  // Running in the rain is fine — runOk is temperature-only. Bike still
+  // flags any rain/snow because wet roads/trails take time to dry.
+  const runOk = tomorrowForecast ? tomorrowForecast.highF < 85 : null
   const bikeOk = tomorrowForecast
     ? tomorrowForecast.highF < 95 && !tomorrowForecast.isRaining && !tomorrowForecast.isSnowing
     : null
