@@ -2,6 +2,15 @@ import { useState } from 'react'
 import { C } from '../../tokens'
 import { use50Hikes, type Hike } from '../../hooks/use50Hikes'
 import { HikeLogSheet } from '../dashboard/widgets/HikeLogSheet'
+import { Ring } from '../ui/Ring'
+
+type Difficulty = NonNullable<Hike['difficulty']>
+const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'moderate', 'challenging']
+const DIFFICULTY_LABEL: Record<Difficulty, string> = {
+  easy: 'Easy',
+  moderate: 'Moderate',
+  challenging: 'Challenging',
+}
 
 type Filter = 'all' | 'todo' | 'done'
 
@@ -140,7 +149,7 @@ function HikeRow({ hike, expanded, onToggle, onLog }: {
 }
 
 export function Hikes50View() {
-  const { hikes, doneCount, isLoading, refetch } = use50Hikes()
+  const { hikes, doneCount, suggested, isLoading, refetch } = use50Hikes()
   const [filter, setFilter] = useState<Filter>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [logging, setLogging] = useState<Hike | null>(null)
@@ -160,31 +169,118 @@ export function Hikes50View() {
   })
   const pct = (doneCount / 50) * 100
 
+  // Difficulty buckets — segments by tier, widths proportional to total,
+  // opacity proportional to in-bucket completion.
+  const totalRated = hikes.filter(h => h.difficulty).length || 50
+  const buckets = DIFFICULTY_ORDER.map(diff => {
+    const bucket = hikes.filter(h => h.difficulty === diff)
+    const total = bucket.length
+    const done = bucket.filter(h => h.done).length
+    return { diff, total, done, ratio: total > 0 ? done / total : 0 }
+  })
+
+  // Average family rating across completed hikes
+  const rated = hikes.filter(h => h.done && h.family_rating)
+  const avgRating = rated.length > 0
+    ? rated.reduce((s, h) => s + (h.family_rating ?? 0), 0) / rated.length
+    : null
+  const totalMiles = hikes
+    .filter(h => h.done && h.distance_mi)
+    .reduce((s, h) => s + (h.distance_mi ?? 0), 0)
+
   return (
     <div style={{ marginTop: 24 }}>
-      {/* Section header */}
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div className="mono" style={{
-          fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em',
-          color: C.ink40,
+      {/* Hero — teal gradient mirrors the Anchor card on Trends.
+          Tap opens the suggested-next hike's log sheet, or the first
+          unfinished hike if no seasonal suggestion is available. */}
+      <button
+        type="button"
+        onClick={() => {
+          const target = suggested ?? hikes.find(h => !h.done)
+          if (target) setLogging(target)
+        }}
+        disabled={doneCount === 50}
+        style={{
+          display: 'block', width: '100%', textAlign: 'left',
+          marginBottom: 14, padding: 18, borderRadius: 18,
+          background: `linear-gradient(135deg, ${C.teal} 0%, ${C.tealDk} 100%)`,
+          color: C.cream, position: 'relative', overflow: 'hidden',
+          boxShadow: '0 10px 30px rgba(91,188,184,0.3)',
+          border: 'none', fontFamily: 'inherit',
+          cursor: doneCount === 50 ? 'default' : 'pointer',
+        }}
+      >
+        {/* Mountain silhouette — same shape as the Anchor card */}
+        <svg viewBox="0 0 300 60" preserveAspectRatio="none" style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          width: '100%', height: 60, opacity: 0.22,
         }}>
-          ◆ 50 HIKES WITH KIDS · COLORADO
+          <path d="M0 60 L0 35 L40 18 L70 28 L110 8 L150 22 L190 12 L230 26 L270 14 L300 22 L300 60 Z" fill={C.cream} />
+        </svg>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <Ring pct={pct} color={C.cream} label={String(doneCount)} size={72} sw={6} />
+          <div style={{ flex: 1 }}>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.18em', opacity: 0.85 }}>
+              50 HIKES · {50 - doneCount} TO GO
+            </div>
+            <div className="badge" style={{ fontSize: 'var(--fs-22)', lineHeight: 1, marginTop: 4, letterSpacing: '0.02em' }}>
+              50 HIKES WITH KIDS
+            </div>
+            <div className="badge" style={{ fontSize: 'var(--fs-13)', opacity: 0.85, marginTop: 1 }}>
+              COLORADO · {doneCount}/50 DONE
+            </div>
+            {(avgRating != null || totalMiles > 0) && (
+              <div className="mono" style={{ fontSize: 'var(--fs-11)', marginTop: 6, opacity: 0.85, lineHeight: 1.4 }}>
+                {avgRating != null ? `family rating: ${avgRating.toFixed(1)}★` : ''}
+                {avgRating != null && totalMiles > 0 ? ' · ' : ''}
+                {totalMiles > 0 ? `${totalMiles.toFixed(1)}mi logged` : ''}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="mono" style={{ fontSize: 'var(--fs-12)', color: C.ink60 }}>
-          {doneCount} / 50
-        </div>
-      </div>
 
-      {/* Progress bar */}
-      <div style={{
-        height: 4, borderRadius: 2, background: 'rgba(26,18,8,0.08)',
-        overflow: 'hidden', marginBottom: 12,
-      }}>
-        <div style={{
-          height: '100%', width: `${pct}%`, background: C.rust,
-          borderRadius: 2, transition: 'width 0.4s ease',
-        }} />
-      </div>
+        {/* Difficulty progression bar */}
+        <div style={{ position: 'relative', marginTop: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            {buckets.map(b => (
+              <div key={b.diff} className="mono" style={{
+                fontSize: 'var(--fs-10)',
+                opacity: b.done > 0 ? 1 : 0.45,
+                color: C.cream,
+              }}>
+                {DIFFICULTY_LABEL[b.diff]}
+              </div>
+            ))}
+          </div>
+          <div style={{
+            height: 4, borderRadius: 2,
+            background: 'rgba(245,237,214,0.2)',
+            display: 'flex', overflow: 'hidden',
+          }}>
+            {buckets.map(b => (
+              <div key={b.diff} style={{
+                height: '100%',
+                width: `${(b.total / totalRated) * 100}%`,
+                background: b.done > 0
+                  ? `rgba(245,237,214,${0.4 + b.ratio * 0.5})`
+                  : 'rgba(245,237,214,0.25)',
+              }} />
+            ))}
+          </div>
+          <div className="mono" style={{ fontSize: 'var(--fs-10)', marginTop: 4, opacity: 0.55 }}>
+            {buckets.map(b => `${DIFFICULTY_LABEL[b.diff]} ${b.done}/${b.total}`).join(' · ')}
+          </div>
+        </div>
+
+        {suggested && doneCount < 50 && (
+          <div className="mono" style={{
+            position: 'relative', marginTop: 12,
+            fontSize: 'var(--fs-11)', opacity: 0.85, lineHeight: 1.4,
+          }}>
+            next: <span className="badge" style={{ fontSize: 'var(--fs-12)' }}>{suggested.name}</span>
+          </div>
+        )}
+      </button>
 
       {/* Filter chips */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
