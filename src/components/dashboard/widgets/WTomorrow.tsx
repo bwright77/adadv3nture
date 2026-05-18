@@ -196,14 +196,14 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
   const rec = buildRec({ week, actuals, recoveryTier, runOk, bikeOk, programs, dow })
 
   return (
-    <Glass dark={dark} span={12} pad={14}>
+    <Glass dark={dark} span={12} pad={14} flat style={{ background: C.tealDk, border: 'none' }}>
       <CardLabel dark={dark}>Tomorrow · {dateLabel}</CardLabel>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
         {isMonday && (
           <div className="badge" style={{ fontSize: 'var(--fs-15)' }}>
             RUN CLUB · WASH PARK · 6PM{' '}
-            <span style={{ color: C.teal }}>SACRED</span>
+            <span style={{ color: C.rust }}>SACRED</span>
           </div>
         )}
 
@@ -224,7 +224,7 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
                 onClick={() => onNavigate?.('training')}
                 style={{
                   marginLeft: 24, padding: 0, background: 'none', border: 'none',
-                  textAlign: 'left', cursor: 'pointer', color: C.teal,
+                  textAlign: 'left', cursor: 'pointer', color: C.cream,
                   fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--fs-11)',
                   textDecoration: 'underline', textUnderlineOffset: 2,
                 }}
@@ -234,7 +234,7 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
             )
           }
           return (
-            <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.55, marginLeft: 24 }}>
+            <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.85, marginLeft: 24 }}>
               {rec.why}
             </div>
           )
@@ -243,7 +243,7 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
         {/* Program detail when strength is the rec */}
         {rec.program && (
           <div className="mono" style={{
-            fontSize: 'var(--fs-11)', color: C.teal, marginLeft: 24,
+            fontSize: 'var(--fs-11)', opacity: 0.85, marginLeft: 24,
           }}>
             {rec.program}
           </div>
@@ -251,7 +251,7 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
 
         {/* Weather line */}
         {tomorrowForecast && (
-          <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.5, marginTop: 2 }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.85, marginTop: 2 }}>
             {DOW_SHORT[dow]} {tomorrowForecast.highF}°
             {tomorrowForecast.precipPct > 15 ? ` · ${tomorrowForecast.precipPct}% precip` : ''}
             {runOk !== null ? ` · run ${runOk ? '✓' : '✗'}` : ''}
