@@ -84,7 +84,7 @@ export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }:
     if (!user) return
     let cancelled = false
     getPlanForDate(user.id, yesterday)
-      .then(p => { if (!cancelled) setYesterdayGate(isPlanReviewIncomplete(p, true)) })
+      .then(p => { if (!cancelled) setYesterdayGate(isPlanReviewIncomplete(p)) })
       .catch(() => { if (!cancelled) setYesterdayGate(false) })
     return () => { cancelled = true }
   }, [user, yesterday])
@@ -110,7 +110,7 @@ export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }:
   async function recheckYesterday() {
     if (!user) return
     const p = await getPlanForDate(user.id, yesterday)
-    setYesterdayGate(isPlanReviewIncomplete(p, true))
+    setYesterdayGate(isPlanReviewIncomplete(p))
   }
 
   // Header needs activeTod prop; pass a dummy since weekend header uses weekendBlock

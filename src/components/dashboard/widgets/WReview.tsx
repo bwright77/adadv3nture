@@ -3,7 +3,7 @@ import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
-import { getPlanForDate, updateReviewRow, getReviewHistory, type DailyPlan, type ReviewCategory, type PilotLights } from '../../../lib/daily-plan'
+import { getPlanForDate, updateReviewRow, getReviewHistory, isWeekendDate, type DailyPlan, type ReviewCategory, type PilotLights } from '../../../lib/daily-plan'
 import { getTodayMood, setTodayMood } from '../../../lib/mood'
 import { logicalToday, isInLogicalToday } from '../../../lib/utils'
 import { getRecentActivities } from '../../../lib/strava'
@@ -55,6 +55,9 @@ export function WReview({ dark, hideCareer, forDate, labelOverride, onSaved }: W
   const today = logicalToday()
   const targetDate = forDate ?? today
   const isToday = targetDate === today
+  // Career is weekday-only — hide on weekends unless the caller explicitly
+  // forces it on. Existing `hideCareer={true}` callers keep working.
+  const dropCareer = hideCareer ?? isWeekendDate(targetDate)
 
   useEffect(() => {
     if (!user) return
@@ -167,7 +170,7 @@ export function WReview({ dark, hideCareer, forDate, labelOverride, onSaved }: W
         </div>
       </div>
 
-      {ROWS.filter(r => !(hideCareer && r.label === 'CAREER')).map((row, i) => {
+      {ROWS.filter(r => !(dropCareer && r.label === 'CAREER')).map((row, i) => {
         const done = row.doneKey && plan ? Boolean(plan[row.doneKey]) : false
         const note = row.noteKey && plan ? (plan[row.noteKey] as string | null) : null
 

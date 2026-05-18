@@ -50,6 +50,13 @@ not the portfolio review. Pilot lights = days since each portfolio category
 was last completed. When a category goes dark (3+ days), name it specifically
 — not "you've been neglecting family" but "Chase and Ada haven't had
 intentional time in 4 days."
+
+CAREER IS WEEKDAY-ONLY. Weekends breathe — Saturday and Sunday with empty
+Career is the design, not neglect. Career's pilot light only counts weekday
+gaps; never flag Career as dark on Monday because of the weekend. The MIT
+completion rate already excludes weekend Career from its denominator, so the
+number you see reflects only days where Career was expected.
+
 MIT completion rate is the meta-metric — reference it when it's moving
 meaningfully.
 
@@ -523,30 +530,43 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
       const catLabels: Record<string, string> = {
         career: 'CAREER', family_creative: 'FAMILY', home: 'HOME', projects: 'PROJECTS',
       }
+      // Career is weekday-only — Sat/Sun don't tick its light or inflate the rate.
+      const isWeekendDay = (dateStr: string) => {
+        const dow = new Date(dateStr + 'T12:00:00').getDay()
+        return dow === 0 || dow === 6
+      }
+      const applicableCatsFor = (dateStr: string) =>
+        isWeekendDay(dateStr)
+          ? (['family_creative', 'home', 'projects'] as const)
+          : reviewCats
       const pilotLights: Record<string, number> = {}
       for (const cat of reviewCats) {
         let days = 0
         for (const row of reviewRows) {
           if (row[`${cat}_done` as keyof ReviewRow]) break
+          if (cat === 'career' && isWeekendDay(row.plan_date)) continue
           days++
         }
         pilotLights[cat] = days
       }
       const yReview = reviewRows[0]
       const yesterdayReviewLines = yReview
-        ? reviewCats.map(cat => {
+        ? applicableCatsFor(yReview.plan_date).map(cat => {
             const done = yReview[`${cat}_done` as keyof ReviewRow]
             const note = yReview[`${cat}_note` as keyof ReviewRow] as string | null
             return `  ${catLabels[cat]}: ${done ? `✓${note ? ` (${note})` : ''}` : '—'}`
           }).join('\n')
         : '  No review data for yesterday'
       const pilotLightLines = reviewCats
-        .map(cat => `  ${catLabels[cat]}: ${pilotLights[cat] === 0 ? 'done yesterday' : `${pilotLights[cat]}d since last done`}`)
+        .map(cat => {
+          const suffix = cat === 'career' ? ' (weekdays only)' : ''
+          return `  ${catLabels[cat]}: ${pilotLights[cat] === 0 ? 'done yesterday' : `${pilotLights[cat]}d since last done${suffix}`}`
+        })
         .join('\n')
       const last7 = reviewRows.slice(0, 7)
       let reviewTotal = 0, reviewDone = 0
       for (const row of last7) {
-        for (const cat of reviewCats) {
+        for (const cat of applicableCatsFor(row.plan_date)) {
           reviewTotal++
           if (row[`${cat}_done` as keyof ReviewRow]) reviewDone++
         }
