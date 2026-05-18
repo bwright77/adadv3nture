@@ -196,7 +196,7 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
   const rec = buildRec({ week, actuals, recoveryTier, runOk, bikeOk, programs, dow })
 
   return (
-    <Glass dark={dark} span={12} pad={14}>
+    <Glass dark={dark} span={12} pad={14} tint="sand">
       <CardLabel dark={dark}>Tomorrow · {dateLabel}</CardLabel>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>

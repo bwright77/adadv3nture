@@ -62,7 +62,7 @@ export function WWeekAhead({ dark }: Props) {
   })()
 
   return (
-    <Glass dark={dark} span={12} pad={16}>
+    <Glass dark={dark} span={12} pad={16} tint="teal">
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
         <span style={{ width: 5, height: 5, background: C.rust, borderRadius: 1 }} />

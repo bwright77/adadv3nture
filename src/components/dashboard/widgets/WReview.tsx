@@ -113,7 +113,7 @@ export function WReview({ dark, hideCareer, forDate, labelOverride, onSaved }: W
   }
 
   return (
-    <Glass dark={dark} span={12} pad={16}>
+    <Glass dark={dark} span={12} pad={16} tint="rust">
       <CardLabel dark={dark}>{labelOverride ?? 'Day review'}</CardLabel>
 
       {/* MOOD — weep → big smile (1-5). Tap the selected face to clear. */}
