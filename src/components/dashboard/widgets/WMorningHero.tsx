@@ -28,15 +28,17 @@ const TIER_LABEL: Record<string, string> = {
   unknown: 'NO DATA',
 }
 
-function RecoveryGauge({ score, tier, size = 104 }: { score: number; tier: string; size?: number }) {
+function RecoveryGauge({ score, tier, size = 104, dark = false }: { score: number; tier: string; size?: number; dark?: boolean }) {
   const r = size / 2 - 8
   const circ = 2 * Math.PI * r
   const offset = circ - circ * (score / 100)
   const color = TIER_COLOR[tier] ?? TIER_COLOR.unknown
+  const trackColor = dark ? 'rgba(255,255,255,0.14)' : 'rgba(26,18,8,0.12)'
+  const labelColor = dark ? 'rgba(245,237,214,0.65)' : C.ink60
   return (
     <div style={{ width: size, height: size + 20, position: 'relative', flexShrink: 0 }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(26,18,8,0.12)" strokeWidth="6" fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke={trackColor} strokeWidth="6" fill="none" />
         <circle cx={size / 2} cy={size / 2} r={r} stroke={color} strokeWidth="6" fill="none"
           strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} />
       </svg>
@@ -44,8 +46,8 @@ function RecoveryGauge({ score, tier, size = 104 }: { score: number; tier: strin
         position: 'absolute', top: 0, left: 0, width: size, height: size,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
-        <div className="badge" style={{ fontSize: 'var(--fs-26)', lineHeight: 1, color: C.dark }}>{score}</div>
-        <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink60 }}>RECOVERY</div>
+        <div className="badge" style={{ fontSize: 'var(--fs-26)', lineHeight: 1, color: dark ? C.cream : C.dark }}>{score}</div>
+        <div className="mono" style={{ fontSize: 'var(--fs-10)', color: labelColor }}>RECOVERY</div>
       </div>
       <div style={{
         position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
@@ -152,7 +154,7 @@ export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMo
 
       {/* Recovery gauge + prescription */}
       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-        <RecoveryGauge score={score} tier={tier} size={104} />
+        <RecoveryGauge score={score} tier={tier} size={104} dark={dark} />
         <div style={{ flex: 1, paddingTop: 4 }}>
           <div className="mono" style={{ fontSize: 'var(--fs-10)', color: dark ? C.teal : C.tealDk, letterSpacing: '0.15em' }}>
             PRESCRIPTION
