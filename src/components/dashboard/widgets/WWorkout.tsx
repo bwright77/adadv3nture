@@ -51,14 +51,14 @@ function ProgramProgress({ program, dark, onDone, advancing }: {
         }} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, alignItems: 'center' }}>
-        <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.6 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.85 }}>
           W{week} of {totalWeeks} · D{day} of 4 · {Math.round(progress * 100)}% done
         </div>
         <button
           onClick={onDone}
           disabled={advancing}
           style={{
-            background: C.teal, color: C.dark, border: 'none', cursor: 'pointer',
+            background: C.cream, color: C.dark, border: 'none', cursor: 'pointer',
             padding: '4px 10px', borderRadius: 8, fontSize: 'var(--fs-12)', fontWeight: 700,
           }}
         >
@@ -150,7 +150,7 @@ export function WWorkout({ dark, span = 7 }: WWorkoutProps) {
       <CardLabel dark={dark}>Today · prescribed</CardLabel>
       <div className="badge" style={{ fontSize: 'var(--fs-17)', lineHeight: 1.1, marginTop: 2 }}>
         <span>{parts[0]}</span>
-        {parts[1] && <span style={{ color: C.teal }}> · {parts[1]}</span>}
+        {parts[1] && <span> · {parts[1]}</span>}
         {parts[2] && <span> · {parts[2]}</span>}
       </div>
       <ProgramProgress program={program} dark={dark} onDone={handleDone} advancing={advancing} />
