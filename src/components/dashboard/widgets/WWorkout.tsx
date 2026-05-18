@@ -146,7 +146,7 @@ export function WWorkout({ dark, span = 7 }: WWorkoutProps) {
   const parts = title.split('·').map((p: string) => p.trim())
 
   return (
-    <Glass dark={dark} span={span} pad={14}>
+    <Glass dark={dark} span={span} pad={14} flat style={{ background: C.tealDk, border: 'none' }}>
       <CardLabel dark={dark}>Today · prescribed</CardLabel>
       <div className="badge" style={{ fontSize: 'var(--fs-17)', lineHeight: 1.1, marginTop: 2 }}>
         <span>{parts[0]}</span>
