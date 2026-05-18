@@ -6,11 +6,14 @@ interface GlassProps {
   dark?: boolean
   span?: number
   pad?: number
+  // Skip the SVG noise overlay — use this when overriding `style.background`
+  // with a solid color and you want it to stay genuinely flat.
+  flat?: boolean
   style?: CSSProperties
   onClick?: () => void
 }
 
-export function Glass({ children, dark = false, span = 6, pad = 16, style, onClick }: GlassProps) {
+export function Glass({ children, dark = false, span = 6, pad = 16, flat = false, style, onClick }: GlassProps) {
   return (
     <div onClick={onClick} style={{
       gridColumn: `span ${span}`,
@@ -28,11 +31,13 @@ export function Glass({ children, dark = false, span = 6, pad = 16, style, onCli
       overflow: 'hidden',
       ...style,
     }}>
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-        backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.18 0'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>")`,
-        opacity: 0.35, mixBlendMode: 'multiply',
-      }} />
+      {!flat && (
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+          backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.18 0'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>")`,
+          opacity: 0.35, mixBlendMode: 'multiply',
+        }} />
+      )}
       <div style={{ position: 'relative', zIndex: 1, height: '100%' }}>
         {children}
       </div>
