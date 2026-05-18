@@ -64,6 +64,8 @@ export interface Database {
           bmi: number | null
           visceral_fat: number | null
           bmr: number | null
+          vascular_age: number | null
+          pulse_wave_velocity: number | null
           created_at: string
         }
         Insert: Omit<Database['public']['Tables']['body_metrics']['Row'], 'id' | 'created_at'>

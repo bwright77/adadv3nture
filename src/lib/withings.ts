@@ -105,6 +105,10 @@ export interface BodyMetricRow {
   muscle_mass_pct: number | null
   bone_mass_lbs: number | null
   water_pct: number | null
+  visceral_fat: number | null         // meastype 170 — 1-12 rating
+  vascular_age: number | null         // meastype 155 — years
+  pulse_wave_velocity: number | null  // meastype 91 — m/s
+  bmr: number | null                  // meastype 226 — kcal/day
 }
 
 export async function syncBodyMetrics(userId: string, daysBack = 90): Promise<number> {
@@ -114,7 +118,11 @@ export async function syncBodyMetrics(userId: string, daysBack = 90): Promise<nu
 
   const body = new URLSearchParams({
     action: 'getmeas',
-    meastype: '1,5,6,8,76,77,88',
+    // 1=weight, 6=fat ratio %, 8=fat mass kg (kept for downstream — unused),
+    // 76=muscle mass kg, 77=hydration %, 88=bone mass kg,
+    // 91=pulse wave velocity m/s, 155=vascular age yrs, 170=visceral fat rating,
+    // 226=BMR kcal/day (confirmed via probe — undocumented but real).
+    meastype: '1,5,6,8,76,77,88,91,155,170,226',
     category: '1',
     startdate: String(startdate),
   })
@@ -155,6 +163,10 @@ export async function syncBodyMetrics(userId: string, daysBack = 90): Promise<nu
     const weightKg = withingsValue(measures, 1)
     const muscleKg = withingsValue(measures, 76)
     const boneKg = withingsValue(measures, 88)
+    const visceralFat = withingsValue(measures, 170)
+    const vascularAge = withingsValue(measures, 155)
+    const pwv = withingsValue(measures, 91)
+    const bmr = withingsValue(measures, 226)
     rows.push({
       user_id: userId,
       measured_at: new Date(date * 1000).toISOString(),
@@ -165,6 +177,11 @@ export async function syncBodyMetrics(userId: string, daysBack = 90): Promise<nu
       muscle_mass_pct: muscleKg !== null && weightKg ? Math.round((muscleKg / weightKg) * 1000) / 10 : null,
       bone_mass_lbs: boneKg !== null ? kgToLbs(boneKg) : null,
       water_pct: withingsValue(measures, 77),
+      // Round to mitigate JS float imprecision (e.g. 4.1 -> 4.1000000000000005).
+      visceral_fat: visceralFat !== null ? Math.round(visceralFat * 10) / 10 : null,
+      vascular_age: vascularAge !== null ? Math.round(vascularAge) : null,
+      pulse_wave_velocity: pwv !== null ? Math.round(pwv * 100) / 100 : null,
+      bmr: bmr !== null ? Math.round(bmr) : null,
     })
   }
 
