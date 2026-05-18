@@ -21,6 +21,15 @@ function sum(nums: (number | null | undefined)[]): number {
   return nums.reduce<number>((a, b) => a + (b ?? 0), 0)
 }
 
+// Strava's normalizer maps the most common bike types to 'ride' but leaves
+// MountainBikeRide / EBikeRide / etc. lowercased as-is. Match broadly so
+// any current or future variant is counted.
+function isBikeActivity(activityType: string): boolean {
+  return activityType === 'ride'
+    || activityType.includes('bike')
+    || activityType.includes('cycl')
+}
+
 export interface TrendRow {
   label: string
   value: string
@@ -152,6 +161,14 @@ export async function getTrends(userId: string): Promise<TrendData> {
   const milesPrev = sum(runsLastWeek.map(r => r.distance_miles))
   const milesDelta = activities.length > 0 ? milesCurr - milesPrev : null
 
+  // ── Bike miles ───────────────────────────────────────────────
+  const rides = activities.filter(a => isBikeActivity(a.activity_type))
+  const ridesThisWeek = rides.filter(r => r.activity_date >= d7)
+  const ridesLastWeek = rides.filter(r => r.activity_date >= d14 && r.activity_date < d7)
+  const bikeMilesCurr = sum(ridesThisWeek.map(r => r.distance_miles))
+  const bikeMilesPrev = sum(ridesLastWeek.map(r => r.distance_miles))
+  const bikeMilesDelta = activities.length > 0 ? bikeMilesCurr - bikeMilesPrev : null
+
   // ── Workouts/week ────────────────────────────────────────────
   const wkCurr = activities.filter(a => a.activity_date >= d7).length
   const wkPrev = activities.filter(a => a.activity_date >= d14 && a.activity_date < d7).length
@@ -183,12 +200,16 @@ export async function getTrends(userId: string): Promise<TrendData> {
 
   // 4 weekly buckets, oldest → newest
   const milesSpark: number[] = []
+  const bikeMilesSpark: number[] = []
   const workoutsSpark: number[] = []
   for (let w = 3; w >= 0; w--) {
     const wStart = subDays((w + 1) * 7)
     const wEnd = subDays(w * 7)
     milesSpark.push(sum(
       runs.filter(r => r.activity_date >= wStart && r.activity_date < wEnd).map(r => r.distance_miles),
+    ))
+    bikeMilesSpark.push(sum(
+      rides.filter(r => r.activity_date >= wStart && r.activity_date < wEnd).map(r => r.distance_miles),
     ))
     workoutsSpark.push(
       activities.filter(a => a.activity_date >= wStart && a.activity_date < wEnd).length,
@@ -273,6 +294,16 @@ export async function getTrends(userId: string): Promise<TrendData> {
       isHero: false,
       noData: milesCurr === 0 && activities.length === 0,
       spark: milesSpark,
+    },
+    {
+      label: 'Miles ridden',
+      value: bikeMilesCurr > 0 ? `${bikeMilesCurr.toFixed(1)} /wk` : '—',
+      delta: bikeMilesDelta != null ? formatDelta(bikeMilesDelta, ' mi') : activities.length > 0 ? 'no prior week' : 'no data yet',
+      direction: direction(bikeMilesDelta),
+      isGood: bikeMilesDelta != null ? bikeMilesDelta >= 0 : null,
+      isHero: false,
+      noData: bikeMilesCurr === 0 && rides.length === 0,
+      spark: bikeMilesSpark,
     },
     {
       label: 'Workouts',
