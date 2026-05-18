@@ -36,6 +36,63 @@ export function applicableCategoriesForDate(dateStr: string): ReviewCategory[] {
     : ['family_creative', 'home', 'career', 'projects']
 }
 
+// Route a project's category to the MIT slot it should register against.
+// Career projects (opportunities) → career; home projects → home; everything
+// else (art, software, other) → the catch-all projects slot.
+export function mapProjectCategoryToMIT(cat: string): ReviewCategory {
+  if (cat === 'career') return 'career'
+  if (cat === 'home') return 'home'
+  return 'projects'
+}
+
+// Route a todo's category to the MIT slot. Body has no MIT slot — that row
+// is derived from Strava, not manually checked off.
+export function mapTodoCategoryToMIT(cat: string): ReviewCategory | null {
+  if (cat === 'family') return 'family_creative'
+  if (cat === 'home') return 'home'
+  if (cat === 'career') return 'career'
+  if (cat === 'projects') return 'projects'
+  return null
+}
+
+interface RegisterMITActivityArgs {
+  userId: string
+  category: ReviewCategory
+  markDone: boolean
+  note?: string | null
+}
+
+/**
+ * Hook for user actions that should auto-register against today's MIT row:
+ *   - Project milestone checked off  → markDone=true, note=milestone title
+ *   - Project update logged          → markDone=false, note=update text
+ *   - Family/home/career/projects todo completed → markDone=true, note=todo title
+ *   - 50 Hikes hike marked done      → markDone=true, note='Hike: <title>'
+ *
+ * Additive semantics: done is monotonic (true wins), notes append with ' · '
+ * unless the new text is already a substring of the existing note. Never
+ * unsets — undoing a completion in the source UI doesn't reverse the MIT
+ * contribution.
+ */
+export async function registerMITActivity({
+  userId, category, markDone, note,
+}: RegisterMITActivityArgs): Promise<void> {
+  const planDate = logicalToday()
+  const existing = await getPlanForDate(userId, planDate)
+  const currentDone = existing ? Boolean(existing[`${category}_done` as keyof DailyPlan]) : false
+  const currentNote = existing ? ((existing[`${category}_note` as keyof DailyPlan] as string | null) ?? '') : ''
+
+  const newDone = currentDone || markDone
+  const incoming = note?.trim() ?? ''
+  let newNote = currentNote
+  if (incoming && !currentNote.includes(incoming)) {
+    newNote = currentNote ? `${currentNote} · ${incoming}` : incoming
+  }
+
+  if (newDone === currentDone && newNote === currentNote) return
+  await updateReviewRow(userId, category, newDone, newNote, planDate)
+}
+
 export async function updateReviewRow(
   userId: string,
   category: ReviewCategory,

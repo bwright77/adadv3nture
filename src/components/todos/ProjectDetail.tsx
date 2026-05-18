@@ -7,6 +7,7 @@ import {
   updateProjectDeadlines,
   type Project, type ProjectMilestone, type ProjectUpdate, type ProjectContact,
 } from '../../lib/projects'
+import { registerMITActivity, mapProjectCategoryToMIT } from '../../lib/daily-plan'
 import { daysUntil as daysUntilDate } from '../../lib/countdown'
 
 interface ProjectDetailProps {
@@ -91,6 +92,15 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
     setLocalMilestones(updated)
     await toggleMilestone(m.id, !m.done)
     await recalcProgress(updated)
+    // Only register MIT on check-on (not uncheck) — additive only.
+    if (!m.done) {
+      await registerMITActivity({
+        userId: project.user_id,
+        category: mapProjectCategoryToMIT(project.category),
+        markDone: true,
+        note: m.title,
+      })
+    }
     // Auto-advance next_action to first remaining incomplete milestone
     if (!m.done) {
       const next = updated
@@ -192,10 +202,19 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
 
   async function handleAddNote() {
     if (!noteDraft.trim()) { setAddingNote(false); return }
-    const update = await addUpdate(project.id, noteDraft.trim())
+    const trimmed = noteDraft.trim()
+    const update = await addUpdate(project.id, trimmed)
     setUpdatesLocal(prev => [update, ...prev])
     setNoteDraft('')
     setAddingNote(false)
+    // Logging an update contributes to the MIT note but doesn't mark it done —
+    // an update is progress, a milestone check is completion.
+    await registerMITActivity({
+      userId: project.user_id,
+      category: mapProjectCategoryToMIT(project.category),
+      markDone: false,
+      note: trimmed,
+    })
     onUpdate()
   }
 

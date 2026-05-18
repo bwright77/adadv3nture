@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { C } from '../../../tokens'
+import { useAuth } from '../../../contexts/AuthContext'
+import { registerMITActivity } from '../../../lib/daily-plan'
 import type { Hike } from '../../../hooks/use50Hikes'
 
 interface Props {
@@ -32,6 +34,7 @@ function StarPicker({ value, onChange, dark }: { value: number; onChange: (v: nu
 }
 
 export function HikeLogSheet({ hike, dark, onClose, onSaved }: Props) {
+  const { user } = useAuth()
   const today = new Date().toISOString().slice(0, 10)
   const [dateDone, setDateDone] = useState(hike.date_done ?? today)
   const [rating, setRating] = useState(hike.family_rating ?? 0)
@@ -68,6 +71,14 @@ export function HikeLogSheet({ hike, dark, onClose, onSaved }: Props) {
       family_rating: rating || null,
       notes: notes || null,
     }).eq('id', hike.id)
+    if (user) {
+      await registerMITActivity({
+        userId: user.id,
+        category: 'family_creative',
+        markDone: true,
+        note: `Hike: ${hike.name}`,
+      })
+    }
     onSaved()
     onClose()
   }

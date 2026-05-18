@@ -9,6 +9,7 @@ import {
   getActiveReminders, addReminder, snoozeReminder, completeReminder, deleteReminder,
   type Reminder,
 } from '../lib/reminders'
+import { registerMITActivity, mapTodoCategoryToMIT } from '../lib/daily-plan'
 import { TrainingView } from '../components/todos/TrainingView'
 import { Hikes50View } from '../components/todos/Hikes50View'
 import { ProjectsView } from '../components/todos/ProjectsView'
@@ -176,10 +177,21 @@ export function TodosPage({ bgPhoto, initialTab, initialTrainingEvent }: TodosPa
   }
 
   async function handleComplete(id: string) {
+    const completed = todos.find(t => t.id === id)
     setTodos(prev => prev.filter(t => t.id !== id))
     await completeTodo(id)
     const closed = await getCompletedTodos(user!.id, cat)
     setDone(closed)
+    // Auto-register against the matching MIT slot. Body has no MIT (Strava-derived).
+    const mitCategory = mapTodoCategoryToMIT(cat)
+    if (mitCategory && completed) {
+      await registerMITActivity({
+        userId: user!.id,
+        category: mitCategory,
+        markDone: true,
+        note: completed.title,
+      })
+    }
   }
 
   async function handleDelete(id: string) {
