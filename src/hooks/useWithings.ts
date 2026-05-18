@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import {
   isWithingsConnected, getWithingsAuthUrl,
-  syncBodyMetrics, getRecentBodyMetrics, WithingsAuthError,
+  syncBodyMetrics, getRecentBodyMetrics,
+  WithingsAuthError, WithingsTransientError,
 } from '../lib/withings'
 
 export interface BodyMetric {
@@ -53,7 +54,12 @@ export function useWithings() {
       await loadMetrics(user.id)
     } catch (err) {
       if (err instanceof WithingsAuthError) {
+        // True disconnect — refresh chain is dead, UI should flip to Connect.
         setConnected(false)
+        setSyncError(err.message)
+      } else if (err instanceof WithingsTransientError) {
+        // Transient (network/rate-limit/5xx). Keep connection; surface message
+        // so the user can retry without re-authorizing.
         setSyncError(err.message)
       } else {
         setSyncError(err instanceof Error ? err.message : 'Sync failed.')

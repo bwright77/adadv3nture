@@ -21,6 +21,16 @@ export class WithingsAuthError extends Error {
   }
 }
 
+// Throw this when the sync hit something Withings-side that's almost certainly
+// momentary (rate limit, 5xx, network). Keeps the connection alive so the UI
+// doesn't flash "Connect" and force a reauthorize cycle.
+export class WithingsTransientError extends Error {
+  constructor(message = 'Withings sync hit a transient error. Try again in a moment.') {
+    super(message)
+    this.name = 'WithingsTransientError'
+  }
+}
+
 async function getValidToken(userId: string): Promise<string> {
   const { data } = await supabase
     .from('oauth_tokens')
@@ -45,7 +55,7 @@ async function getValidToken(userId: string): Promise<string> {
         await disconnectWithings(userId).catch(() => null)
         throw new WithingsAuthError()
       }
-      throw new WithingsAuthError('Withings sync hit a transient error. Try again in a moment.')
+      throw new WithingsTransientError()
     }
     const refreshed = await res.json() as { access_token: string }
     return refreshed.access_token
@@ -163,17 +173,24 @@ export async function syncBodyMetrics(userId: string, daysBack = 90): Promise<nu
   // Upsert against the unique (user_id, measured_at, source) constraint.
   // ignoreDuplicates: existing rows keep whatever values they have — re-syncs
   // never destroy data that a previous run captured but a later one didn't.
+  // .select() with ignoreDuplicates returns only the rows that were actually
+  // inserted (PostgREST: INSERT ... ON CONFLICT DO NOTHING RETURNING ...), so
+  // the count reported back reflects new weigh-ins, not the Withings backfill
+  // window size.
+  let insertedCount = 0
   for (let i = 0; i < rows.length; i += 100) {
-    const { error } = await db
+    const { data: inserted, error } = await db
       .from('body_metrics')
       .upsert(rows.slice(i, i + 100), {
         onConflict: 'user_id,measured_at,source',
         ignoreDuplicates: true,
       })
+      .select('measured_at')
     if (error) throw new Error(error.message)
+    insertedCount += inserted?.length ?? 0
   }
 
-  return rows.length
+  return insertedCount
 }
 
 export async function getRecentBodyMetrics(userId: string, limit = 30) {
