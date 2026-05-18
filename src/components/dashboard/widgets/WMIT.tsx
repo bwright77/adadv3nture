@@ -23,7 +23,7 @@ export function WMIT({ dark }: WMITProps) {
   const deltaColor = delta > 0 ? C.teal : delta < 0 ? C.rust : undefined
 
   return (
-    <Glass dark={dark} span={4} pad={14}>
+    <Glass dark={dark} span={4} pad={14} tint="rust">
       <CardLabel dark={dark}>MIT · today</CardLabel>
       <div className="mono" style={{ fontSize: 'var(--fs-26)', fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0' }}>
         {pct}<span style={{ fontSize: 'var(--fs-14)', opacity: 0.5 }}>%</span>

@@ -100,7 +100,7 @@ export function WWorkout({ dark, span = 7 }: WWorkoutProps) {
 
   if (todayAct === undefined) {
     return (
-      <Glass dark={dark} span={span} pad={14}>
+      <Glass dark={dark} span={span} pad={14} tint="teal">
         <CardLabel dark={dark}>Workout</CardLabel>
         <div style={{ opacity: 0.4, fontSize: 'var(--fs-14)', marginTop: 8 }}>Loading…</div>
       </Glass>
@@ -111,7 +111,7 @@ export function WWorkout({ dark, span = 7 }: WWorkoutProps) {
   if (todayAct) {
     const isStrength = ['strength', 'workout', 'weight_training'].includes(todayAct.activity_type)
     return (
-      <Glass dark={dark} span={span} pad={14}>
+      <Glass dark={dark} span={span} pad={14} tint="teal">
         <CardLabel dark={dark}>Today · done ✓</CardLabel>
         <div className="badge" style={{ fontSize: 'var(--fs-17)', lineHeight: 1.1, marginTop: 2 }}>
           {todayAct.title?.toUpperCase() ?? todayAct.activity_type.toUpperCase()}
