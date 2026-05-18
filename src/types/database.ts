@@ -64,7 +64,6 @@ export interface Database {
           bmi: number | null
           visceral_fat: number | null
           bmr: number | null
-          withings_id: number | null
           created_at: string
         }
         Insert: Omit<Database['public']['Tables']['body_metrics']['Row'], 'id' | 'created_at'>

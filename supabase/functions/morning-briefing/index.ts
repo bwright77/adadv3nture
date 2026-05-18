@@ -60,6 +60,11 @@ number you see reflects only days where Career was expected.
 MIT completion rate is the meta-metric — reference it when it's moving
 meaningfully.
 
+Weight is logged 2-3× per week, not daily. The WEIGHT line labels how recent
+the reading is — quote whatever's there. Never characterize a few-day-old
+weigh-in as "no weight data" or "missing data"; that field is only empty if
+Ben has literally never weighed in.
+
 Tone: Direct. Warm. Specific. Never generic. Never wellness-app cheerful.
 Reference real numbers. Flag uncertainty honestly. Max 150 words for the
 briefing. Always end with ONE specific next action — not a category, an
@@ -227,6 +232,17 @@ async function fetchWeather(owmKey: string, lat: number, lon: number): Promise<s
   } catch {
     return null
   }
+}
+
+// Weight is measured periodically (~2-3x/week), not daily. The briefing should
+// always quote the most recent reading and label its age so the model can
+// reference recency without ever saying "no weight data" for a few-day-old number.
+function weightContextLine(weight: number | null, measuredAt: string | null): string {
+  if (weight == null) return 'WEIGHT: never logged (target 178, GLP-1 trend)'
+  if (!measuredAt) return `WEIGHT: ${weight} lbs · target 178 (GLP-1 trend)`
+  const daysAgo = Math.max(0, Math.floor((Date.now() - new Date(measuredAt).getTime()) / 86_400_000))
+  const ago = daysAgo === 0 ? 'today' : daysAgo === 1 ? '1d ago' : `${daysAgo}d ago`
+  return `WEIGHT: ${weight} lbs · weighed ${ago} · target 178 (GLP-1 trend)`
 }
 
 function locationStamp(loc: BriefingLocation): string {
@@ -408,7 +424,9 @@ Deno.serve(async (req: Request) => {
       const yDrinks = (recoveryRes.data?.[1] as { drinks_consumed: number } | undefined)?.drinks_consumed ?? 0
       const yMood = (moodRes.data as { mood_score: number | null } | null)?.mood_score
 
-      const weight = (weightRes.data as { weight_lbs: number | null } | null)?.weight_lbs
+      const weightRow = weightRes.data as { weight_lbs: number | null; measured_at: string | null } | null
+      const weight = weightRow?.weight_lbs ?? null
+      const weightMeasuredAt = weightRow?.measured_at ?? null
 
       const effort = lastEffortRes.data as {
         activity_type: string; title: string | null
@@ -451,7 +469,7 @@ TODAY'S PLAN:${plan?.title
 - ${plan.activity_type ?? 'activity'} · ${plan.title}${plan.location ? ` · ${plan.location}` : ''}${plan.departure_time ? ` · leave ${plan.departure_time}` : ''}${plan.notes ? `\n- Notes: ${plan.notes}` : ''}`
   : '\n- No plan set yet'}
 
-WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-1 trend)`
+${weightContextLine(weight, weightMeasuredAt)}`
 
     } else {
       // ── Weekday context (unchanged) ────────────────────────────────────────
@@ -514,7 +532,9 @@ WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178, GLP-
         total_weeks: number | null; next_workout_title: string | null; last_completed_date: string | null
       } | null
       const inboxCount = inboxRes.count ?? 0
-      const weight = (weightRes.data as { weight_lbs: number | null } | null)?.weight_lbs
+      const weightRow = weightRes.data as { weight_lbs: number | null; measured_at: string | null } | null
+      const weight = weightRow?.weight_lbs ?? null
+      const weightMeasuredAt = weightRow?.measured_at ?? null
 
       type ReviewRow = {
         plan_date: string
@@ -593,7 +613,7 @@ WORKOUT:
 - Progress: W${program?.current_week ?? 1} of ${program?.total_weeks ?? 4} (${(program?.current_week ?? 1) - 1} weeks complete)
 
 INBOX: ${inboxCount} unprocessed items
-WEIGHT: ${weight != null ? `${weight} lbs` : 'no recent data'} (target 178)
+${weightContextLine(weight, weightMeasuredAt)}
 
 YESTERDAY'S PORTFOLIO REVIEW:
 ${yesterdayReviewLines}

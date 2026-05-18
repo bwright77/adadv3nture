@@ -38,12 +38,14 @@ async function getValidToken(userId: string): Promise<string> {
       body: JSON.stringify({ userId }),
     })
     if (!res.ok) {
-      // Refresh-token chain is dead (Withings rotates on every refresh and
-      // expires after a year). Clear the row so the UI flips to "Connect".
-      if (res.status === 401 || res.status === 400 || res.status === 404) {
+      // Only nuke the local oauth row on a true 401 (refresh-token chain
+      // dead). 503 / network errors keep the connection so the next sync
+      // attempt can succeed without forcing a reconnect.
+      if (res.status === 401) {
         await disconnectWithings(userId).catch(() => null)
+        throw new WithingsAuthError()
       }
-      throw new WithingsAuthError()
+      throw new WithingsAuthError('Withings sync hit a transient error. Try again in a moment.')
     }
     const refreshed = await res.json() as { access_token: string }
     return refreshed.access_token
@@ -93,7 +95,6 @@ export interface BodyMetricRow {
   muscle_mass_pct: number | null
   bone_mass_lbs: number | null
   water_pct: number | null
-  withings_id: number
 }
 
 export async function syncBodyMetrics(userId: string, daysBack = 90): Promise<number> {
@@ -129,42 +130,50 @@ export async function syncBodyMetrics(userId: string, daysBack = 90): Promise<nu
   const groups = json.body?.measuregrps ?? []
   if (!groups.length) return 0
 
-  const { data: existing } = await supabase
-    .from('body_metrics')
-    .select('withings_id')
-    .eq('user_id', userId)
-    .not('withings_id', 'is', null) as { data: { withings_id: number }[] | null }
+  // A single weigh-in can land as multiple measuregroups sharing the same
+  // `date` (Withings splits some measure types into separate groups). Merge
+  // them so one weigh-in = one row, matching the unique-index shape in
+  // migration 031.
+  const measuresByDate = new Map<number, WithingsMeasure[]>()
+  for (const g of groups) {
+    const existing = measuresByDate.get(g.date) ?? []
+    measuresByDate.set(g.date, existing.concat(g.measures))
+  }
 
-  const existingIds = new Set((existing ?? []).map(r => r.withings_id))
-  const newGroups = groups.filter(g => !existingIds.has(g.grpid))
-  if (!newGroups.length) return 0
-
-  const rows: BodyMetricRow[] = newGroups.map(g => {
-    const weightKg = withingsValue(g.measures, 1)
-    const muscleKg = withingsValue(g.measures, 76)
-    const boneKg = withingsValue(g.measures, 88)
-    return {
+  const rows: BodyMetricRow[] = []
+  for (const [date, measures] of measuresByDate) {
+    const weightKg = withingsValue(measures, 1)
+    const muscleKg = withingsValue(measures, 76)
+    const boneKg = withingsValue(measures, 88)
+    rows.push({
       user_id: userId,
-      measured_at: new Date(g.date * 1000).toISOString(),
+      measured_at: new Date(date * 1000).toISOString(),
       source: 'withings',
       weight_lbs: weightKg !== null ? kgToLbs(weightKg) : null,
-      body_fat_pct: withingsValue(g.measures, 6),
+      body_fat_pct: withingsValue(measures, 6),
       muscle_mass_lbs: muscleKg !== null ? kgToLbs(muscleKg) : null,
       muscle_mass_pct: muscleKg !== null && weightKg ? Math.round((muscleKg / weightKg) * 1000) / 10 : null,
       bone_mass_lbs: boneKg !== null ? kgToLbs(boneKg) : null,
-      water_pct: withingsValue(g.measures, 77),
-      withings_id: g.grpid,
-    }
-  })
+      water_pct: withingsValue(measures, 77),
+    })
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
+  // Upsert against the unique (user_id, measured_at, source) constraint.
+  // ignoreDuplicates: existing rows keep whatever values they have — re-syncs
+  // never destroy data that a previous run captured but a later one didn't.
   for (let i = 0; i < rows.length; i += 100) {
-    const { error } = await db.from('body_metrics').insert(rows.slice(i, i + 100))
+    const { error } = await db
+      .from('body_metrics')
+      .upsert(rows.slice(i, i + 100), {
+        onConflict: 'user_id,measured_at,source',
+        ignoreDuplicates: true,
+      })
     if (error) throw new Error(error.message)
   }
 
-  return newGroups.length
+  return rows.length
 }
 
 export async function getRecentBodyMetrics(userId: string, limit = 30) {

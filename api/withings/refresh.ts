@@ -39,8 +39,11 @@ export default async function handler(req: Request): Promise<Response> {
     body,
   })
 
+  // Distinguish transient errors (network, rate limits, 5xx) from terminal
+  // ones (refresh-token chain dead). The client uses HTTP 401 as the only
+  // signal to nuke the local oauth row — anything else keeps the connection.
   if (!tokenRes.ok) {
-    return new Response(JSON.stringify({ error: 'Refresh failed' }), { status: 401 })
+    return new Response(JSON.stringify({ error: 'Refresh failed (transient)' }), { status: 503 })
   }
 
   const json = await tokenRes.json() as {
@@ -48,8 +51,14 @@ export default async function handler(req: Request): Promise<Response> {
     body: { access_token: string; refresh_token: string; expires_in: number }
   }
 
+  // Withings JSON status codes: 100/101/102 = invalid params/token; 401 =
+  // unauthorized — these mean the refresh token is dead, disconnect. Anything
+  // else non-zero is transient (rate limit 213/214/215/216/217, server 503, etc.).
+  if ([100, 101, 102, 401].includes(json.status)) {
+    return new Response(JSON.stringify({ error: `Withings refresh expired (${json.status})` }), { status: 401 })
+  }
   if (json.status !== 0) {
-    return new Response(JSON.stringify({ error: `Withings error ${json.status}` }), { status: 401 })
+    return new Response(JSON.stringify({ error: `Withings transient error ${json.status}` }), { status: 503 })
   }
 
   const tokens = json.body
