@@ -22,7 +22,7 @@ export function WLaborDay({ dark }: WLaborDayProps) {
   const tagline = isPast ? 'Date passed.' : isToday ? 'Today.' : 'Time to build.'
 
   return (
-    <Glass dark={dark} span={6} pad={14} tint="sand">
+    <Glass dark={dark} span={6} pad={14}>
       <CardLabel dark={dark}>{event.title} · {formatShortDate(event.event_date)}</CardLabel>
       <div className="mono" style={{ fontSize: 'var(--fs-26)', fontWeight: 700, lineHeight: 1, fontFeatureSettings: '"zero" 0', color: urgentColor }}>
         {isPast ? '—' : (

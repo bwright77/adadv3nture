@@ -1,40 +1,24 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { C } from '../../tokens'
 
-type Tint = 'rust' | 'teal' | 'sand'
-
 interface GlassProps {
   children: ReactNode
   dark?: boolean
   span?: number
   pad?: number
-  tint?: Tint
   style?: CSSProperties
   onClick?: () => void
 }
 
-// Role-based color washes for dark glass. RGB triplets match tokens.ts so the
-// gradient blends the accent into the dark base without losing the noise/blur look.
-const TINTS: Record<Tint, { rgb: string; border: string }> = {
-  rust: { rgb: '196,82,42',  border: 'rgba(196,82,42,0.45)'  },
-  teal: { rgb: '91,188,184', border: 'rgba(91,188,184,0.40)' },
-  sand: { rgb: '212,130,74', border: 'rgba(212,130,74,0.45)' },
-}
-
-export function Glass({ children, dark = false, span = 6, pad = 16, tint, style, onClick }: GlassProps) {
-  const tintCfg = tint ? TINTS[tint] : null
-  const darkBg = tintCfg
-    ? `linear-gradient(135deg, rgba(${tintCfg.rgb},0.55) 0%, rgba(20,12,4,0.78) 100%)`
-    : 'rgba(20,12,4,0.62)'
-
+export function Glass({ children, dark = false, span = 6, pad = 16, style, onClick }: GlassProps) {
   return (
     <div onClick={onClick} style={{
       gridColumn: `span ${span}`,
-      background: dark ? darkBg : 'rgba(251,247,236,0.82)',
+      background: dark ? 'rgba(20,12,4,0.62)' : 'rgba(251,247,236,0.82)',
       backdropFilter: 'blur(18px) saturate(140%)',
       WebkitBackdropFilter: 'blur(18px) saturate(140%)',
       border: dark
-        ? `0.5px solid ${tintCfg ? tintCfg.border : 'rgba(255,255,255,0.12)'}`
+        ? '0.5px solid rgba(255,255,255,0.12)'
         : `0.5px solid ${C.ink20}`,
       borderRadius: 22,
       padding: pad,
