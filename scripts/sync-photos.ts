@@ -33,6 +33,15 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
+// Strip characters that cause headaches in URLs / CSS / shells: whitespace,
+// quotes, parens, ampersands, etc. Keeps alphanumerics, dash, underscore, dot.
+function sanitizeFilename(filename: string): string {
+  const ext = path.extname(filename)
+  const stem = path.basename(filename, ext)
+  const cleaned = stem.replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
+  return cleaned + ext.toLowerCase()
+}
+
 function parseDateFromFilename(filename: string): string | null {
   // Handles: 20040501-IMG_5063.jpg → 2004-05-01
   const match = filename.match(/^(\d{4})(\d{2})(\d{2})-/)
@@ -69,15 +78,21 @@ async function main() {
     .select('original_filename')
     .eq('user_id', USER_ID)
 
+  // Dedup compares sanitized names so a disk file with a space won't
+  // re-sync just because its DB row was stored under the sanitized version.
   const synced = new Set((existing ?? []).map(r => r.original_filename))
-  const toSync = FORCE ? files : files.filter(f => !synced.has(f))
+  const toSync = FORCE ? files : files.filter(f => !synced.has(sanitizeFilename(f)))
 
   console.log(`${synced.size} already synced, ${toSync.length} to process\n`)
 
   let ok = 0, skipped = 0, errors = 0
 
-  for (const filename of toSync) {
-    const filepath = path.join(PHOTOS_DIR, filename)
+  for (const diskFilename of toSync) {
+    const filepath = path.join(PHOTOS_DIR, diskFilename)
+    const filename = sanitizeFilename(diskFilename)
+    if (filename !== diskFilename) {
+      console.log(`  ↳ sanitized: ${diskFilename} → ${filename}`)
+    }
 
     try {
       const buffer = fs.readFileSync(filepath)
@@ -110,7 +125,8 @@ async function main() {
         .upload(thumbPath, thumbBuffer, { contentType: 'image/jpeg', upsert: true })
       if (thumbErr) throw thumbErr
 
-      // Upsert DB row
+      // Upsert DB row — original_filename stores the sanitized name so
+      // future dedup checks line up with what's in storage.
       const { error: dbErr } = await supabase.from('inspiration_photos').upsert(
         {
           user_id: USER_ID,

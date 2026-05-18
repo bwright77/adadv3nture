@@ -10,6 +10,46 @@ interface InspireDetailProps {
   onClose: () => void
 }
 
+// Stacked <img> layers: cached thumbnail underneath (blur-up placeholder),
+// full-res original fades in onLoad. State is local so it resets cleanly when
+// the parent remounts via key={idx} on swipe.
+function PhotoLayer({ photo, style }: { photo: InspirationPhoto; style?: React.CSSProperties }) {
+  const [loaded, setLoaded] = useState(false)
+  const layerStyle: React.CSSProperties = {
+    position: 'absolute', inset: 0,
+    width: '100%', height: '100%', objectFit: 'cover',
+    userSelect: 'none', pointerEvents: 'none',
+  }
+  return (
+    <div style={{ position: 'absolute', inset: 0, ...style }}>
+      <img
+        src={photo.thumbnail_url}
+        alt=""
+        aria-hidden
+        draggable={false}
+        style={{
+          ...layerStyle,
+          filter: loaded ? 'none' : 'blur(14px)',
+          transform: loaded ? 'none' : 'scale(1.06)',
+          transition: 'filter 0.25s ease, transform 0.25s ease',
+        }}
+      />
+      <img
+        src={photo.original_url}
+        alt=""
+        draggable={false}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(false)}
+        style={{
+          ...layerStyle,
+          opacity: loaded ? 1 : 0,
+          transition: 'opacity 0.3s ease',
+        }}
+      />
+    </div>
+  )
+}
+
 export function InspireDetail({ photo, onClose }: InspireDetailProps) {
   const { user } = useAuth()
   const [photos, setPhotos] = useState<InspirationPhoto[]>([photo])
@@ -61,27 +101,22 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
   }
 
   return (
-    // Outer container never moves — overflow hidden means nothing bleeds through
-    <div style={{ position: 'fixed', inset: 0, zIndex: 60, overflow: 'hidden' }}>
+    // Dark background on outer container means nothing bleeds through to dashboard
+    // even if every image fails to load — last-resort defense.
+    <div style={{ position: 'fixed', inset: 0, zIndex: 60, overflow: 'hidden', background: C.dark }}>
 
-      {/* Adjacent photos — always in DOM so they preload; revealed by opacity when swiping */}
+      {/* Adjacent photos — always in DOM so they preload; revealed by opacity when swiping.
+          Using <img> (not CSS background-image) sidesteps iOS Safari quirks with %20-encoded
+          URLs in url() and gives us actual load events. */}
       {photos[idx - 1] && (
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: `url(${photos[idx - 1].original_url}) center/cover no-repeat`,
-          opacity: activeDx > 0 ? 1 : 0,
-        }} />
+        <PhotoLayer photo={photos[idx - 1]} style={{ opacity: activeDx > 0 ? 1 : 0 }} />
       )}
       {photos[idx + 1] && (
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: `url(${photos[idx + 1].original_url}) center/cover no-repeat`,
-          opacity: activeDx < 0 ? 1 : 0,
-        }} />
+        <PhotoLayer photo={photos[idx + 1]} style={{ opacity: activeDx < 0 ? 1 : 0 }} />
       )}
 
-      {/* Front layer: current photo + all overlays, slides with drag */}
-      {/* key={idx} forces a fresh DOM element on nav — no bounce-back animation */}
+      {/* Front layer: current photo + all overlays, slides with drag.
+          key={idx} forces a fresh DOM element on nav — no bounce-back animation. */}
       <div
         key={idx}
         onPointerDown={onPointerDown}
@@ -90,12 +125,12 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
         onPointerCancel={() => { setDx(0); setExitDx(null); setDragging(false) }}
         style={{
           position: 'absolute', inset: 0,
-          background: `url(${current.original_url}) center/cover no-repeat`,
           transform: `translateX(${activeDx}px)`,
           transition: dragging ? 'none' : 'transform 0.28s ease',
           touchAction: 'pan-y', userSelect: 'none',
         }}
       >
+      <PhotoLayer photo={current} />
       {/* Gradient overlay */}
       <div style={{
         position: 'absolute', inset: 0,
