@@ -65,6 +65,22 @@ recovery score, sleep, weekly training volume vs plan — not weight progress.
 Do NOT say "X lbs from goal," "X lbs to target," or imply weight loss is the
 objective. Weight is logged 2–3× per week; quote whatever's there as data.
 
+TRAINING WEEK is the structured WLW prep context for the current Monday.
+When present, it states which week of 19, the phase (BASE/BUILD/PEAK/TAPER),
+this week's focus, run / long run / bike / strength volume targets, plus
+two prescription strings:
+- Quality: the week's intensity menu (e.g. "PZ Max 1× · Strides 2×").
+  PZ Max = Power Zone Max on the Peloton, the primary midweek quality slot.
+  Strides, cruise miles, tempo, fartlek, progression are running quality
+  options.
+- Strength block: which lifting program is active (e.g. "3× TS" = three
+  Total Strength sessions; "RK" = Rebecca Kennedy 5-day split; "maint" =
+  maintenance loading). This is separate from the standalone WORKOUT
+  block, which names the specific next strength session in the program.
+When you suggest a body / workout action, name it from the plan — "PZ Max
+on the Peloton this morning," "long run is 14mi with descents" — instead
+of inventing one or relying solely on the standalone workout prescription.
+
 Portfolio categories (match the Lists tabs): CAREER (non-negotiable, this is
 where Wright Adventures opportunities live), FAMILY, HOME, PROJECTS (personal
 art/software/other — NOT Wright Adventures). Body / workout is tracked
@@ -123,6 +139,12 @@ On weekends:
 - If a plan is already set, affirm it and add any useful prep detail.
 - If no plan, suggest the obvious best move given conditions + recovery.
 - One specific action at the end: a time, a location, a first step.
+
+TRAINING WEEK context (when present) names this week's long-run target
+(distance + vert) and any key marker like Bergen simulator or race week.
+On weekends the long run is THE workout — anchor the briefing to the
+prescribed long run when conditions allow, or flag a deferral when they
+don't. Don't invent a different distance.
 
 Tone: The same direct, warm voice — but exhale. This is the weekend.
 No urgency except "make it count." Max 150 words.
@@ -255,12 +277,36 @@ async function advanceProgramFromActivities(admin: any, userId: string, program:
   return { ...program, ...updated }
 }
 
+interface TrainingWeekRow {
+  week_start: string
+  phase_id: string | null
+  phase_label: string | null
+  focus: string | null
+  notes: string | null
+  key_marker: string | null
+  quality_prescription: string | null
+  strength_prescription: string | null
+  target_run_miles: number | null
+  target_long_run_miles: number | null
+  target_cycling_miles: number | null
+  target_strength_sessions: number | null
+}
+
+// Monday of the week containing `dateStr` (YYYY-MM-DD), local-anchored at noon
+// so timezone math doesn't shift the result.
+function mondayOf(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00')
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+  return d.toISOString().substring(0, 10)
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadAnchorsAndFamily(admin: any, userId: string, today: string): Promise<{
   anchorBlock: string
   familyBlock: string
+  trainingWeekBlock: string
 }> {
-  const [anchorsRes, familyRes] = await Promise.all([
+  const [anchorsRes, familyRes, trainingWeeksRes] = await Promise.all([
     admin.from('anchor_events')
       .select('slug, title, event_date, location, notes')
       .eq('user_id', userId),
@@ -268,10 +314,15 @@ async function loadAnchorsAndFamily(admin: any, userId: string, today: string): 
       .select('name, role, birthday')
       .eq('user_id', userId)
       .order('sort_order', { ascending: true }),
+    admin.from('training_weeks')
+      .select('week_start, phase_id, phase_label, focus, notes, key_marker, quality_prescription, strength_prescription, target_run_miles, target_long_run_miles, target_cycling_miles, target_strength_sessions')
+      .eq('user_id', userId)
+      .order('week_start', { ascending: true }),
   ])
 
   const anchors = (anchorsRes.data ?? []) as AnchorRow[]
   const family = (familyRes.data ?? []) as FamilyRow[]
+  const trainingWeeks = (trainingWeeksRes.data ?? []) as TrainingWeekRow[]
 
   const anchorLines = anchors.map(a => {
     const days = daysBetween(today, a.event_date)
@@ -300,7 +351,32 @@ async function loadAnchorsAndFamily(admin: any, userId: string, today: string): 
     ? `FAMILY:\n${familyLines.join('\n')}`
     : 'FAMILY: not configured'
 
-  return { anchorBlock, familyBlock }
+  // Locate the current plan week (week_start == this Monday). Surface the
+  // structured prescription so the model can name the day's prescribed
+  // workout instead of inventing one or relying solely on the standalone
+  // strength program tracker.
+  const currentMonday = mondayOf(today)
+  const idx = trainingWeeks.findIndex(w => w.week_start === currentMonday)
+  let trainingWeekBlock = 'TRAINING WEEK: no plan-week row for this Monday'
+  if (idx >= 0) {
+    const w = trainingWeeks[idx]
+    const lines: string[] = []
+    lines.push(`TRAINING WEEK (WLW prep, W${idx + 1} of ${trainingWeeks.length}${w.phase_id ? ` · ${w.phase_id.toUpperCase()}` : ''}):`)
+    if (w.key_marker) lines.push(`- Key marker: ${w.key_marker}`)
+    if (w.focus) lines.push(`- Focus: ${w.focus}`)
+    const targets: string[] = []
+    if (w.target_run_miles)         targets.push(`${w.target_run_miles}mi run`)
+    if (w.target_long_run_miles)    targets.push(`${w.target_long_run_miles}mi long run`)
+    if (w.target_cycling_miles)     targets.push(`${w.target_cycling_miles}mi bike`)
+    if (w.target_strength_sessions) targets.push(`${w.target_strength_sessions}× strength`)
+    if (targets.length) lines.push(`- Targets: ${targets.join(' · ')}`)
+    if (w.quality_prescription)  lines.push(`- Quality: ${w.quality_prescription}`)
+    if (w.strength_prescription) lines.push(`- Strength block: ${w.strength_prescription}`)
+    if (w.notes) lines.push(`- Notes: ${w.notes}`)
+    trainingWeekBlock = lines.join('\n')
+  }
+
+  return { anchorBlock, familyBlock, trainingWeekBlock }
 }
 
 // Default to Denver when the client didn't (or couldn't) pass a location.
@@ -486,7 +562,7 @@ Deno.serve(async (req: Request) => {
       loadAnchorsAndFamily(admin, user.id, today),
     ])
     const profile = ((profileRes.data as { briefing_profile: BriefingProfile } | null)?.briefing_profile) ?? {}
-    const { anchorBlock, familyBlock } = anchorsAndFamily
+    const { anchorBlock, familyBlock, trainingWeekBlock } = anchorsAndFamily
 
     const systemPrompt = dayType === 'weekend'
       ? buildWeekendSystemPrompt(profile)
@@ -565,6 +641,8 @@ Deno.serve(async (req: Request) => {
 ${familyBlock}
 
 ${anchorBlock}
+
+${trainingWeekBlock}
 
 WEATHER (${locationStamp(location)}):
 ${weatherStr ? `- ${weatherStr}` : '- No weather data'}
@@ -721,6 +799,8 @@ LOCATION: ${locationStamp(location)}
 ${familyBlock}
 
 ${anchorBlock}
+
+${trainingWeekBlock}
 
 RECOVERY:
 - RHR: ${todaySignal?.rhr ?? 'no data'} bpm (baseline 63)
