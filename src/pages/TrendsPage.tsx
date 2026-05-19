@@ -20,9 +20,12 @@ interface TrendsPageProps {
   bgPhoto?: string
   version?: number
   onOpenTrainingEvent?: (goalId: string) => void
+  // Tap the WLW readiness card → jump to Lists / Training sub-tab so Ben
+  // can see the full plan section without going through the event detail.
+  onOpenTrainingPlan?: () => void
 }
 
-export function TrendsPage({ bgPhoto, version = 0, onOpenTrainingEvent }: TrendsPageProps) {
+export function TrendsPage({ bgPhoto, version = 0, onOpenTrainingEvent, onOpenTrainingPlan }: TrendsPageProps) {
   const { user } = useAuth()
   const [data, setData] = useState<TrendData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -87,15 +90,22 @@ export function TrendsPage({ bgPhoto, version = 0, onOpenTrainingEvent }: Trends
       {/* Content section */}
       <div style={{ padding: '0 14px 100px' }}>
 
-        {/* Hero metric card — race readiness */}
-        <div style={{
-          marginTop: -18,
-          padding: 18,
-          background: C.dark, color: C.cream, borderRadius: 18,
-          position: 'relative',
-          boxShadow: '0 14px 40px rgba(26,18,8,0.5)',
-          border: '1px solid rgba(245,237,214,0.1)',
-        }}>
+        {/* Hero metric card — race readiness. Tap to jump to the full
+            training program section (Lists / Training). */}
+        <button
+          onClick={() => onOpenTrainingPlan?.()}
+          disabled={!onOpenTrainingPlan}
+          style={{
+            display: 'block', width: '100%', textAlign: 'left',
+            marginTop: -18,
+            padding: 18,
+            background: C.dark, color: C.cream, borderRadius: 18,
+            position: 'relative',
+            boxShadow: '0 14px 40px rgba(26,18,8,0.5)',
+            border: '1px solid rgba(245,237,214,0.1)',
+            cursor: onOpenTrainingPlan ? 'pointer' : 'default',
+            fontFamily: 'inherit',
+          }}>
           <div style={{ position: 'absolute', top: 12, right: 14, background: C.rust, color: C.cream, padding: '3px 8px', borderRadius: 999, fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.18em' }} className="mono">★ ANCHOR</div>
           <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.7, letterSpacing: '0.2em' }}>
             WEST LINE WINDER READINESS
@@ -127,12 +137,19 @@ export function TrendsPage({ bgPhoto, version = 0, onOpenTrainingEvent }: Trends
                 <span className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.5 }}>8 WK AGO</span>
                 <span className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.5 }}>NOW</span>
               </div>
-              <div className="mono" style={{ fontSize: 'var(--fs-11)', color: C.teal, marginTop: 8, opacity: 0.9 }}>
-                ↳ {r.nextMilestone}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, gap: 8 }}>
+                <div className="mono" style={{ fontSize: 'var(--fs-11)', color: C.teal, opacity: 0.9 }}>
+                  ↳ {r.nextMilestone}
+                </div>
+                {onOpenTrainingPlan && (
+                  <span className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(245,237,214,0.55)', letterSpacing: '0.14em' }}>
+                    VIEW PLAN →
+                  </span>
+                )}
               </div>
             </>
           ) : null}
-        </div>
+        </button>
 
         {/* Report card table */}
         <div style={{

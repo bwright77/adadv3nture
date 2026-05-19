@@ -126,7 +126,7 @@ function Dashboard() {
         {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sat' && <WeekendEveningView     weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
         {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sun' && <WeekendSundayEveningView weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
 
-        {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} version={dataVersion} onOpenTrainingEvent={openTrainingEvent} />}
+        {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} version={dataVersion} onOpenTrainingEvent={openTrainingEvent} onOpenTrainingPlan={() => openListTab('training')} />}
         {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} initialTab={listsInitialTab} initialTrainingEvent={initialTrainingEventId} />}
         {tab === 'inbox'  && <InboxPage  bgPhoto={bgPhoto || undefined} version={inboxVersion} />}
         {tab === 'log'    && <LogPage onDataSynced={bumpData} />}
