@@ -51,7 +51,9 @@ export function useWeekendPlan() {
     setPlan(planData ?? null)
 
     if (effortData) {
-      const daysAgo = Math.floor((Date.now() - new Date(effortData.activity_date).getTime()) / 86_400_000)
+      // Anchor at noon local — activity_date is a YYYY-MM-DD DATE column; bare
+      // `new Date(dateStr)` parses as UTC midnight and shifts the day in Denver.
+      const daysAgo = Math.floor((Date.now() - new Date(effortData.activity_date + 'T12:00:00').getTime()) / 86_400_000)
       setLastEffort({ activity_type: effortData.activity_type, title: effortData.title, daysAgo })
     }
 

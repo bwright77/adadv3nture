@@ -22,7 +22,9 @@ function daysUntil(dateStr: string | null): number | null {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
+  // Anchor at noon local — YYYY-MM-DD parses as UTC midnight, which lands on
+  // the previous calendar day in Denver. Same trick as countdown.ts.
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
 }
 
 function ProjectCard({ project, onOpen }: { project: Project; onOpen: () => void }) {

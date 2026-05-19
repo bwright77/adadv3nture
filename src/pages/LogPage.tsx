@@ -214,7 +214,7 @@ export function LogPage({ onDataSynced }: LogPageProps = {}) {
               </div>
             </div>
             <div className="mono" style={{ fontSize: 'var(--fs-12)', color: C.ink40, textAlign: 'right', whiteSpace: 'nowrap' }}>
-              {new Date(a.activity_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {new Date(a.activity_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </div>
           </div>
         </div>

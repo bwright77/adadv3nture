@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { logicalToday } from './utils'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any
 
@@ -107,7 +108,7 @@ export async function addProgram(
       current_day: 1,
       total_weeks: totalWeeks,
       next_workout_title: getTitle(programName, 1, 1),
-      started_at: new Date().toISOString().substring(0, 10),
+      started_at: logicalToday(),
       active: true,
     })
     .select()
@@ -175,7 +176,7 @@ export async function advanceProgram(userId: string): Promise<void> {
     current_week: nextWeek,
     current_day: nextDay,
     next_workout_title: getTitle(program.program_name, nextWeek, nextDay),
-    last_completed_date: new Date().toISOString().substring(0, 10),
+    last_completed_date: logicalToday(),
   }).eq('id', program.id)
 }
 

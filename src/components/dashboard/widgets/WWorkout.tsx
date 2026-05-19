@@ -5,6 +5,7 @@ import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getRecentActivities } from '../../../lib/strava'
 import { getProgram, advanceProgram, type ProgramState } from '../../../lib/program-tracker'
+import { logicalToday } from '../../../lib/utils'
 import type { Database } from '../../../types/database'
 
 type Activity = Database['public']['Tables']['activities']['Row']
@@ -71,7 +72,7 @@ function ProgramProgress({ program, dark, onDone, advancing }: {
 
 export function WWorkout({ dark, span = 7 }: WWorkoutProps) {
   const { user } = useAuth()
-  const today = new Date().toISOString().substring(0, 10)
+  const today = logicalToday()
   const [todayAct, setTodayAct] = useState<Activity | null | undefined>(undefined)
   const [program, setProgram] = useState<ProgramState | null>(null)
   const [advancing, setAdvancing] = useState(false)

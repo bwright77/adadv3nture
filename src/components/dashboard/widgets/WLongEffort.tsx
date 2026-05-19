@@ -6,6 +6,7 @@ import { loadRecovery } from '../../../lib/recovery'
 import { getTrainingGoals } from '../../../lib/training'
 import { supabase } from '../../../lib/supabase'
 import { daysUntil, formatCountdown } from '../../../lib/countdown'
+import { logicalToday } from '../../../lib/utils'
 
 interface Props { dark?: boolean }
 
@@ -67,7 +68,7 @@ export function WLongEffort({ dark }: Props) {
   useEffect(() => {
     if (!user) return
     const monday = thisWeekMonday()
-    const today = new Date().toISOString().substring(0, 10)
+    const today = logicalToday()
 
     Promise.all([
       (supabase as any)

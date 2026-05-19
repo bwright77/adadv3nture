@@ -8,6 +8,7 @@ import { getCurrentTrainingWeek, type TrainingWeek } from '../../../lib/training
 import { loadRecovery } from '../../../lib/recovery'
 import { useWeather } from '../../../hooks/useWeather'
 import { supabase } from '../../../lib/supabase'
+import { logicalToday } from '../../../lib/utils'
 
 type ListTab = 'training' | 'career' | 'family' | 'home' | 'projects'
 
@@ -146,7 +147,7 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
   useEffect(() => {
     if (!user) return
     const monday = thisWeekMonday()
-    const today = new Date().toISOString().substring(0, 10)
+    const today = logicalToday()
 
     Promise.allSettled([
       getCurrentTrainingWeek(user.id),

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
 import { exportToMarkdown, downloadMarkdown } from '../../lib/dataExport'
+import { logicalToday } from '../../lib/utils'
 
 type Window = '90d' | 'all'
 
@@ -18,7 +19,7 @@ export function ExportCard() {
       const md = await exportToMarkdown(user.id, {
         windowDays: window === 'all' ? 'all' : 90,
       })
-      const date = new Date().toISOString().substring(0, 10)
+      const date = logicalToday()
       downloadMarkdown(`adadv3nture-${date}-${window}.md`, md)
       setLastExportedAt(new Date().toLocaleTimeString())
     } finally {

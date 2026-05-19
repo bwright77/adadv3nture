@@ -432,8 +432,9 @@ Deno.serve(async (req: Request) => {
         activity_type: string; title: string | null
         distance_miles: number | null; activity_date: string
       } | null
+      // Noon anchor — activity_date is YYYY-MM-DD, bare parse is UTC midnight.
       const daysAgoEffort = effort
-        ? Math.floor((Date.now() - new Date(effort.activity_date).getTime()) / 86_400_000)
+        ? Math.floor((Date.now() - new Date(effort.activity_date + 'T12:00:00').getTime()) / 86_400_000)
         : null
 
       const plan = weekendPlanRes.data as {

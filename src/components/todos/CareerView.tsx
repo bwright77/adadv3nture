@@ -15,7 +15,8 @@ function daysUntil(dateStr: string | null): number | null {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
+  // Noon-local anchor — YYYY-MM-DD parses as UTC midnight, prev day in Denver.
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
 }
 
 function CareerCard({ project, primaryContact, onOpen }: {

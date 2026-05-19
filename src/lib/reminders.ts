@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { logicalToday } from './utils'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any
 
@@ -14,7 +15,7 @@ export interface Reminder {
 }
 
 export async function getActiveReminders(userId: string): Promise<Reminder[]> {
-  const today = new Date().toISOString().substring(0, 10)
+  const today = logicalToday()
   const { data, error } = await supabase
     .from('persistent_reminders')
     .select('*')
