@@ -24,11 +24,18 @@ export interface TrainingGoal {
   created_at: string
 }
 
+export type TrainingPhase = 'base' | 'build' | 'peak' | 'taper'
+
 export interface TrainingWeek {
   id: string
   user_id: string
   week_start: string
   phase_label: string
+  // phase_id is the constrained category for grouping/coloring the plan UI;
+  // phase_label remains the freeform per-week title ("Base 6 · Peak").
+  phase_id: TrainingPhase | null
+  focus: string | null
+  key_marker: string | null
   target_run_miles: number | null
   target_long_run_miles: number | null
   target_cycling_miles: number | null
@@ -37,6 +44,17 @@ export interface TrainingWeek {
   actual_cycling_miles: number | null
   actual_strength_sessions: number | null
   notes: string | null
+}
+
+// Pull every seeded week for the user, oldest → newest. Used by the Plan view.
+export async function getAllTrainingWeeks(userId: string): Promise<TrainingWeek[]> {
+  const { data, error } = await supabase
+    .from('training_weeks')
+    .select('*')
+    .eq('user_id', userId)
+    .order('week_start', { ascending: true })
+  if (error) throw new Error(error.message)
+  return (data ?? []) as TrainingWeek[]
 }
 
 export async function getTrainingGoals(userId: string): Promise<TrainingGoal[]> {
