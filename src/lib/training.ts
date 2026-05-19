@@ -12,6 +12,7 @@ export interface TrainingGoal {
   user_id: string
   event_name: string
   event_date: string
+  event_start_time: string | null   // HH:MM:SS (Postgres time), local clock
   event_type: TrainingEventType
   distance_label: string | null
   elevation_label: string | null
@@ -104,6 +105,7 @@ export async function addTrainingGoal(
     elevation_label?: string
     is_anchor?: boolean
     website_url?: string
+    event_start_time?: string
   }
 ): Promise<TrainingGoal> {
   const { data, error } = await db
@@ -118,6 +120,7 @@ export async function addTrainingGoal(
       elevation_label: opts?.elevation_label ?? null,
       is_anchor: opts?.is_anchor ?? false,
       website_url: opts?.website_url ?? null,
+      event_start_time: opts?.event_start_time ?? null,
     })
     .select()
     .single()
@@ -147,6 +150,7 @@ export async function updateTrainingGoalWebsiteUrl(id: string, url: string): Pro
 export interface TrainingGoalEditableFields {
   event_name?: string
   event_date?: string
+  event_start_time?: string | null
   event_type?: TrainingEventType
   location?: string | null
   distance_label?: string | null
@@ -163,6 +167,7 @@ export async function updateTrainingGoalDetails(
   const update: Record<string, unknown> = {}
   if (fields.event_name !== undefined) update.event_name = fields.event_name.trim()
   if (fields.event_date !== undefined) update.event_date = fields.event_date
+  if (fields.event_start_time !== undefined) update.event_start_time = fields.event_start_time || null
   if (fields.event_type !== undefined) update.event_type = fields.event_type
   if (fields.location !== undefined) update.location = (fields.location ?? '').trim() || null
   if (fields.distance_label !== undefined) update.distance_label = (fields.distance_label ?? '').trim() || null

@@ -35,7 +35,20 @@ function daysUntil(dateStr: string): number {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
+  // Anchor at noon local. `new Date('2026-08-22')` parses as UTC midnight,
+  // which renders as Aug 21 in Denver. Same trick used in countdown.ts.
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
+}
+
+function formatStartTime(t: string | null | undefined): string | null {
+  if (!t) return null
+  // Postgres `time` columns come back as 'HH:MM:SS'. Convert to 12-hour
+  // local-style for display (e.g. '7:00 AM'); leave the raw value alone in DB.
+  const [hh, mm] = t.split(':').map(Number)
+  if (isNaN(hh) || isNaN(mm)) return t
+  const period = hh >= 12 ? 'PM' : 'AM'
+  const h12 = hh % 12 === 0 ? 12 : hh % 12
+  return `${h12}:${String(mm).padStart(2, '0')} ${period}`
 }
 
 function EventCard({ goal, onOpen }: { goal: TrainingGoal; onOpen: () => void }) {
@@ -124,6 +137,9 @@ function EventDetail({ goal, onClose, onUpdate }: {
   const [savingDetails, setSavingDetails] = useState(false)
   const [nameDraft, setNameDraft] = useState(goal.event_name)
   const [dateDraft, setDateDraft] = useState(goal.event_date)
+  // Trim the seconds off the Postgres `time` value for the HTML time input,
+  // which expects HH:MM. Empty string = no start time set.
+  const [startTimeDraft, setStartTimeDraft] = useState((goal.event_start_time ?? '').slice(0, 5))
   const [typeDraft, setTypeDraft] = useState<TrainingEventType>(goal.event_type)
   const [locationDraft, setLocationDraft] = useState(goal.location ?? '')
   const [distanceDraft, setDistanceDraft] = useState(goal.distance_label ?? '')
@@ -134,6 +150,7 @@ function EventDetail({ goal, onClose, onUpdate }: {
   function startEditingDetails() {
     setNameDraft(goal.event_name)
     setDateDraft(goal.event_date)
+    setStartTimeDraft((goal.event_start_time ?? '').slice(0, 5))
     setTypeDraft(goal.event_type)
     setLocationDraft(goal.location ?? '')
     setDistanceDraft(goal.distance_label ?? '')
@@ -148,6 +165,7 @@ function EventDetail({ goal, onClose, onUpdate }: {
       const updated = await updateTrainingGoalDetails(goal.id, {
         event_name: nameDraft,
         event_date: dateDraft,
+        event_start_time: startTimeDraft || null,
         event_type: typeDraft,
         location: locationDraft,
         distance_label: distanceDraft,
@@ -186,6 +204,7 @@ function EventDetail({ goal, onClose, onUpdate }: {
   const meta: [string, string][] = [
     ['DATE', formatDate(goal.event_date)],
     ['COUNTDOWN', days < 0 ? 'COMPLETE' : `${days}d · ${Math.floor(days / 7)}wk`],
+    ...(goal.event_start_time ? [['START', formatStartTime(goal.event_start_time) ?? goal.event_start_time] as [string, string]] : []),
     ...(goal.distance_label ? [['DISTANCE', goal.distance_label] as [string, string]] : []),
     ...(goal.elevation_label ? [['ELEVATION', goal.elevation_label] as [string, string]] : []),
     ...(goal.location ? [['LOCATION', goal.location] as [string, string]] : []),
@@ -256,16 +275,23 @@ function EventDetail({ goal, onClose, onUpdate }: {
                   onChange={e => setDateDraft(e.target.value)}
                   style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark, outline: 'none', minWidth: 0 }}
                 />
-                <select
-                  value={typeDraft}
-                  onChange={e => setTypeDraft(e.target.value as TrainingEventType)}
-                  style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark, outline: 'none', background: '#fff', minWidth: 0 }}
-                >
-                  <option value="trail_run">Trail Run</option>
-                  <option value="cycling_gravel">Gravel Cycling</option>
-                  <option value="cycling_road">Road Cycling</option>
-                </select>
+                <input
+                  type="time"
+                  value={startTimeDraft}
+                  onChange={e => setStartTimeDraft(e.target.value)}
+                  placeholder="Start time"
+                  style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark, outline: 'none', minWidth: 0 }}
+                />
               </div>
+              <select
+                value={typeDraft}
+                onChange={e => setTypeDraft(e.target.value as TrainingEventType)}
+                style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark, outline: 'none', background: '#fff' }}
+              >
+                <option value="trail_run">Trail Run</option>
+                <option value="cycling_gravel">Gravel Cycling</option>
+                <option value="cycling_road">Road Cycling</option>
+              </select>
               <input
                 value={locationDraft}
                 onChange={e => setLocationDraft(e.target.value)}
@@ -644,6 +670,7 @@ function AddEventForm({ onSave, onCancel }: { onSave: (g: TrainingGoal) => void;
   const { user } = useAuth()
   const [name, setName] = useState('')
   const [date, setDate] = useState('')
+  const [startTime, setStartTime] = useState('')
   const [type, setType] = useState<TrainingEventType>('trail_run')
   const [location, setLocation] = useState('')
   const [distance, setDistance] = useState('')
@@ -663,6 +690,7 @@ function AddEventForm({ onSave, onCancel }: { onSave: (g: TrainingGoal) => void;
         distance_label: distance.trim() || undefined,
         elevation_label: elevation.trim() || undefined,
         website_url: websiteUrl.trim() || undefined,
+        event_start_time: startTime || undefined,
       })
       onSave(g)
     } catch {
@@ -687,12 +715,13 @@ function AddEventForm({ onSave, onCancel }: { onSave: (g: TrainingGoal) => void;
           onKeyDown={e => { if (e.key === 'Escape') onCancel() }} />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, minWidth: 0 }}>
           <input style={{ ...inputStyle, minWidth: 0 }} type="date" value={date} onChange={e => setDate(e.target.value)} />
-          <select style={{ ...inputStyle, minWidth: 0 }} value={type} onChange={e => setType(e.target.value as TrainingEventType)}>
-            <option value="trail_run">Trail Run</option>
-            <option value="cycling_gravel">Gravel Cycling</option>
-            <option value="cycling_road">Road Cycling</option>
-          </select>
+          <input style={{ ...inputStyle, minWidth: 0 }} type="time" value={startTime} onChange={e => setStartTime(e.target.value)} placeholder="Start time (optional)" />
         </div>
+        <select style={inputStyle} value={type} onChange={e => setType(e.target.value as TrainingEventType)}>
+          <option value="trail_run">Trail Run</option>
+          <option value="cycling_gravel">Gravel Cycling</option>
+          <option value="cycling_road">Road Cycling</option>
+        </select>
         <input style={inputStyle} placeholder="Location (optional)" value={location} onChange={e => setLocation(e.target.value)} />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, minWidth: 0 }}>
           <input style={{ ...inputStyle, minWidth: 0 }} placeholder="Distance (e.g. 18.6mi)" value={distance} onChange={e => setDistance(e.target.value)} />
