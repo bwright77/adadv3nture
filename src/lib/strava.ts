@@ -187,7 +187,11 @@ export async function getRecentActivities(userId: string, limit = 7) {
     .from('activities')
     .select('*')
     .eq('user_id', userId)
+    // activity_date is a DATE (no time) so within a single day Postgres'
+    // ordering was non-deterministic and tended to surface oldest-first.
+    // Break ties on start_time so the list is strictly newest → oldest.
     .order('activity_date', { ascending: false })
+    .order('start_time', { ascending: false, nullsFirst: false })
     .limit(limit)
 
   return data ?? []
