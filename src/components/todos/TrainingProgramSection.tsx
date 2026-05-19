@@ -26,12 +26,12 @@ const PHASE_DESC: Record<TrainingPhase, string> = {
 }
 
 const PRINCIPLES: [string, string][] = [
-  ['Down weeks matter', 'W4, W10, W15 are not optional. Skipping recovery weeks is where injuries come from. Bergen at 13.1 mi / 2,451 ft makes W15 especially critical.'],
-  ['Bergen is a predictor, not just a tune-up', '13.1 mi / 2,451 ft / 9,708 ft summit. Your 2016 result was 3:08 unstructured. Target 2:45 in 2026. Watch your mile 7–8 pace at the summit — that split predicts your WLW back half.'],
-  ['Vert is non-negotiable', 'Green Mtn → Mount Falcon → Lookout Mtn → Herman Gulch → Bergen Peak. WLW has 4,200 ft. Flat miles don\'t prepare you for any of it.'],
-  ['Cycling doesn\'t transfer here', 'FOCO and Hurricane build aerobic base, not trail legs. Once both events are done, cycling drops to zero permanently.'],
-  ['The W13 run is your Bergen simulator', '14 miles / 1,500+ ft the week before Bergen. If that feels controlled, race Bergen at 2:40–2:45. If it\'s a suffer-fest, back off to 2:50–3:00.'],
-  ['Trust the taper, trust the data', 'WLW target: 4:30–4:45. Sub-4:30 on the table if Bergen goes under 2:40 and W16 long run feels strong. The math is grounded in your actual 2016 result, not pace calculators.'],
+  ['Long runs are sacred — and trail-specific', "Distance, vert, and descent targets are non-negotiable. Route doesn't matter. Denver foothills or Howard/Salida — same targets, different scenery. Turkey Rock doubled + flat miles works fine."],
+  ['Multi-sport midweek is the plan', 'Peloton intervals, gravel climbing, rower, MTB — all count. Rotating load vectors reduces overuse injury risk and lets you train at higher total stress than running alone allows. Best athlete wins, not best runner.'],
+  ['Cycling climbing transfers', "Sustained bike climbing builds quads and glutes directly relevant to trail uphills. Gravel and MTB terrain builds meaningful proprioception too. What cycling can't replicate is eccentric downhill loading — that's what the trail long runs are for."],
+  ['Bergen is a predictor, not just a tune-up', '13.1 mi / 2,451 ft / 9,708 ft summit. Target 2:45. Your 2016 result was 3:08 unstructured — this is the delta structured training buys. Watch mile 7–8 at the summit.'],
+  ['Down weeks are not optional', "W4, W10, W15. Skipping them is where long training blocks unravel. Bergen's recovery (W15) is especially critical — 9,700 ft at race effort is a deeper hole than it looks."],
+  ['Trust the taper, trust the data', 'WLW target: 4:30–4:45. Sub-4:30 on the table if Bergen goes under 2:40 and W16 long run feels controlled. The math is grounded in your actual 2016 result.'],
 ]
 
 interface Activity {
