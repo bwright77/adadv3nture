@@ -126,6 +126,40 @@ export async function updateTrainingGoalWebsiteUrl(id: string, url: string): Pro
   await db.from('training_goals').update({ website_url: url.trim() || null }).eq('id', id)
 }
 
+export interface TrainingGoalEditableFields {
+  event_name?: string
+  event_date?: string
+  event_type?: TrainingEventType
+  location?: string | null
+  distance_label?: string | null
+  elevation_label?: string | null
+}
+
+// Single update for the user-facing detail fields. Used by the "Edit details"
+// form on EventDetail. Empty strings are normalised to null for the optional
+// fields so the DB stays clean.
+export async function updateTrainingGoalDetails(
+  id: string,
+  fields: TrainingGoalEditableFields,
+): Promise<TrainingGoal> {
+  const update: Record<string, unknown> = {}
+  if (fields.event_name !== undefined) update.event_name = fields.event_name.trim()
+  if (fields.event_date !== undefined) update.event_date = fields.event_date
+  if (fields.event_type !== undefined) update.event_type = fields.event_type
+  if (fields.location !== undefined) update.location = (fields.location ?? '').trim() || null
+  if (fields.distance_label !== undefined) update.distance_label = (fields.distance_label ?? '').trim() || null
+  if (fields.elevation_label !== undefined) update.elevation_label = (fields.elevation_label ?? '').trim() || null
+
+  const { data, error } = await db
+    .from('training_goals')
+    .update(update)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw new Error(error.message)
+  return data as TrainingGoal
+}
+
 export async function addTrainingWeek(
   userId: string,
   weekStart: string,                  // YYYY-MM-DD — should be a Monday

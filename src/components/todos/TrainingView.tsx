@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
-import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, addTrainingWeek, updateTrainingGoalNotes, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
+import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, addTrainingWeek, updateTrainingGoalNotes, updateTrainingGoalDetails, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
 import { getAllPrograms, addProgram, advanceProgram, setProgramPosition, deactivateProgram, syncProgramFromStrava, updateProgramImageUrl, type ProgramState } from '../../lib/program-tracker'
 import { updateTrainingGoalImageUrl, updateTrainingGoalWebsiteUrl } from '../../lib/training'
 import { isDerivedWeek } from '../../lib/trainingPlan'
@@ -119,8 +119,45 @@ function EventDetail({ goal, onClose, onUpdate }: {
   const [imageDraft, setImageDraft] = useState(goal.image_url ?? '')
   const [editingUrl, setEditingUrl] = useState(false)
   const [urlDraft, setUrlDraft] = useState(goal.website_url ?? '')
+  const [editingDetails, setEditingDetails] = useState(false)
+  const [savingDetails, setSavingDetails] = useState(false)
+  const [nameDraft, setNameDraft] = useState(goal.event_name)
+  const [dateDraft, setDateDraft] = useState(goal.event_date)
+  const [typeDraft, setTypeDraft] = useState<TrainingEventType>(goal.event_type)
+  const [locationDraft, setLocationDraft] = useState(goal.location ?? '')
+  const [distanceDraft, setDistanceDraft] = useState(goal.distance_label ?? '')
+  const [elevationDraft, setElevationDraft] = useState(goal.elevation_label ?? '')
   const days = daysUntil(goal.event_date)
   const color = EVENT_COLOR[goal.event_type] ?? C.rust
+
+  function startEditingDetails() {
+    setNameDraft(goal.event_name)
+    setDateDraft(goal.event_date)
+    setTypeDraft(goal.event_type)
+    setLocationDraft(goal.location ?? '')
+    setDistanceDraft(goal.distance_label ?? '')
+    setElevationDraft(goal.elevation_label ?? '')
+    setEditingDetails(true)
+  }
+
+  async function saveDetails() {
+    if (!nameDraft.trim() || !dateDraft) return
+    setSavingDetails(true)
+    try {
+      const updated = await updateTrainingGoalDetails(goal.id, {
+        event_name: nameDraft,
+        event_date: dateDraft,
+        event_type: typeDraft,
+        location: locationDraft,
+        distance_label: distanceDraft,
+        elevation_label: elevationDraft,
+      })
+      onUpdate(updated)
+      setEditingDetails(false)
+    } finally {
+      setSavingDetails(false)
+    }
+  }
 
   async function save() {
     setSaving(true)
@@ -202,14 +239,89 @@ function EventDetail({ goal, onClose, onUpdate }: {
 
       <div style={{ padding: '20px 18px 100px' }}>
         <div style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', marginBottom: 16, border: `0.5px solid ${C.ink20}` }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px' }}>
-            {meta.map(([label, val]) => (
-              <div key={label}>
-                <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em', marginBottom: 2 }}>{label}</div>
-                <div style={{ fontSize: 'var(--fs-15)', fontWeight: 600, color: C.dark }}>{val}</div>
+          {editingDetails ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="mono" style={{ fontSize: 'var(--fs-10)', color: color, letterSpacing: '0.12em' }}>EDIT EVENT</div>
+              <input
+                value={nameDraft}
+                onChange={e => setNameDraft(e.target.value)}
+                placeholder="Event name"
+                style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark, outline: 'none' }}
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <input
+                  type="date"
+                  value={dateDraft}
+                  onChange={e => setDateDraft(e.target.value)}
+                  style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark, outline: 'none', minWidth: 0 }}
+                />
+                <select
+                  value={typeDraft}
+                  onChange={e => setTypeDraft(e.target.value as TrainingEventType)}
+                  style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark, outline: 'none', background: '#fff', minWidth: 0 }}
+                >
+                  <option value="trail_run">Trail Run</option>
+                  <option value="cycling_gravel">Gravel Cycling</option>
+                  <option value="cycling_road">Road Cycling</option>
+                </select>
               </div>
-            ))}
-          </div>
+              <input
+                value={locationDraft}
+                onChange={e => setLocationDraft(e.target.value)}
+                placeholder="Location"
+                style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark, outline: 'none' }}
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <input
+                  value={distanceDraft}
+                  onChange={e => setDistanceDraft(e.target.value)}
+                  placeholder="Distance (e.g. 18.6mi)"
+                  style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark, outline: 'none', minWidth: 0 }}
+                />
+                <input
+                  value={elevationDraft}
+                  onChange={e => setElevationDraft(e.target.value)}
+                  placeholder="Elevation"
+                  style={{ border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 10px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark, outline: 'none', minWidth: 0 }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 2 }}>
+                <button
+                  onClick={() => setEditingDetails(false)}
+                  style={{ background: 'none', border: `1px solid ${C.ink20}`, borderRadius: 8, padding: '7px 14px', fontSize: 'var(--fs-13)', color: C.ink60, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveDetails}
+                  disabled={savingDetails || !nameDraft.trim() || !dateDraft}
+                  style={{ background: color, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 'var(--fs-13)', fontWeight: 700, cursor: 'pointer', opacity: (savingDetails || !nameDraft.trim() || !dateDraft) ? 0.5 : 1, fontFamily: 'inherit' }}
+                >
+                  {savingDetails ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+                <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em' }}>DETAILS</div>
+                <button
+                  onClick={startEditingDetails}
+                  style={{ background: 'none', border: 'none', color: C.ink40, fontSize: 'var(--fs-12)', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+                >
+                  ✎ Edit
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px' }}>
+                {meta.map(([label, val]) => (
+                  <div key={label}>
+                    <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em', marginBottom: 2 }}>{label}</div>
+                    <div style={{ fontSize: 'var(--fs-15)', fontWeight: 600, color: C.dark }}>{val}</div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
           <div style={{ marginTop: 12, paddingTop: 12, borderTop: `0.5px solid ${C.ink20}` }}>
             {editingUrl ? (
               <div style={{ display: 'flex', gap: 8 }}>
