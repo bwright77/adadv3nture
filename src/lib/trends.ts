@@ -24,7 +24,7 @@ function sum(nums: (number | null | undefined)[]): number {
 // Strava's normalizer maps the most common bike types to 'ride' but leaves
 // MountainBikeRide / EBikeRide / etc. lowercased as-is. Match broadly so
 // any current or future variant is counted.
-function isBikeActivity(activityType: string): boolean {
+export function isBikeActivity(activityType: string): boolean {
   return activityType === 'ride'
     || activityType.includes('bike')
     || activityType.includes('cycl')

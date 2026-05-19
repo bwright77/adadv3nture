@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
 import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, addTrainingWeek, updateTrainingGoalNotes, updateTrainingGoalDetails, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
-import { TrainingPlanView } from './TrainingPlanView'
+import { TrainingProgramSection } from './TrainingProgramSection'
 import { getAllPrograms, addProgram, advanceProgram, setProgramPosition, deactivateProgram, syncProgramFromStrava, updateProgramImageUrl, type ProgramState } from '../../lib/program-tracker'
 import { updateTrainingGoalImageUrl, updateTrainingGoalWebsiteUrl } from '../../lib/training'
 import { isDerivedWeek } from '../../lib/trainingPlan'
@@ -854,7 +854,6 @@ export function TrainingView({ initialEvent }: TrainingViewProps = {}) {
   const [addingProgram, setAddingProgram] = useState(false)
   const [addingWeek, setAddingWeek] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [showPlan, setShowPlan] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -915,23 +914,9 @@ export function TrainingView({ initialEvent }: TrainingViewProps = {}) {
         />
       )}
 
-      {showPlan && <TrainingPlanView onClose={() => setShowPlan(false)} />}
-
       {/* This week's targets — derived from upcoming events by default */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40 }}>
-          ◆ THIS WEEK
-        </div>
-        <button
-          onClick={() => setShowPlan(true)}
-          style={{
-            background: 'none', border: 'none', color: C.teal,
-            fontSize: 'var(--fs-13)', fontWeight: 700, cursor: 'pointer',
-            padding: '2px 0', fontFamily: 'inherit',
-          }}
-        >
-          View season plan →
-        </button>
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', fontWeight: 700, letterSpacing: '0.15em', color: C.ink40, marginBottom: 10 }}>
+        ◆ THIS WEEK
       </div>
 
       {addingWeek && (
@@ -971,6 +956,9 @@ export function TrainingView({ initialEvent }: TrainingViewProps = {}) {
           </button>
         </div>
       )}
+
+      {/* Full season program — position, report card, week list, principles */}
+      <TrainingProgramSection />
 
       {/* Programs */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: week ? 20 : 0 }}>
