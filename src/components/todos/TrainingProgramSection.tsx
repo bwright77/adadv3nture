@@ -30,19 +30,107 @@ const PHASE_HERO: Record<TrainingPhase, { from: string; to: string; shadow: stri
 }
 
 const PHASE_DESC: Record<TrainingPhase, string> = {
-  base:  'Build aerobic foundation. Run volume ramps from 24→32 mpw. Long run to 12 miles. Cycling volume builds toward FOCO. Vert work begins by W3.',
-  build: 'Peak aerobic load. FOCO Fondo (W9) and Ride the Hurricane (W11) as cycling anchors. Run volume maintained 25–32 mpw around events. W12 cycling exits — trail running becomes sole focus.',
-  peak:  'Highest run quality. W13 long run (14 mi / 1,500+ ft) is the Bergen simulator. W14: Bergen Peak (13.1 mi / 2,451 ft / 9,708 ft summit) — race at controlled effort. Target finish 2:45. Bergen is your single best WLW predictor.',
-  taper: 'Bergen recovery then one final hard week (W16). Volume drops progressively into WLW. Target finish: 4:30–4:45. Sub-4:30 on the table if Bergen goes under 2:40.',
+  base:  'Build aerobic foundation. Run 18–28 mpw, long run to 12 miles. Quality starts W1 (PZ Max + strides); cruise miles add W3. Cycling volume builds toward FOCO. FTP retest closes Phase 1.',
+  build: 'Peak aerobic load. FOCO Fondo (W9) is the cycling anchor; Ride the Hurricane (W11) is a bonus. Run maintained around events. W12: cycling exits, trail running primary. Heat rule active: run before 8AM or at altitude.',
+  peak:  'Highest run quality. W13 long run (14mi / 1,500+ ft) is the Bergen simulator. W14: Bergen Peak (13.1mi / 2,451ft / 9,708ft summit) — race controlled. Target 2:45. Bergen is the single best WLW predictor.',
+  taper: 'Bergen recovery then one final hard week (W16, 13mi with vert). Volume drops 30% → 55% into WLW. Target finish 4:30–4:45. Sub-4:30 on the table if Bergen goes under 2:40.',
 }
 
+// ─── Reference content (v3 plan) ────────────────────────────────────────
+
+const WEEKLY_TEMPLATES: Record<TrainingPhase, { day: string; primary: string; sub?: string }[]> = {
+  base: [
+    { day: 'Mon', primary: 'Run Club PM',                       sub: 'Wash Park · 3–5mi easy · SACRED' },
+    { day: 'Tue', primary: 'Strength (TS / RK)',                sub: '7:40am window' },
+    { day: 'Wed', primary: 'Peloton PZ Max · 30–45 min',        sub: 'Primary quality. No impact, no drive.' },
+    { day: 'Thu', primary: 'Strides OR cruise miles',           sub: 'Alternate weeks · 4–5mi total + light strength' },
+    { day: 'Fri', primary: 'Easy run OR Peloton Row',           sub: '20–30 min · Z1–low Z2' },
+    { day: 'Sat', primary: 'Long run (trail)',                  sub: 'Howard / SMR / Denver foothills' },
+    { day: 'Sun', primary: 'Easy Z2 bike or row + light strength', sub: 'Active recovery' },
+  ],
+  build: [
+    { day: 'Mon', primary: 'Run Club PM',                       sub: 'Easy effort always' },
+    { day: 'Tue', primary: 'Strength (RK Split)',               sub: 'Lower body or full body' },
+    { day: 'Wed', primary: 'Peloton PZ Max',                    sub: 'Primary quality' },
+    { day: 'Thu', primary: 'Tempo run OR cruise miles',         sub: 'Alternate weeks · quality #2' },
+    { day: 'Fri', primary: 'Easy bike (Z2)',                    sub: 'Cycling volume building' },
+    { day: 'Sat', primary: 'Long ride OR long run',             sub: 'Cycling weeks: long ride · Run weeks: long trail' },
+    { day: 'Sun', primary: 'Easy alt-mode',                     sub: 'Row, easy bike, or rest — based on Sat load' },
+  ],
+  peak: [
+    { day: 'Mon', primary: 'Run Club PM',                       sub: 'Easy only' },
+    { day: 'Tue', primary: 'Maintenance strength',              sub: '1 set per movement' },
+    { day: 'Wed', primary: 'PZ Max OR tempo run',               sub: 'Last hard quality of the build' },
+    { day: 'Thu', primary: 'Easy run',                          sub: 'No quality' },
+    { day: 'Fri', primary: 'Rest or 20 min easy row',           sub: 'Race week (W14): rest' },
+    { day: 'Sat', primary: 'Bergen sim (W13) / Bergen race (W14)', sub: 'The whole week points here' },
+    { day: 'Sun', primary: 'Easy shake-out / recovery',         sub: '20–30 min Z1–Z2' },
+  ],
+  taper: [
+    { day: 'Mon', primary: 'Run Club PM',                       sub: 'Easy' },
+    { day: 'Tue', primary: 'Light strength · single set',       sub: '1× per week' },
+    { day: 'Wed', primary: 'Strides + easy run (short)',        sub: 'Sharpening, not building' },
+    { day: 'Thu', primary: 'Easy run (short)',                  sub: 'Cut duration weekly' },
+    { day: 'Fri', primary: 'Rest',                              sub: 'Sleep is the workout' },
+    { day: 'Sat', primary: 'Long run (declining)',              sub: 'W16: 13 · W17: 10 · W18: 6 · W19: race' },
+    { day: 'Sun', primary: 'Easy alt-mode or rest' },
+  ],
+}
+
+const QUALITY_STREAMS: { group: string; rows: { name: string; dose: string; when: string }[] }[] = [
+  {
+    group: 'CYCLING (Peloton Bike)',
+    rows: [
+      { name: 'Power Zone Max',  dose: '30–45 min, Z4–Z5 intervals',           when: '1×/wk W1–W13 · primary midweek quality' },
+      { name: 'Climb Ride (alt)', dose: '30–45 min sustained Z3–Z4',            when: 'Substitute for PZ Max' },
+      { name: 'PZ Endurance',    dose: '45–60 min Z2',                          when: '1–2×/wk all phases · heat alternative' },
+      { name: 'FTP retest',      dose: '20-min FTP test',                       when: 'End of W6 (Jun 28) · gates Phase 2 zones' },
+    ],
+  },
+  {
+    group: 'RUNNING (flat-ground, no drive)',
+    rows: [
+      { name: 'Strides',         dose: '4–6 × 20s @ 5K effort, full walk rec',  when: '2×/wk all phases · neuromuscular' },
+      { name: 'Cruise miles',    dose: '3–4 × 1mi @ Z3, 60–90s jog rec',        when: 'Bi-weekly W3–W13 · Cherry Creek / Wash Park' },
+      { name: 'Progression run', dose: '45–60 min, last 15–20 @ Z3',            when: 'Alt with cruise miles W7–W13' },
+      { name: 'Fartlek',         dose: '1–3 min hard / 1–3 min easy × 6–10',    when: 'Alt option · fits any neighborhood' },
+      { name: 'Tempo (Z3)',      dose: '20–30 min continuous',                  when: '1×/wk Phase 2–3 high-quality weeks' },
+    ],
+  },
+]
+
+const STRENGTH_PHASES: { range: string; program: string; freq: string; goal: string }[] = [
+  { range: 'W1–3',    program: 'Total Strength (Speer) — finish cycle', freq: '3×',          goal: 'Reactivation → progressive overload' },
+  { range: 'W4',      program: 'Down week — bodyweight + light DB',     freq: '2×',          goal: 'Recovery' },
+  { range: 'W5–8',    program: 'RK 5-Day Split (pick 3 of 5)',          freq: '3×',          goal: 'Unilateral / posterior chain · trail-specific' },
+  { range: 'W9',      program: 'Maintenance — 1 lower body early week', freq: '1×',          goal: "Don't go into FOCO sore" },
+  { range: 'W10–12',  program: 'RK Split continued',                    freq: '2–3×',        goal: 'Room for strength as cycling drops' },
+  { range: 'W13–14',  program: 'Maintenance — 1 set per movement',      freq: '2× / 1× race',goal: 'Preserve, don\'t fatigue' },
+  { range: 'W15–16',  program: 'Maintenance, light loading',            freq: '2×',          goal: 'Stay in the groove' },
+  { range: 'W17–19',  program: 'Minimum effective dose',                freq: '1×',          goal: 'Stay loose, no soreness' },
+]
+
+const TRAIL_ROUTES: { name: string; distance: string; elevation: string; base: string; notes: string }[] = [
+  { name: 'Turkey Rock (BLM, Howard)',         distance: '3.57mi base',        elevation: '361 ft',          base: '~6,600 ft', notes: 'Known route. Easily extended or doubled.' },
+  { name: 'Turret Trail (Browns Canyon)',      distance: '6.9mi out-and-back', elevation: '1,085 ft',        base: '~6,800 ft', notes: 'Ruby Mountain trailhead, ~15 min north of Howard.' },
+  { name: 'Catkin Gulch Loop (Browns Canyon)', distance: '11.5mi',             elevation: '~1,000 ft',       base: '~6,800 ft', notes: 'Deep monument run. No water. Rattlesnakes May–Sep.' },
+  { name: 'Salida Mountain Trails (Tenderfoot)', distance: 'Flexible 6–14mi', elevation: '7,000–8,500 ft',  base: '~7,000 ft', notes: 'Stacked loop system, Burmac trailhead, 15 min from Howard.' },
+  { name: 'Snow Mountain Ranch (Granby)',      distance: 'Flexible',           elevation: 'varies',          base: '~8,700 ft', notes: 'Waterfall + Nordic + 9-Mile Mtn. Pace 30–45 sec/mi slower at altitude.' },
+]
+
 const PRINCIPLES: [string, string][] = [
-  ['Long runs are sacred — and trail-specific', "Distance, vert, and descent targets are non-negotiable. Route doesn't matter. Denver foothills or Howard/Salida — same targets, different scenery. Turkey Rock doubled + flat miles works fine."],
-  ['Multi-sport midweek is the plan', 'Peloton intervals, gravel climbing, rower, MTB — all count. Rotating load vectors reduces overuse injury risk and lets you train at higher total stress than running alone allows. Best athlete wins, not best runner.'],
-  ['Cycling climbing transfers', "Sustained bike climbing builds quads and glutes directly relevant to trail uphills. Gravel and MTB terrain builds meaningful proprioception too. What cycling can't replicate is eccentric downhill loading — that's what the trail long runs are for."],
-  ['Bergen is a predictor, not just a tune-up', '13.1 mi / 2,451 ft / 9,708 ft summit. Target 2:45. Your 2016 result was 3:08 unstructured — this is the delta structured training buys. Watch mile 7–8 at the summit.'],
-  ['Down weeks are not optional', "W4, W10, W15. Skipping them is where long training blocks unravel. Bergen's recovery (W15) is especially critical — 9,700 ft at race effort is a deeper hole than it looks."],
-  ['Trust the taper, trust the data', 'WLW target: 4:30–4:45. Sub-4:30 on the table if Bergen goes under 2:40 and W16 long run feels controlled. The math is grounded in your actual 2016 result.'],
+  ['Long runs are sacred and trail-specific', 'Vert and descent targets non-negotiable. Route flexible — Howard, Snow Mountain Ranch, Denver foothills all interchangeable.'],
+  ['Multi-sport midweek is the plan', 'Peloton Bike + Row, gravel, MTB all count. Best athlete wins, not best runner.'],
+  ['Quality is small but constant', 'PZ Max + strides from W1 onward. Volume alone doesn\'t make you faster.'],
+  ['Hill stimulus comes from the Peloton and weekend long runs', "Midweek running is flat ground (Denver has no good in-town hills without a drive). Eccentric downhill loading lives on Saturdays — the bike can't replicate it."],
+  ['Easy miles are the dosage variable', 'Protect long runs, quality, and strength. Cut easy when systemic load runs high.'],
+  ['Bergen is a predictor', 'Mile 7–8 at the summit is the key split. Run it controlled, read the data.'],
+  ['Down weeks are not optional', "W4, W10, W15. Bergen recovery (W15) especially deep — 13.1mi at 9,700ft is a deeper hole than it looks."],
+  ['Strength supports running', "Don't compete with it. Maintenance only in Peak and Taper. 2 real sessions beats 3 planned and missed."],
+  ['Body composition follows training load', "Fuel the work. Protein 150–160g/day. Alcohol ≤2/day. Don't chase lbs — chase pace, vert, and finish times."],
+  ['Heat rule (Jul/Aug)', 'Run before 8AM or above 7,000 ft. Otherwise indoor Peloton or rower.'],
+  ['Trust the taper', 'W18–19 will feel wrong. That restless feeling is legs loading up.'],
+  ['Run Club Monday is sacred', 'Never override. The plan flexes around it, not the other way.'],
 ]
 
 interface Activity {
@@ -112,6 +200,9 @@ export function TrainingProgramSection() {
   const [phaseFilter, setPhaseFilter] = useState<TrainingPhase | 'all'>('all')
   const [autoPickedPhase, setAutoPickedPhase] = useState(false)
   const [showDone, setShowDone] = useState(false)
+  const [showQuality, setShowQuality] = useState(false)
+  const [showStrength, setShowStrength] = useState(false)
+  const [showTrails, setShowTrails] = useState(false)
   const wlw = useAnchorEvent('wlw')
   const wlwDays = daysUntil(wlw.event_date)
 
@@ -388,6 +479,11 @@ export function TrainingProgramSection() {
         </div>
       </div>
 
+      {/* Weekly day-of-week template for the active phase (current phase
+          when ALL is selected). Always visible — this is the "what does
+          a normal week in this block look like" view. */}
+      <WeeklyTemplate phase={phaseFilter === 'all' ? currentPhase : phaseFilter} />
+
       {/* Week list — current + upcoming visible, done weeks collapsed at the
           bottom (toggle), so the user always lands on what's ahead. Phase
           headers only render in ALL view since the pill already names the phase. */}
@@ -474,6 +570,18 @@ export function TrainingProgramSection() {
           </>
         )
       })()}
+
+      {/* Reference cards — collapsed by default. Plan content the user dips
+          into when planning rather than scanning every load. */}
+      <CollapsibleCard title="QUALITY STREAMS" open={showQuality} onToggle={() => setShowQuality(v => !v)}>
+        <QualityStreamsCard />
+      </CollapsibleCard>
+      <CollapsibleCard title="STRENGTH PROGRESSION" open={showStrength} onToggle={() => setShowStrength(v => !v)}>
+        <StrengthProgressionCard />
+      </CollapsibleCard>
+      <CollapsibleCard title="TRAIL ROTATION" open={showTrails} onToggle={() => setShowTrails(v => !v)}>
+        <TrailRotationCard />
+      </CollapsibleCard>
 
       {/* Principles */}
       <div style={{ background: '#fff', borderRadius: 12, border: `0.5px solid ${C.ink20}`, padding: '14px 16px' }}>
@@ -639,10 +747,28 @@ function WeekRow({ week, index, color, isCurrent, showActuals, actuals }: {
         </div>
       )}
       {week.notes && (
-        <div style={{ fontSize: 'var(--fs-11)', color: C.ink60, lineHeight: 1.5, marginBottom: 8 }}>
+        <div style={{ fontSize: 'var(--fs-11)', color: C.ink60, lineHeight: 1.5, marginBottom: 6 }}>
           {week.notes}
         </div>
       )}
+
+      {/* Quality + Strength prescriptions — small distinct rows so PZ Max / strides
+          / cruise miles render alongside the volume targets without crowding focus. */}
+      {(week.quality_prescription || week.strength_prescription) && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 8 }}>
+          {week.quality_prescription && (
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink60, letterSpacing: '0.05em' }}>
+              <span style={{ color: C.ink40 }}>QUALITY ·</span> {week.quality_prescription}
+            </div>
+          )}
+          {week.strength_prescription && (
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink60, letterSpacing: '0.05em' }}>
+              <span style={{ color: C.ink40 }}>STRENGTH ·</span> {week.strength_prescription}
+            </div>
+          )}
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <WeekMetric label="RUN"  target={week.target_run_miles}        actual={showActuals ? actuals.run      : null} unit="mi" />
         <WeekMetric label="LONG" target={week.target_long_run_miles}   actual={showActuals ? actuals.long_run : null} unit="mi" />
@@ -688,6 +814,155 @@ function WeekMetric({ label, target, actual, unit }: {
             · {fmt(actual)}
           </span>
         )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Weekly day-of-week template for the current phase ────────────────────
+
+function WeeklyTemplate({ phase }: { phase: TrainingPhase }) {
+  const days = WEEKLY_TEMPLATES[phase]
+  const color = PHASE_COLOR[phase]
+  return (
+    <div style={{ background: '#fff', borderRadius: 12, border: `0.5px solid ${C.ink20}`, padding: '12px 14px', marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.15em' }}>
+          WEEKLY TEMPLATE
+        </div>
+        <div className="mono" style={{ fontSize: 'var(--fs-10)', color, letterSpacing: '0.15em' }}>
+          {PHASE_LABEL[phase]}
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {days.map(d => (
+          <div key={d.day} style={{ display: 'grid', gridTemplateColumns: '38px 1fr', gap: 10, alignItems: 'baseline' }}>
+            <div className="mono" style={{ fontSize: 'var(--fs-11)', color: C.ink40, letterSpacing: '0.1em', fontWeight: 700 }}>
+              {d.day.toUpperCase()}
+            </div>
+            <div>
+              <div style={{ fontSize: 'var(--fs-12)', color: C.dark, lineHeight: 1.35 }}>
+                {d.primary}
+              </div>
+              {d.sub && (
+                <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink60, lineHeight: 1.4 }}>
+                  {d.sub}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Collapsible reference card wrapper ───────────────────────────────────
+
+function CollapsibleCard({ title, open, onToggle, children }: {
+  title: string
+  open: boolean
+  onToggle: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <div style={{ background: '#fff', borderRadius: 12, border: `0.5px solid ${C.ink20}`, marginBottom: 10, overflow: 'hidden' }}>
+      <button
+        onClick={onToggle}
+        style={{
+          width: '100%', textAlign: 'left',
+          background: 'none', border: 'none', cursor: 'pointer',
+          padding: '12px 14px', fontFamily: 'inherit',
+          display: 'flex', alignItems: 'center', gap: 6,
+        }}
+      >
+        <span className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.15em' }}>
+          {open ? '▾' : '▸'} {title}
+        </span>
+      </button>
+      {open && (
+        <div style={{ padding: '0 14px 14px', borderTop: `0.5px solid ${C.ink20}` }}>
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Quality streams reference ────────────────────────────────────────────
+
+function QualityStreamsCard() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 12 }}>
+      {QUALITY_STREAMS.map(group => (
+        <div key={group.group}>
+          <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.15em', marginBottom: 6 }}>
+            {group.group}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {group.rows.map(r => (
+              <div key={r.name} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <div style={{ fontSize: 'var(--fs-12)', color: C.dark, fontWeight: 600 }}>{r.name}</div>
+                <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink60, lineHeight: 1.4 }}>
+                  {r.dose}
+                </div>
+                <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, lineHeight: 1.4 }}>
+                  {r.when}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Strength program progression ─────────────────────────────────────────
+
+function StrengthProgressionCard() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 12 }}>
+      {STRENGTH_PHASES.map(p => (
+        <div key={p.range} style={{ display: 'grid', gridTemplateColumns: '70px 1fr', gap: 10, alignItems: 'baseline' }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-11)', color: C.ink40, letterSpacing: '0.1em', fontWeight: 700 }}>
+            {p.range}
+          </div>
+          <div>
+            <div style={{ fontSize: 'var(--fs-12)', color: C.dark }}>
+              <span style={{ fontWeight: 600 }}>{p.program}</span>
+              <span className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, marginLeft: 6 }}>{p.freq}</span>
+            </div>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink60, lineHeight: 1.4 }}>
+              {p.goal}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Trail rotation reference ─────────────────────────────────────────────
+
+function TrailRotationCard() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 12 }}>
+      {TRAIL_ROUTES.map(r => (
+        <div key={r.name}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+            <div style={{ fontSize: 'var(--fs-12)', color: C.dark, fontWeight: 600 }}>{r.name}</div>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink60, whiteSpace: 'nowrap' }}>
+              {r.distance} · {r.elevation}
+            </div>
+          </div>
+          <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, lineHeight: 1.4 }}>
+            base {r.base} · {r.notes}
+          </div>
+        </div>
+      ))}
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, lineHeight: 1.5, marginTop: 4, paddingTop: 10, borderTop: `0.5px solid ${C.ink20}` }}>
+        Altitude exposure ladder: Howard (~6,600) → Catkin (~6,800) → SMR (~8,700) → Bergen summit (9,708) → WLW.
       </div>
     </div>
   )

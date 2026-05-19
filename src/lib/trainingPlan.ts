@@ -177,6 +177,8 @@ export function deriveTrainingWeek(
     phase_id: null,
     focus: null,
     key_marker: null,
+    quality_prescription: null,
+    strength_prescription: null,
     target_run_miles: run.long > 0 ? run.total : null,
     target_long_run_miles: run.long > 0 ? run.long : null,
     target_cycling_miles: ride.total > 0 ? ride.total : null,

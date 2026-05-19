@@ -37,6 +37,9 @@ export interface TrainingWeek {
   phase_id: TrainingPhase | null
   focus: string | null
   key_marker: string | null
+  // Display-only prescription strings, e.g. "PZ Max 1× · Strides 2×" / "3× TS"
+  quality_prescription: string | null
+  strength_prescription: string | null
   target_run_miles: number | null
   target_long_run_miles: number | null
   target_cycling_miles: number | null
