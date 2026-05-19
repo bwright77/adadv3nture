@@ -28,8 +28,10 @@ export function WSteps({ dark, span = 4 }: WStepsProps) {
   // most recent complete day land vs. the user's own 7-day baseline?
   const latest = [...days].reverse().find((d: { date: string; count: number | null }) => d.count !== null) ?? null
   const yesterday = latest?.count ?? null
-  const sparkData = days.map(d => d.count ?? 0)
-  const hasData = days.some(d => d.count !== null)
+  // Drop null days — Apple Health hasn't reported them yet, treating them as
+  // zero squashes the rest-day-vs-run-day variance into a near-flat line.
+  const sparkData = days.map(d => d.count).filter((n): n is number => n !== null)
+  const hasData = sparkData.length > 0
 
   // Goal coloring still useful as a "was that a strong day?" signal,
   // but we drop the "X to go" copy because yesterday is over.
@@ -72,7 +74,7 @@ export function WSteps({ dark, span = 4 }: WStepsProps) {
       </div>
       {hasData && (
         <div style={{ marginTop: 8 }}>
-          <Spark data={sparkData} color={color} w={80} h={20} fill />
+          <Spark data={sparkData} color={color} w={80} h={20} fill baseline="min" />
           {avg !== null && (
             <div className="mono" style={{ fontSize: 9, opacity: 0.45, marginTop: 3, letterSpacing: '0.06em' }}>
               7d avg {formatSteps(avg)}
