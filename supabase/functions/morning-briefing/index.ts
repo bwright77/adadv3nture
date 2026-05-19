@@ -44,12 +44,29 @@ ${aboutLines(profile, false)}
 Current family + anchors are in the context message — use the given dates and
 days-until numbers verbatim. Do NOT compute or estimate dates yourself.
 
-Portfolio categories (match the Lists tabs): CAREER (non-negotiable), FAMILY,
-HOME, PROJECTS. Body / workout is tracked separately via the program tracker,
-not the portfolio review. Pilot lights = days since each portfolio category
-was last completed. When a category goes dark (3+ days), name it specifically
-— not "you've been neglecting family" but "Chase and Ada haven't had
-intentional time in 4 days."
+ANCHORS ARE DOMAIN-TAGGED. Each anchor in the context starts with [CAREER]
+or [TRAINING]. These domains MUST stay separate:
+- [CAREER] anchor (Wright Adventures = the company / income milestone): work
+  deadlines. Pair only with CAREER MIT progress, job-target activity, or
+  Wright Adventures opportunity work.
+- [TRAINING] anchor (West Line Winder 30K, plus FOCO/Hurricane/Bergen via
+  training_goals): race events. Pair only with workout/recovery/long-run
+  context — never with career, never with weight.
+NEVER mix domains. Don't say "X lbs from target with N days to Wright
+Adventures" — weight is not tied to Wright Adventures. Don't say "open the
+Projects list for a Wright Adventures task" — Wright Adventures is CAREER,
+not the personal-projects MIT slot.
+
+Weight target (178 lbs) has NO calendar deadline. It's a body-composition
+trend (GLP-1 driven), not a milestone. Never pair it with a days-until count.
+
+Portfolio categories (match the Lists tabs): CAREER (non-negotiable, this is
+where Wright Adventures opportunities live), FAMILY, HOME, PROJECTS (personal
+art/software/other — NOT Wright Adventures). Body / workout is tracked
+separately via the program tracker, not the portfolio review. Pilot lights =
+days since each portfolio category was last completed. When a category goes
+dark (3+ days), name it specifically — not "you've been neglecting family"
+but "Chase and Ada haven't had intentional time in 4 days."
 
 CAREER IS WEEKDAY-ONLY. Weekends breathe — Saturday and Sunday with empty
 Career is the design, not neglect. Career's pilot light only counts weekday
@@ -141,6 +158,13 @@ function ageOnDate(birthday: string, today: string): number {
 interface AnchorRow { slug: string; title: string; event_date: string; location: string | null; notes: string | null }
 interface FamilyRow { name: string; role: string; birthday: string }
 
+// Domain tag for each anchor so the prompt sees [CAREER] vs [TRAINING] and the
+// model stops mashing weight metrics with career deadlines.
+const ANCHOR_DOMAIN: Record<string, string> = {
+  labor_day: 'CAREER',
+  wlw: 'TRAINING',
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadAnchorsAndFamily(admin: any, userId: string, today: string): Promise<{
   anchorBlock: string
@@ -161,7 +185,9 @@ async function loadAnchorsAndFamily(admin: any, userId: string, today: string): 
 
   const anchorLines = anchors.map(a => {
     const days = daysBetween(today, a.event_date)
+    const domain = ANCHOR_DOMAIN[a.slug]
     const parts = [
+      domain ? `[${domain}]` : null,
       `${a.title}`,
       `${a.event_date}`,
       `${days} days away`,
