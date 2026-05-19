@@ -203,6 +203,7 @@ export function TrainingProgramSection() {
   const [showQuality, setShowQuality] = useState(false)
   const [showStrength, setShowStrength] = useState(false)
   const [showTrails, setShowTrails] = useState(false)
+  const [showPrinciples, setShowPrinciples] = useState(false)
   const wlw = useAnchorEvent('wlw')
   const wlwDays = daysUntil(wlw.event_date)
 
@@ -583,12 +584,9 @@ export function TrainingProgramSection() {
         <TrailRotationCard />
       </CollapsibleCard>
 
-      {/* Principles */}
-      <div style={{ background: '#fff', borderRadius: 12, border: `0.5px solid ${C.ink20}`, padding: '14px 16px' }}>
-        <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.2em', marginBottom: 10 }}>
-          GOVERNING PRINCIPLES
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* Principles — collapsed by default to match the other reference cards. */}
+      <CollapsibleCard title="GOVERNING PRINCIPLES" open={showPrinciples} onToggle={() => setShowPrinciples(v => !v)}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 12 }}>
           {PRINCIPLES.map(([title, body]) => (
             <div key={title}>
               <div className="badge" style={{ fontSize: 'var(--fs-12)', color: C.dark, marginBottom: 2 }}>{title}</div>
@@ -596,7 +594,7 @@ export function TrainingProgramSection() {
             </div>
           ))}
         </div>
-      </div>
+      </CollapsibleCard>
     </div>
   )
 }
