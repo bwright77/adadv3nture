@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 
@@ -54,8 +54,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
   }
 
+  // Supabase fires TOKEN_REFRESHED when the tab regains visibility, which
+  // mints a fresh session object — and a fresh session.user reference even
+  // for the same logged-in user. Memoize by id so consumers' useEffect deps
+  // don't re-fire on every token refresh (was unmounting in-flight forms
+  // like the New Event modal when the user briefly switched tabs).
+  const user = useMemo(() => session?.user ?? null, [session?.user?.id])
+
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading, signIn, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   )
