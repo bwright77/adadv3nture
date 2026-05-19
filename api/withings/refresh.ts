@@ -25,8 +25,12 @@ export default async function handler(req: Request): Promise<Response> {
     return new Response(JSON.stringify({ error: 'No token found' }), { status: 404 })
   }
 
+  // Withings's /v2/oauth2 endpoint takes action=requesttoken for BOTH the
+  // initial code exchange and refresh; grant_type disambiguates. The old
+  // action=refreshaccesstoken started returning status 2554 "Not implemented"
+  // — undocumented deprecation that silently broke daily syncs.
   const body = new URLSearchParams({
-    action: 'refreshaccesstoken',
+    action: 'requesttoken',
     client_id: process.env.WITHINGS_CLIENT_ID!,
     client_secret: process.env.WITHINGS_CLIENT_SECRET!,
     refresh_token: token.refresh_token,
