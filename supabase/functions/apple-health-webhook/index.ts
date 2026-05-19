@@ -21,6 +21,11 @@ interface HealthPayload {
   sleep_seconds?: number | null
   sleep_raw?: unknown    // raw Sleep samples from Shortcuts — logged to inspect structure
   steps?: number | null
+  // Defense-in-depth: ship the last N days of step counts each morning so a
+  // missed Shortcut firing on any individual day gets backfilled by the next
+  // run. Each entry upserts steps_count on its signal_date without touching
+  // other fields on the row.
+  steps_history?: { date: string; steps: number }[]
 }
 
 Deno.serve(async (req) => {
@@ -93,12 +98,41 @@ Deno.serve(async (req) => {
     })
   }
 
+  // Backfill historical step counts. Each entry upserts only the steps_count
+  // column for its date, leaving rhr/sleep/etc. on existing rows untouched.
+  let historyApplied = 0
+  if (Array.isArray(payload.steps_history) && payload.steps_history.length > 0) {
+    const rows = payload.steps_history
+      .filter(h => h && typeof h.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(h.date) && typeof h.steps === 'number')
+      .map(h => ({
+        user_id: WEBHOOK_USER_ID,
+        signal_date: h.date,
+        source: 'apple_health',
+        steps_count: Math.round(h.steps),
+      }))
+    if (rows.length > 0) {
+      const { error: histErr } = await supabase
+        .from('recovery_signals')
+        .upsert(rows, { onConflict: 'user_id,signal_date' })
+      if (histErr) {
+        console.error('steps_history upsert error:', histErr.message)
+      } else {
+        historyApplied = rows.length
+      }
+    }
+  }
+
   // ── Chain: kick off the morning briefing now that recovery data has
   // landed. Fire-and-forget — we don't want the webhook response to fail
   // (or wait on) the Anthropic round trip. Errors are logged but swallowed.
   triggerBriefing(supabase).catch(err => console.error('triggerBriefing failed:', err))
 
-  return new Response(JSON.stringify({ ok: true, date: payload.date, fields: Object.keys(row) }), {
+  return new Response(JSON.stringify({
+    ok: true,
+    date: payload.date,
+    fields: Object.keys(row),
+    steps_history_applied: historyApplied,
+  }), {
     headers: { 'Content-Type': 'application/json' },
   })
 })
