@@ -165,6 +165,91 @@ const ANCHOR_DOMAIN: Record<string, string> = {
   wlw: 'TRAINING',
 }
 
+// Mirrored from src/lib/program-tracker.ts so the briefing can self-correct
+// the program position from completed Strava activities, instead of waiting
+// for the client to open the Training tab and run syncProgramFromStrava.
+const PROGRAM_SCHEDULES: Record<string, {
+  workoutsPerWeek: number[]
+  dayLabels: Record<number, Record<number, string>>
+}> = {
+  'Total Strength': {
+    workoutsPerWeek: [3, 3, 4, 4],
+    dayLabels: {
+      1: { 1: 'Upper Body', 2: 'Lower Body', 3: 'Full Body' },
+      2: { 1: 'Upper Body', 2: 'Lower Body', 3: 'Full Body' },
+      3: { 1: 'Full Body',  2: 'Upper Body', 3: 'Lower Body', 4: 'Full Body' },
+      4: { 1: 'Full Body',  2: 'Upper Body', 3: 'Lower Body', 4: 'Full Body' },
+    },
+  },
+}
+
+function programTitle(programName: string, week: number, day: number): string {
+  const label = PROGRAM_SCHEDULES[programName]?.dayLabels[week]?.[day]
+  return label ? `${programName} · W${week}D${day} · ${label}` : `${programName} · W${week}D${day}`
+}
+
+function nextProgramPosition(programName: string, sessionsCompleted: number): { week: number; day: number } | null {
+  const schedule = PROGRAM_SCHEDULES[programName]
+  if (!schedule) {
+    const week = Math.floor(sessionsCompleted / 4) + 1
+    const day = (sessionsCompleted % 4) + 1
+    return { week, day }
+  }
+  let remaining = sessionsCompleted
+  for (let w = 0; w < schedule.workoutsPerWeek.length; w++) {
+    const inWeek = schedule.workoutsPerWeek[w]
+    if (remaining < inWeek) return { week: w + 1, day: remaining + 1 }
+    remaining -= inWeek
+  }
+  return null
+}
+
+// Pulls completed strength activities since the program started, derives the
+// correct position, and writes it back to program_tracker if it drifted.
+// Returns the (possibly-updated) program state so the briefing's prompt
+// reflects yesterday's session regardless of when the user opens the app.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function advanceProgramFromActivities(admin: any, userId: string, program: any) {
+  if (!program) return program
+  const startDate = program.started_at ?? program.last_completed_date
+  if (!startDate) return program
+
+  const { data: activities } = await admin
+    .from('activities')
+    .select('activity_date')
+    .eq('user_id', userId)
+    .eq('source', 'strava')
+    .gte('activity_date', startDate)
+    .ilike('title', '%strength%')
+    .gt('duration_seconds', 600)
+    .order('activity_date', { ascending: true }) as { data: { activity_date: string }[] | null }
+
+  if (!activities || activities.length === 0) return program
+
+  const distinctDates = [...new Set(activities.map(a => a.activity_date))].sort()
+  const sessionsCompleted = distinctDates.length
+  const next = nextProgramPosition(program.program_name, sessionsCompleted)
+  if (!next) {
+    // Program complete — flag inactive and reflect in the returned shape.
+    await admin.from('program_tracker').update({ active: false }).eq('id', program.id)
+    return { ...program, active: false }
+  }
+
+  if (next.week === program.current_week && next.day === program.current_day) {
+    return program
+  }
+
+  const lastDate = distinctDates[distinctDates.length - 1]
+  const updated = {
+    current_week: next.week,
+    current_day: next.day,
+    next_workout_title: programTitle(program.program_name, next.week, next.day),
+    last_completed_date: lastDate,
+  }
+  await admin.from('program_tracker').update(updated).eq('id', program.id)
+  return { ...program, ...updated }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadAnchorsAndFamily(admin: any, userId: string, today: string): Promise<{
   anchorBlock: string
@@ -554,7 +639,11 @@ ${weightContextLine(weight, weightMeasuredAt)}`
       ) as Signal | undefined
       const todaySignal = wakeupSignal       // alias used by template below
       const ySignal = yesterdayRow as { drinks_consumed: number } | undefined
-      const program = programRes.data as {
+      // Self-correct the program from completed Strava strength sessions so
+      // a workout logged yesterday but not yet reflected by the client-side
+      // syncProgramFromStrava (which only runs when the user opens the
+      // Training tab) doesn't leave the briefing one day behind.
+      const program = (await advanceProgramFromActivities(admin, user.id, programRes.data)) as {
         program_name: string; current_week: number; current_day: number
         total_weeks: number | null; next_workout_title: string | null; last_completed_date: string | null
       } | null
