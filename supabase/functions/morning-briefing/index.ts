@@ -57,8 +57,13 @@ Adventures" — weight is not tied to Wright Adventures. Don't say "open the
 Projects list for a Wright Adventures task" — Wright Adventures is CAREER,
 not the personal-projects MIT slot.
 
-Weight target (178 lbs) has NO calendar deadline. It's a body-composition
-trend (GLP-1 driven), not a milestone. Never pair it with a days-until count.
+WEIGHT IS OBSERVATIONAL, NOT A GOAL. Ben tracks weight (GLP-1 since Nov 2024)
+but does not chase a number. The body goal is training-driven: the West Line
+Winder 30K on Sept 26 and the 19-week training program. When you reference
+body status, frame it through training readiness — RHR vs baseline (63),
+recovery score, sleep, weekly training volume vs plan — not weight progress.
+Do NOT say "X lbs from goal," "X lbs to target," or imply weight loss is the
+objective. Weight is logged 2–3× per week; quote whatever's there as data.
 
 Portfolio categories (match the Lists tabs): CAREER (non-negotiable, this is
 where Wright Adventures opportunities live), FAMILY, HOME, PROJECTS (personal
@@ -345,15 +350,15 @@ async function fetchWeather(owmKey: string, lat: number, lon: number): Promise<s
   }
 }
 
-// Weight is measured periodically (~2-3x/week), not daily. The briefing should
-// always quote the most recent reading and label its age so the model can
-// reference recency without ever saying "no weight data" for a few-day-old number.
+// Weight is measured periodically (~2-3x/week), not daily. Show the value and
+// its age — that's it. No target, no "to goal." Body progress is framed
+// through training metrics, not the scale.
 function weightContextLine(weight: number | null, measuredAt: string | null): string {
-  if (weight == null) return 'WEIGHT: never logged (target 178, GLP-1 trend)'
-  if (!measuredAt) return `WEIGHT: ${weight} lbs · target 178 (GLP-1 trend)`
+  if (weight == null) return 'WEIGHT: never logged'
+  if (!measuredAt) return `WEIGHT: ${weight} lbs`
   const daysAgo = Math.max(0, Math.floor((Date.now() - new Date(measuredAt).getTime()) / 86_400_000))
   const ago = daysAgo === 0 ? 'today' : daysAgo === 1 ? '1d ago' : `${daysAgo}d ago`
-  return `WEIGHT: ${weight} lbs · weighed ${ago} · target 178 (GLP-1 trend)`
+  return `WEIGHT: ${weight} lbs · weighed ${ago}`
 }
 
 function locationStamp(loc: BriefingLocation): string {

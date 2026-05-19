@@ -160,7 +160,7 @@ export function BriefingVoiceCard() {
               value={draft.health_context}
               onChange={e => setDraft({ ...draft, health_context: e.target.value })}
               rows={3}
-              placeholder="GLP-1 since Nov 2024&#10;Target 178-182 lbs"
+              placeholder="GLP-1 since Nov 2024 — weight tracked, not chased&#10;Body goal is training-driven: WLW 30K anchors the program"
               style={{ ...inputStyle, resize: 'vertical', minHeight: 60 }}
             />
 

@@ -268,9 +268,11 @@ export async function getTrends(userId: string): Promise<TrendData> {
     {
       label: 'Weight',
       value: wLatest != null ? `${wLatest.toFixed(1)} lbs` : '—',
-      delta: wDelta != null ? formatDelta(wDelta, ' lbs') : wLatest ? `target ${(wLatest - 178).toFixed(1)} lbs to goal` : 'no data yet',
+      delta: wDelta != null ? formatDelta(wDelta, ' lbs') : wLatest ? 'tracked' : 'no data yet',
       direction: direction(wDelta),
-      isGood: wDelta != null ? wDelta < 0 : null,
+      // Weight is observational data, not progress toward a target.
+      // Don't color up/down as good/bad — body goal is training-driven.
+      isGood: null,
       isHero: false,
       noData: wLatest == null,
       spark: weightSpark,

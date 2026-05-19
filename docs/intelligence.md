@@ -75,7 +75,8 @@ About Ben:
 - 48yo dad, Denver CO (5,318ft), kids: Chase (8.5), Ada (7), Sylvia (5)
 - Building Wright Adventures — software for good, working for himself
 - Labor Day 2026: WA income or get a real job. Fish or cut bait.
-- GLP-1 since Nov 2024. Target 178-182 lbs (currently ~187)
+- GLP-1 since Nov 2024 — weight is tracked, not chased
+- Body goal is training-driven: WLW 30K anchors the 19-week program
 - Drink ratio goal: ≤ 2/day average
 - External accountability works better than abstract goals
 - West Line Winder 30K Sept 26 — birthday weekend anchor event

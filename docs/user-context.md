@@ -35,7 +35,9 @@ const USER_CONTEXT = {
   avg_run_pace: "9:35/mi",      // hilly Seattle terrain
 
   current_weight_lbs: 187,
-  target_weight_lbs: 178,       // Project Six Pack
+  // Weight is tracked, not chased. Body goal is training-driven: WLW 30K
+  // (Sept 26) anchors the 19-week program. Reference RHR / recovery / sleep
+  // for body status, not weight progress.
   on_glp1: true,                // started November 2024
                                 // track trends not daily fluctuations
 
