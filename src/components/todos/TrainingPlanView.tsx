@@ -32,19 +32,19 @@ const PHASE_COLOR: Record<TrainingPhase, string> = {
 }
 
 const PHASE_DESC: Record<TrainingPhase, string> = {
-  base:  'Build aerobic foundation. Run volume ramps from 24→32 mpw. Long run to 12 miles. Cycling volume builds toward FOCO.',
-  build: 'Peak aerobic load. FOCO Fondo (W9) and Ride the Hurricane (W11) as cycling anchors. Run volume maintained 25–32 mpw around events.',
-  peak:  'Highest run quality. Bergen Peak HM (W14) as tune-up race at 90% effort. Max vert exposure.',
-  taper: 'Volume drops, sharpness retained. WLW Sept 26.',
+  base:  'Build aerobic foundation. Run volume ramps from 24→32 mpw. Long run to 12 miles. Cycling volume builds toward FOCO. Vert work begins by W3.',
+  build: 'Peak aerobic load. FOCO Fondo (W9) and Ride the Hurricane (W11) as cycling anchors. Run volume maintained 25–32 mpw around events. W12 cycling exits — trail running becomes sole focus.',
+  peak:  'Highest run quality. W13 long run (14 mi / 1,500+ ft) is the Bergen simulator. W14: Bergen Peak (13.1 mi / 2,451 ft / 9,708 ft summit) — race at controlled effort. Target finish 2:45. Bergen is your single best WLW predictor.',
+  taper: 'Bergen recovery then one final hard week (W16). Volume drops progressively into WLW. Target finish: 4:30–4:45. Sub-4:30 on the table if Bergen goes under 2:40.',
 }
 
 const PRINCIPLES: [string, string][] = [
-  ['Down weeks matter', 'W4, W10, W15 are not optional. Skipping recovery weeks is where injuries come from.'],
-  ['Bergen Peak is a dress rehearsal', 'Full vest, race-day nutrition, trail shoes. Run 90% — not 100%. You need 35 days of legs left.'],
-  ['Vert is non-negotiable', 'Green Mtn → Mount Falcon → Lookout Mtn → Herman Gulch. WLW has 4,200 ft. Flat miles don\'t prepare you.'],
-  ['Cycling doesn\'t transfer here', 'FOCO and Hurricane build aerobic base, not trail legs. Once both events are done, cycling drops to zero.'],
-  ['The Sep 6 long run is your preview', 'Your W16 13-miler will predict your WLW finish time better than any calculator. Run it honest.'],
-  ['Trust the taper', 'W18–19 will feel wrong. That restless feeling is your legs loading up. Don\'t add junk miles.'],
+  ['Down weeks matter', 'W4, W10, W15 are not optional. Skipping recovery weeks is where injuries come from. Bergen at 13.1 mi / 2,451 ft makes W15 especially critical.'],
+  ['Bergen is a predictor, not just a tune-up', '13.1 mi / 2,451 ft / 9,708 ft summit. Your 2016 result was 3:08 unstructured. Target 2:45 in 2026. Watch your mile 7–8 pace at the summit — that split predicts your WLW back half.'],
+  ['Vert is non-negotiable', 'Green Mtn → Mount Falcon → Lookout Mtn → Herman Gulch → Bergen Peak. WLW has 4,200 ft. Flat miles don\'t prepare you for any of it.'],
+  ['Cycling doesn\'t transfer here', 'FOCO and Hurricane build aerobic base, not trail legs. Once both events are done, cycling drops to zero permanently.'],
+  ['The W13 run is your Bergen simulator', '14 miles / 1,500+ ft the week before Bergen. If that feels controlled, race Bergen at 2:40–2:45. If it\'s a suffer-fest, back off to 2:50–3:00.'],
+  ['Trust the taper, trust the data', 'WLW target: 4:30–4:45. Sub-4:30 on the table if Bergen goes under 2:40 and W16 long run feels strong. The math is grounded in your actual 2016 result, not pace calculators.'],
 ]
 
 function formatWeekRange(weekStart: string): string {
