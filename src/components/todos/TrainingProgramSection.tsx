@@ -531,7 +531,9 @@ function WeekMetric({ label, target, actual, unit }: {
     )
   }
   const fmt = (n: number) => unit === '×' ? String(Math.round(n)) : r1(n).toString()
-  let actualColor = C.ink40
+  // Explicit string type — C.ink40 is a literal token, paceColor returns a
+  // wider string, so without this tsc -b complains in the Vercel build.
+  let actualColor: string = C.ink40
   if (actual !== null) {
     const pct = t > 0 ? (actual / t) * 100 : (actual > 0 ? 100 : 0)
     actualColor = paceColor(pct)
