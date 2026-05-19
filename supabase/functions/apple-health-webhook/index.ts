@@ -122,10 +122,17 @@ Deno.serve(async (req) => {
     }
   }
 
-  // ── Chain: kick off the morning briefing now that recovery data has
-  // landed. Fire-and-forget — we don't want the webhook response to fail
-  // (or wait on) the Anthropic round trip. Errors are logged but swallowed.
-  triggerBriefing(supabase).catch(err => console.error('triggerBriefing failed:', err))
+  // ── Chain: pull fresh Strava activities + Withings body metrics so the
+  // briefing reads against real state instead of yesterday's stale snapshot,
+  // then trigger the briefing. Whole chain is fire-and-forget — the webhook
+  // returns 200 immediately and the Anthropic round trip runs in background.
+  ;(async () => {
+    await Promise.allSettled([
+      syncStravaActivities(supabase),
+      syncWithingsMetrics(supabase),
+    ])
+    await triggerBriefing(supabase)
+  })().catch(err => console.error('morning chain failed:', err))
 
   return new Response(JSON.stringify({
     ok: true,
@@ -241,4 +248,230 @@ async function sendPushToUser(supabase: any, userId: string, body: string): Prom
       console.error('Push send failed', subs[i].endpoint, err?.statusCode, err?.message)
     }
   }))
+}
+
+
+// ─── External-provider sync helpers ──────────────────────────────────────
+// Both run as part of the morning chain so the briefing reads fresh state.
+// Each is best-effort: errors are logged and the chain continues. Token
+// refresh is delegated to the existing Vercel routes (which have the
+// client_id/secret env vars) so this function doesnt need new secrets.
+
+const VERCEL_BASE = "https://adadv3ntures.vercel.app"
+
+async function getProviderAccessToken(provider: "strava" | "withings"): Promise<string | null> {
+  try {
+    const res = await fetch(`${VERCEL_BASE}/api/${provider}/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: WEBHOOK_USER_ID }),
+    })
+    if (!res.ok) {
+      console.warn(`${provider} refresh returned ${res.status}`)
+      return null
+    }
+    const json = await res.json() as { access_token?: string }
+    return json.access_token ?? null
+  } catch (err) {
+    console.error(`${provider} refresh failed:`, err)
+    return null
+  }
+}
+
+interface StravaActivity {
+  id: number
+  name: string
+  type: string
+  sport_type?: string
+  start_date: string
+  start_date_local?: string
+  elapsed_time: number
+  distance?: number
+  total_elevation_gain?: number
+  average_heartrate?: number
+  max_heartrate?: number
+  average_speed?: number
+  average_watts?: number
+  kilojoules?: number
+  calories?: number
+}
+
+function stravaTypeToLocal(type: string): string {
+  const map: Record<string, string> = {
+    Run: "run", TrailRun: "run",
+    Ride: "ride", VirtualRide: "ride", GravelRide: "ride",
+    WeightTraining: "strength", Workout: "workout",
+    Hike: "hike", Walk: "walk",
+    Swim: "swim", Yoga: "yoga",
+  }
+  return map[type] ?? type.toLowerCase()
+}
+
+const metersToMiles = (m: number) => Math.round((m / 1609.34) * 100) / 100
+const metersToFeet  = (m: number) => Math.round(m * 3.28084)
+const mpsToSecPerMi = (mps: number) => mps > 0 ? Math.round(1609.34 / mps) : 0
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function syncStravaActivities(supabase: any): Promise<void> {
+  try {
+    const token = await getProviderAccessToken("strava")
+    if (!token) return
+
+    // 7-day window is enough for a daily sync; first-time backfill stays
+    // on the client (90 days via syncActivities in src/lib/strava.ts).
+    const after = Math.floor((Date.now() - 7 * 86400 * 1000) / 1000)
+    const stravaRes = await fetch(
+      `https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=100`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
+    if (!stravaRes.ok) {
+      console.warn(`Strava /activities returned ${stravaRes.status}`)
+      return
+    }
+    const activities = await stravaRes.json() as StravaActivity[]
+    if (!activities.length) {
+      console.log("Strava sync: 0 activities returned")
+      return
+    }
+
+    // Dedupe by strava_id — anything we already have is skipped. Bridge-
+    // duplicate dedupe (fingerprint) stays client-side for now.
+    const ids = activities.map(a => a.id)
+    const { data: existing } = await supabase
+      .from("activities")
+      .select("strava_id")
+      .eq("user_id", WEBHOOK_USER_ID)
+      .in("strava_id", ids) as { data: { strava_id: number | null }[] | null }
+    const existingIds = new Set((existing ?? [])
+      .map(r => r.strava_id)
+      .filter((id): id is number => id !== null))
+
+    const rows = activities
+      .filter(a => !existingIds.has(a.id))
+      .map(a => ({
+        user_id: WEBHOOK_USER_ID,
+        source: "strava",
+        strava_id: a.id,
+        activity_type: stravaTypeToLocal(a.sport_type ?? a.type),
+        title: a.name,
+        // Pin activity_date to start_date_local so the workout groups under
+        // the day Ben actually did it, even when start_date (UTC) crosses
+        // the Denver day boundary.
+        activity_date: (a.start_date_local ?? a.start_date).substring(0, 10),
+        start_time: a.start_date,
+        duration_seconds: a.elapsed_time,
+        distance_miles: a.distance ? metersToMiles(a.distance) : null,
+        elevation_feet: a.total_elevation_gain ? metersToFeet(a.total_elevation_gain) : null,
+        avg_hr: a.average_heartrate ? Math.round(a.average_heartrate) : null,
+        max_hr: a.max_heartrate ? Math.round(a.max_heartrate) : null,
+        avg_pace_seconds_per_mile: a.average_speed ? mpsToSecPerMi(a.average_speed) : null,
+        avg_watts: a.average_watts ? Math.round(a.average_watts) : null,
+        total_output_kj: a.kilojoules ?? null,
+        calories: a.calories ? Math.round(a.calories) : null,
+      }))
+
+    if (!rows.length) {
+      console.log("Strava sync: no new activities")
+      return
+    }
+    for (let i = 0; i < rows.length; i += 100) {
+      const { error } = await supabase.from("activities").insert(rows.slice(i, i + 100))
+      if (error) console.error("Strava insert error:", error.message)
+    }
+    console.log(`Strava sync: ${rows.length} new activities`)
+  } catch (err) {
+    console.error("Strava sync failed:", err)
+  }
+}
+
+interface WithingsMeasure { value: number; type: number; unit: number }
+interface WithingsMeasureGroup { date: number; measures: WithingsMeasure[] }
+
+const valOf = (measures: WithingsMeasure[], type: number) => {
+  const m = measures.find(x => x.type === type)
+  return m ? m.value * Math.pow(10, m.unit) : null
+}
+const kgToLbs = (kg: number) => Math.round(kg * 2.20462 * 10) / 10
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function syncWithingsMetrics(supabase: any): Promise<void> {
+  try {
+    const token = await getProviderAccessToken("withings")
+    if (!token) return
+
+    const startdate = Math.floor((Date.now() - 30 * 86400 * 1000) / 1000)
+    const wRes = await fetch("https://wbsapi.withings.net/measure", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        action: "getmeas",
+        meastype: "1,5,6,8,76,77,88,91,155,170,226",
+        category: "1",
+        startdate: String(startdate),
+      }),
+    })
+    if (!wRes.ok) {
+      console.warn(`Withings /measure returned ${wRes.status}`)
+      return
+    }
+    const json = await wRes.json() as { status: number; body?: { measuregrps: WithingsMeasureGroup[] } }
+    if (json.status !== 0) {
+      console.warn(`Withings /measure status=${json.status}`)
+      return
+    }
+
+    const groups = json.body?.measuregrps ?? []
+    if (!groups.length) {
+      console.log("Withings sync: 0 measuregroups")
+      return
+    }
+
+    // Group by date — Withings splits one weigh-in across multiple groups.
+    const byDate = new Map<number, WithingsMeasure[]>()
+    for (const g of groups) {
+      byDate.set(g.date, (byDate.get(g.date) ?? []).concat(g.measures))
+    }
+
+    const rows = []
+    for (const [date, measures] of byDate) {
+      const weightKg = valOf(measures, 1)
+      const muscleKg = valOf(measures, 76)
+      const boneKg   = valOf(measures, 88)
+      const visceralFat = valOf(measures, 170)
+      const vascularAge = valOf(measures, 155)
+      const pwv = valOf(measures, 91)
+      const bmr = valOf(measures, 226)
+      rows.push({
+        user_id: WEBHOOK_USER_ID,
+        measured_at: new Date(date * 1000).toISOString(),
+        source: "withings",
+        weight_lbs: weightKg !== null ? kgToLbs(weightKg) : null,
+        body_fat_pct: valOf(measures, 6),
+        muscle_mass_lbs: muscleKg !== null ? kgToLbs(muscleKg) : null,
+        muscle_mass_pct: muscleKg !== null && weightKg ? Math.round((muscleKg / weightKg) * 1000) / 10 : null,
+        bone_mass_lbs: boneKg !== null ? kgToLbs(boneKg) : null,
+        water_pct: valOf(measures, 77),
+        visceral_fat: visceralFat !== null ? Math.round(visceralFat * 10) / 10 : null,
+        vascular_age: vascularAge !== null ? Math.round(vascularAge) : null,
+        pulse_wave_velocity: pwv !== null ? Math.round(pwv * 100) / 100 : null,
+        bmr: bmr !== null ? Math.round(bmr) : null,
+      })
+    }
+
+    for (let i = 0; i < rows.length; i += 100) {
+      const { error } = await supabase
+        .from("body_metrics")
+        .upsert(rows.slice(i, i + 100), {
+          onConflict: "user_id,measured_at,source",
+          ignoreDuplicates: true,
+        })
+      if (error) console.error("Withings upsert error:", error.message)
+    }
+    console.log(`Withings sync: ${rows.length} candidate rows`)
+  } catch (err) {
+    console.error("Withings sync failed:", err)
+  }
 }
