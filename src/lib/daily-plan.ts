@@ -163,7 +163,16 @@ export interface ReviewHistory {
     projects_note: string | null
   } | null
   pilotLights: PilotLights
-  completionRate7d: number
+}
+
+// Default per-category cadence in days — how often each MIT slot is expected
+// to be touched. Career counts only weekday gaps (Mon–Fri, weekends skipped).
+// Override via users.briefing_profile.category_cadence_days.
+export const DEFAULT_CADENCE: Record<ReviewCategory, number> = {
+  career: 3,
+  family_creative: 2,
+  home: 5,
+  projects: 5,
 }
 
 type ReviewRow = {
@@ -205,83 +214,78 @@ export async function getReviewHistory(userId: string): Promise<ReviewHistory> {
     pilotLights[cat] = days
   }
 
-  // 7-day completion rate — denominator counts only categories that are
-  // applicable on each day (Career excluded on Sat/Sun), so a perfectly
-  // executed weekend doesn't drag the rate down.
-  const last7 = rows.slice(0, 7)
-  let total = 0, done = 0
-  for (const row of last7) {
-    for (const cat of applicableCategoriesForDate(row.plan_date)) {
-      total++
-      if (row[`${cat}_done` as keyof ReviewRow]) done++
-    }
-  }
-
   return {
     yesterday: rows[0] ?? null,
     pilotLights,
-    completionRate7d: total > 0 ? done / total : 0,
   }
 }
 
-export interface MITStats {
-  rate7d: number          // 0..1 completion rate over the last 7 days (incl. today)
-  deltaVsPrior: number    // percentage-point change vs the prior 7-day window
-  last5Days: boolean[]    // [today-4 ... today], true if that day had ≥ 3 of 4 done
+// ─── Cadence-aware MIT freshness ─────────────────────────────────────────
+// Each category has its own expected interval (career midweek-only, family
+// every other day, home/projects weekend-weighted). "Lit" = within interval,
+// "dark" = past it. No aggregate % — uniform-quota framing was the wrong
+// shape (career on Saturdays isn't progress, projects on Tuesdays isn't
+// either).
+
+export interface CategoryFreshness {
+  category: ReviewCategory
+  daysSinceLastDone: number    // weekday-only counter for career
+  cadenceDays: number
+  isDark: boolean              // past the cadence interval
 }
 
-export async function getMITStats(userId: string): Promise<MITStats> {
-  const today = logicalToday()
-  const todayDate = new Date(today + 'T12:00:00')
-  const start = new Date(todayDate)
-  start.setDate(todayDate.getDate() - 13)
-  const startStr = start.toISOString().substring(0, 10)
+export interface MITCadence {
+  freshness: CategoryFreshness[]
+  cadence: Record<ReviewCategory, number>
+}
 
+// Reads cadence overrides from users.briefing_profile.category_cadence_days,
+// falling back to DEFAULT_CADENCE for any missing keys.
+async function loadCadence(userId: string): Promise<Record<ReviewCategory, number>> {
   const { data } = await supabase
-    .from('daily_plans')
-    .select('plan_date, family_creative_done, home_done, career_done, projects_done')
-    .eq('user_id', userId)
-    .gte('plan_date', startStr)
-    .lte('plan_date', today)
-
-  const rows = (data ?? []) as ReviewRow[]
-  // For each date in the 14-day window, track (done, applicable) so weekend
-  // Career doesn't inflate the denominator. A weekend day is 3-cell, weekday 4-cell.
-  type DayCounts = { done: number; applicable: number }
-  const byDate = new Map<string, DayCounts>()
-  for (const row of rows) {
-    let done = 0
-    const cats = applicableCategoriesForDate(row.plan_date)
-    for (const cat of cats) if (row[`${cat}_done` as keyof ReviewRow]) done++
-    byDate.set(row.plan_date, { done, applicable: cats.length })
+    .from('users')
+    .select('briefing_profile')
+    .eq('id', userId)
+    .maybeSingle() as { data: { briefing_profile: { category_cadence_days?: Partial<Record<ReviewCategory, number>> } | null } | null }
+  const override = data?.briefing_profile?.category_cadence_days ?? {}
+  return {
+    career:          override.career          ?? DEFAULT_CADENCE.career,
+    family_creative: override.family_creative ?? DEFAULT_CADENCE.family_creative,
+    home:            override.home            ?? DEFAULT_CADENCE.home,
+    projects:        override.projects        ?? DEFAULT_CADENCE.projects,
   }
+}
 
-  const days: { date: string; done: number; applicable: number }[] = []
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(todayDate)
-    d.setDate(todayDate.getDate() - i)
-    const date = d.toISOString().substring(0, 10)
-    const cell = byDate.get(date)
-    days.push({
-      date,
-      done: cell?.done ?? 0,
-      applicable: cell?.applicable ?? applicableCategoriesForDate(date).length,
-    })
-  }
+export async function getMITCadence(userId: string): Promise<MITCadence> {
+  const today = logicalToday()
+  const [{ data: rows }, cadence] = await Promise.all([
+    supabase
+      .from('daily_plans')
+      .select('plan_date, family_creative_done, home_done, career_done, projects_done')
+      .eq('user_id', userId)
+      .lt('plan_date', today)
+      .order('plan_date', { ascending: false })
+      .limit(30) as unknown as { data: ReviewRow[] | null },
+    loadCadence(userId),
+  ])
 
-  const rate = (xs: typeof days) => {
-    const totDone = xs.reduce((s, d) => s + d.done, 0)
-    const totAppl = xs.reduce((s, d) => s + d.applicable, 0)
-    return totAppl > 0 ? totDone / totAppl : 0
-  }
-  const prior7 = days.slice(0, 7)
-  const last7 = days.slice(7, 14)
-  const rate7d = rate(last7)
-  const deltaVsPrior = Math.round((rate7d - rate(prior7)) * 100)
-  // A day is "lit" if at least 75% of applicable cells are done.
-  const last5Days = days.slice(9, 14).map(d => d.applicable > 0 && d.done / d.applicable >= 0.75)
-
-  return { rate7d, deltaVsPrior, last5Days }
+  const list = rows ?? []
+  const freshness: CategoryFreshness[] = REVIEW_CATS.map(cat => {
+    let days = 0
+    for (const row of list) {
+      if (row[`${cat}_done` as keyof ReviewRow]) break
+      if (cat === 'career' && isWeekendDate(row.plan_date)) continue
+      days++
+    }
+    const cadenceDays = cadence[cat]
+    return {
+      category: cat,
+      daysSinceLastDone: days,
+      cadenceDays,
+      isDark: days >= cadenceDays,
+    }
+  })
+  return { freshness, cadence }
 }
 
 export async function saveThinkingAnswer(userId: string, answer: string): Promise<void> {

@@ -18,6 +18,16 @@ interface BriefingProfile {
   goals?: string[]
   tone_notes?: string[]
   weekend_identity?: string
+  // Per-category cadence in days — drives the cadence-aware MIT signal in
+  // the context block. Missing keys fall back to DEFAULT_CADENCE below.
+  category_cadence_days?: Partial<Record<'career' | 'family_creative' | 'home' | 'projects', number>>
+}
+
+const DEFAULT_CADENCE: Record<'career' | 'family_creative' | 'home' | 'projects', number> = {
+  career: 3,
+  family_creative: 2,
+  home: 5,
+  projects: 5,
 }
 
 function aboutLines(profile: BriefingProfile, weekend: boolean): string {
@@ -90,13 +100,24 @@ dark (3+ days), name it specifically — not "you've been neglecting family"
 but "Chase and Ada haven't had intentional time in 4 days."
 
 CAREER IS WEEKDAY-ONLY. Weekends breathe — Saturday and Sunday with empty
-Career is the design, not neglect. Career's pilot light only counts weekday
-gaps; never flag Career as dark on Monday because of the weekend. The MIT
-completion rate already excludes weekend Career from its denominator, so the
-number you see reflects only days where Career was expected.
+Career is the design, not neglect. Career's pilot light counts weekday
+gaps only; never flag Career as dark on Monday because of the weekend.
 
-MIT completion rate is the meta-metric — reference it when it's moving
-meaningfully.
+MIT CADENCE IS THE SIGNAL — NOT A COMPLETION %. Each category has its own
+expected interval (career midweek, family every other day, home/projects
+weekend-weighted). The MIT CADENCE context block tags each as LIT (within
+interval) or DARK (past it). Goal is FORWARD MOTION, not uniform daily
+quota.
+- When a category is DARK, name it specifically with the actual days
+  since last touched ("Projects 7d since last · cadence 5d · DARK —
+  past your usual rhythm").
+- When LIT, affirm the cadence briefly when it's working ("Career hit
+  3 of the last 4 weekdays · good rhythm"). Don't belabor.
+- NEVER aggregate into a single "X% MIT completion" or "X of 4 done"
+  framing. That implicitly demands daily progress in every area at once,
+  which is the wrong shape.
+- Calibrate to Ben's actual rhythm: weekend-weighted categories on
+  Tuesday afternoon aren't dark just because the count crept up.
 
 Weight is logged 2-3× per week, not daily. The WEIGHT line labels how recent
 the reading is — quote whatever's there. Never characterize a few-day-old
@@ -776,21 +797,20 @@ ${weightContextLine(weight, weightMeasuredAt)}`
             return `  ${catLabels[cat]}: ${done ? `✓${note ? ` (${note})` : ''}` : '—'}`
           }).join('\n')
         : '  No review data for yesterday'
-      const pilotLightLines = reviewCats
-        .map(cat => {
-          const suffix = cat === 'career' ? ' (weekdays only)' : ''
-          return `  ${catLabels[cat]}: ${pilotLights[cat] === 0 ? 'done yesterday' : `${pilotLights[cat]}d since last done${suffix}`}`
-        })
-        .join('\n')
-      const last7 = reviewRows.slice(0, 7)
-      let reviewTotal = 0, reviewDone = 0
-      for (const row of last7) {
-        for (const cat of applicableCatsFor(row.plan_date)) {
-          reviewTotal++
-          if (row[`${cat}_done` as keyof ReviewRow]) reviewDone++
-        }
+
+      // Cadence-aware MIT signal. Each category has its own expected interval;
+      // "DARK" = past it. No aggregate %, no uniform-quota framing.
+      const cadenceMap = {
+        ...DEFAULT_CADENCE,
+        ...(profile.category_cadence_days ?? {}),
       }
-      const completionRate = reviewTotal > 0 ? Math.round((reviewDone / reviewTotal) * 100) : null
+      const mitCadenceLines = reviewCats.map(cat => {
+        const days = pilotLights[cat]
+        const cadence = cadenceMap[cat]
+        const status = days >= cadence ? 'DARK' : 'LIT'
+        const suffix = cat === 'career' ? ' (weekdays only)' : ''
+        return `  ${catLabels[cat]}: ${days}d since last · cadence ${cadence}d · ${status}${suffix}`
+      }).join('\n')
       const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
 
       contextMsg = `Today is ${dayName}, ${today}.
@@ -819,9 +839,8 @@ ${weightContextLine(weight, weightMeasuredAt)}
 YESTERDAY'S PORTFOLIO REVIEW:
 ${yesterdayReviewLines}
 
-PILOT LIGHTS (days since each category last completed):
-${pilotLightLines}
-${completionRate !== null ? `7-day MIT completion rate: ${completionRate}%` : ''}`
+MIT CADENCE (each category has its own expected interval — DARK = past it):
+${mitCadenceLines}`
     }
 
     // ── Call Anthropic ───────────────────────────────────────────────────────
