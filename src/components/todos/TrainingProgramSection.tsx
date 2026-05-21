@@ -4,6 +4,7 @@ import { Ring } from '../ui/Ring'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { getAllTrainingWeeks, type TrainingWeek, type TrainingPhase } from '../../lib/training'
+import { WEEKLY_TEMPLATES } from '../../lib/training-templates'
 import { isBikeActivity } from '../../lib/trends'
 import { daysUntil } from '../../lib/countdown'
 import { useAnchorEvent } from '../../hooks/useAnchorEvent'
@@ -37,45 +38,8 @@ const PHASE_DESC: Record<TrainingPhase, string> = {
 }
 
 // ─── Reference content (v3 plan) ────────────────────────────────────────
-
-const WEEKLY_TEMPLATES: Record<TrainingPhase, { day: string; primary: string; sub?: string }[]> = {
-  base: [
-    { day: 'Mon', primary: 'Run Club PM',                       sub: 'Wash Park · 3–5mi easy · SACRED' },
-    { day: 'Tue', primary: 'Strength (TS / RK)',                sub: '7:40am window' },
-    { day: 'Wed', primary: 'Peloton PZ Max · 30–45 min',        sub: 'Primary quality. No impact, no drive.' },
-    { day: 'Thu', primary: 'Strides OR cruise miles',           sub: 'Alternate weeks · 4–5mi total + light strength' },
-    { day: 'Fri', primary: 'Easy run OR Peloton Row',           sub: '20–30 min · Z1–low Z2' },
-    { day: 'Sat', primary: 'Long run (trail)',                  sub: 'Howard / SMR / Denver foothills' },
-    { day: 'Sun', primary: 'Easy Z2 bike or row + light strength', sub: 'Active recovery' },
-  ],
-  build: [
-    { day: 'Mon', primary: 'Run Club PM',                       sub: 'Easy effort always' },
-    { day: 'Tue', primary: 'Strength (RK Split)',               sub: 'Lower body or full body' },
-    { day: 'Wed', primary: 'Peloton PZ Max',                    sub: 'Primary quality' },
-    { day: 'Thu', primary: 'Tempo run OR cruise miles',         sub: 'Alternate weeks · quality #2' },
-    { day: 'Fri', primary: 'Easy bike (Z2)',                    sub: 'Cycling volume building' },
-    { day: 'Sat', primary: 'Long ride OR long run',             sub: 'Cycling weeks: long ride · Run weeks: long trail' },
-    { day: 'Sun', primary: 'Easy alt-mode',                     sub: 'Row, easy bike, or rest — based on Sat load' },
-  ],
-  peak: [
-    { day: 'Mon', primary: 'Run Club PM',                       sub: 'Easy only' },
-    { day: 'Tue', primary: 'Maintenance strength',              sub: '1 set per movement' },
-    { day: 'Wed', primary: 'PZ Max OR tempo run',               sub: 'Last hard quality of the build' },
-    { day: 'Thu', primary: 'Easy run',                          sub: 'No quality' },
-    { day: 'Fri', primary: 'Rest or 20 min easy row',           sub: 'Race week (W14): rest' },
-    { day: 'Sat', primary: 'Bergen sim (W13) / Bergen race (W14)', sub: 'The whole week points here' },
-    { day: 'Sun', primary: 'Easy shake-out / recovery',         sub: '20–30 min Z1–Z2' },
-  ],
-  taper: [
-    { day: 'Mon', primary: 'Run Club PM',                       sub: 'Easy' },
-    { day: 'Tue', primary: 'Light strength · single set',       sub: '1× per week' },
-    { day: 'Wed', primary: 'Strides + easy run (short)',        sub: 'Sharpening, not building' },
-    { day: 'Thu', primary: 'Easy run (short)',                  sub: 'Cut duration weekly' },
-    { day: 'Fri', primary: 'Rest',                              sub: 'Sleep is the workout' },
-    { day: 'Sat', primary: 'Long run (declining)',              sub: 'W16: 13 · W17: 10 · W18: 6 · W19: race' },
-    { day: 'Sun', primary: 'Easy alt-mode or rest' },
-  ],
-}
+// WEEKLY_TEMPLATES moved to src/lib/training-templates.ts so WTomorrow can
+// reuse the same day-of-week schedule for its swap-aware recommendations.
 
 const QUALITY_STREAMS: { group: string; rows: { name: string; dose: string; when: string }[] }[] = [
   {

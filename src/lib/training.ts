@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import { deriveTrainingWeek } from './trainingPlan'
 import { getProgram } from './program-tracker'
+import { logicalToday } from './utils'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any
 
@@ -73,10 +74,13 @@ export async function getTrainingGoals(userId: string): Promise<TrainingGoal[]> 
 }
 
 export async function getCurrentTrainingWeek(userId: string): Promise<TrainingWeek | null> {
-  const today = new Date()
-  const monday = new Date(today)
-  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7))
-  const weekStart = monday.toISOString().substring(0, 10)
+  // Anchor the Monday computation on Denver-local "today" so evenings past
+  // 6pm don't roll the UTC day forward and miss the week_start row. Same
+  // pattern as briefing's mondayOf() helper.
+  const todayStr = logicalToday()
+  const d = new Date(todayStr + 'T12:00:00')
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+  const weekStart = d.toISOString().substring(0, 10)
 
   // 1. Manual override wins. A row in training_weeks for this Monday means
   //    the user explicitly customised this week — use it.
@@ -94,7 +98,7 @@ export async function getCurrentTrainingWeek(userId: string): Promise<TrainingWe
     getTrainingGoals(userId),
     getProgram(userId).catch(() => null),
   ])
-  return deriveTrainingWeek(userId, events, program, today)
+  return deriveTrainingWeek(userId, events, program, d)
 }
 
 export async function addTrainingGoal(
