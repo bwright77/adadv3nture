@@ -16,25 +16,25 @@ export interface DayTemplate {
 export const WEEKLY_TEMPLATES: Record<TrainingPhase, DayTemplate[]> = {
   base: [
     { day: 'Mon', primary: 'Run Club PM',                          sub: 'Wash Park · 3–5mi easy · SACRED' },
-    { day: 'Tue', primary: 'Strength (TS / RK)',                   sub: '7:40am window' },
+    { day: 'Tue', primary: 'Row Bootcamp',                         sub: '30–45 min · Primary strength' },
     { day: 'Wed', primary: 'Peloton PZ Max · 30–45 min',           sub: 'Primary quality. No impact, no drive.' },
-    { day: 'Thu', primary: 'Strides OR cruise miles',              sub: 'Alternate weeks · 4–5mi total + light strength' },
+    { day: 'Thu', primary: 'Strides OR cruise miles',              sub: 'Alternate weeks · 4–5mi + optional row 20 min' },
     { day: 'Fri', primary: 'Easy run OR Peloton Row',              sub: '20–30 min · Z1–low Z2' },
     { day: 'Sat', primary: 'Long run (trail)',                     sub: 'Howard / SMR / Denver foothills' },
-    { day: 'Sun', primary: 'Easy Z2 bike or row + light strength', sub: 'Active recovery' },
+    { day: 'Sun', primary: 'Row Bootcamp OR easy bike',            sub: 'Active recovery + secondary strength' },
   ],
   build: [
     { day: 'Mon', primary: 'Run Club PM',                          sub: 'Easy effort always' },
-    { day: 'Tue', primary: 'Strength (RK Split)',                  sub: 'Lower body or full body' },
+    { day: 'Tue', primary: 'Row Bootcamp',                         sub: 'Primary strength · 30–45 min' },
     { day: 'Wed', primary: 'Peloton PZ Max',                       sub: 'Primary quality' },
     { day: 'Thu', primary: 'Tempo run OR cruise miles',            sub: 'Alternate weeks · quality #2' },
     { day: 'Fri', primary: 'Easy bike (Z2)',                       sub: 'Cycling volume building' },
     { day: 'Sat', primary: 'Long ride OR long run',                sub: 'Cycling weeks: long ride · Run weeks: long trail' },
-    { day: 'Sun', primary: 'Easy alt-mode',                        sub: 'Row, easy bike, or rest — based on Sat load' },
+    { day: 'Sun', primary: 'Row Bootcamp OR easy alt-mode',        sub: 'Secondary strength or recovery — based on Sat load' },
   ],
   peak: [
     { day: 'Mon', primary: 'Run Club PM',                          sub: 'Easy only' },
-    { day: 'Tue', primary: 'Maintenance strength',                 sub: '1 set per movement' },
+    { day: 'Tue', primary: 'Row Bootcamp · maintain',              sub: 'No new stimulus · 1–2× this phase' },
     { day: 'Wed', primary: 'PZ Max OR tempo run',                  sub: 'Last hard quality of the build' },
     { day: 'Thu', primary: 'Easy run',                             sub: 'No quality' },
     { day: 'Fri', primary: 'Rest or 20 min easy row',              sub: 'Race week (W14): rest' },
@@ -43,7 +43,7 @@ export const WEEKLY_TEMPLATES: Record<TrainingPhase, DayTemplate[]> = {
   ],
   taper: [
     { day: 'Mon', primary: 'Run Club PM',                          sub: 'Easy' },
-    { day: 'Tue', primary: 'Light strength · single set',          sub: '1× per week' },
+    { day: 'Tue', primary: 'Row Bootcamp · light',                 sub: '1× per week max' },
     { day: 'Wed', primary: 'Strides + easy run (short)',           sub: 'Sharpening, not building' },
     { day: 'Thu', primary: 'Easy run (short)',                     sub: 'Cut duration weekly' },
     { day: 'Fri', primary: 'Rest',                                 sub: 'Sleep is the workout' },
@@ -72,6 +72,7 @@ export interface WeekProgress {
 
 interface ActivityLite {
   activity_type: string
+  activity_date: string
   title: string | null
   distance_miles: number | null
   duration_seconds: number | null
@@ -98,10 +99,13 @@ export function computeWeekProgress(week: TrainingWeek | null, activities: Activ
     return t.includes('power zone max') || t.includes('pz max') || t.includes('climb ride')
   })
 
+  // Count strength sessions: legacy "strength"-titled work AND Row Bootcamp
+  // (the new primary modality). Plain Z2 "Row" workouts don't count — only
+  // bootcamp, which combines rowing intervals + floor strength.
   const strengthDates = new Set(
     activities
-      .filter(a => (a.title ?? '').toLowerCase().includes('strength') && (a.duration_seconds ?? 0) > 600)
-      .map(a => a.activity_type),
+      .filter(a => /strength|bootcamp/i.test(a.title ?? '') && (a.duration_seconds ?? 0) > 600)
+      .map(a => a.activity_date),
   )
 
   return {
@@ -125,7 +129,7 @@ export function classifyPrimary(primary: string): RecKind {
     return 'long_run'
   }
   if (p.includes('pz max') || p.includes('peloton')) return 'pz_max'
-  if (p.includes('strength')) return 'strength'
+  if (p.includes('strength') || p.includes('bootcamp')) return 'strength'
   if (p.includes('rest')) return 'rest'
   if (p.includes('run club')) return 'easy_run'
   if (p.includes('strides') || p.includes('cruise') || p.includes('tempo') || p.includes('fartlek') || p.includes('progression')) return 'run_quality'

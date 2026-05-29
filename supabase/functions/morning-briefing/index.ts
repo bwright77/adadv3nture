@@ -811,6 +811,14 @@ ${weightContextLine(weight, weightMeasuredAt)}`
         const suffix = cat === 'career' ? ' (weekdays only)' : ''
         return `  ${catLabels[cat]}: ${days}d since last · cadence ${cadence}d · ${status}${suffix}`
       }).join('\n')
+
+      // Only show a WORKOUT block when a structured program is active. Total
+      // Strength was retired (Row Bootcamp is the modality now) — its weekly
+      // target lives in the TRAINING WEEK block's strength prescription, so
+      // we don't fabricate a "W1 of 4" line from a deactivated program.
+      const workoutBlock = program
+        ? `WORKOUT:\n- Prescribed: ${program.next_workout_title ?? 'check program'}\n- Progress: W${program.current_week} of ${program.total_weeks} (${program.current_week - 1} weeks complete)\n\n`
+        : ''
       const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
 
       contextMsg = `Today is ${dayName}, ${today}.
@@ -829,11 +837,7 @@ RECOVERY:
 - Mood yesterday (1-5): ${yReview?.mood_score ?? 'not logged'}
 - Recovery score: ${todaySignal?.recovery_score != null ? Math.round(todaySignal.recovery_score) : 'unknown'}/100${todaySignal?.recovery_tier ? ` · ${todaySignal.recovery_tier}` : ''}
 
-WORKOUT:
-- Prescribed: ${program?.next_workout_title ?? 'Total Strength (check program)'}
-- Progress: W${program?.current_week ?? 1} of ${program?.total_weeks ?? 4} (${(program?.current_week ?? 1) - 1} weeks complete)
-
-INBOX: ${inboxCount} unprocessed items
+${workoutBlock}INBOX: ${inboxCount} unprocessed items
 ${weightContextLine(weight, weightMeasuredAt)}
 
 YESTERDAY'S PORTFOLIO REVIEW:

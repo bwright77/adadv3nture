@@ -179,6 +179,7 @@ export function deriveTrainingWeek(
     key_marker: null,
     quality_prescription: null,
     strength_prescription: null,
+    strength_stretch_sessions: null,
     target_run_miles: run.long > 0 ? run.total : null,
     target_long_run_miles: run.long > 0 ? run.long : null,
     target_cycling_miles: ride.total > 0 ? ride.total : null,

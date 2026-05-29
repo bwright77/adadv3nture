@@ -233,9 +233,9 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
       loadRecovery(user.id),
       (supabase as any)
         .from('activities')
-        // title + duration are needed to detect PZ Max / Climb Ride / strength
-        // sessions; the legacy gap math only needed distance.
-        .select('activity_type, title, distance_miles, duration_seconds')
+        // title + duration detect PZ Max / Climb Ride / strength + bootcamp;
+        // activity_date dedupes strength sessions by day.
+        .select('activity_type, activity_date, title, distance_miles, duration_seconds')
         .eq('user_id', user.id)
         .gte('activity_date', monday)
         .lte('activity_date', today),

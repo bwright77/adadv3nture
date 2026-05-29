@@ -64,14 +64,13 @@ const QUALITY_STREAMS: { group: string; rows: { name: string; dose: string; when
 ]
 
 const STRENGTH_PHASES: { range: string; program: string; freq: string; goal: string }[] = [
-  { range: 'W1–3',    program: 'Total Strength (Speer) — finish cycle', freq: '3×',          goal: 'Reactivation → progressive overload' },
-  { range: 'W4',      program: 'Down week — bodyweight + light DB',     freq: '2×',          goal: 'Recovery' },
-  { range: 'W5–8',    program: 'RK 5-Day Split (pick 3 of 5)',          freq: '3×',          goal: 'Unilateral / posterior chain · trail-specific' },
-  { range: 'W9',      program: 'Maintenance — 1 lower body early week', freq: '1×',          goal: "Don't go into FOCO sore" },
-  { range: 'W10–12',  program: 'RK Split continued',                    freq: '2–3×',        goal: 'Room for strength as cycling drops' },
-  { range: 'W13–14',  program: 'Maintenance — 1 set per movement',      freq: '2× / 1× race',goal: 'Preserve, don\'t fatigue' },
-  { range: 'W15–16',  program: 'Maintenance, light loading',            freq: '2×',          goal: 'Stay in the groove' },
-  { range: 'W17–19',  program: 'Minimum effective dose',                freq: '1×',          goal: 'Stay loose, no soreness' },
+  { range: 'W1–8',    program: 'Row Bootcamp (primary)',          freq: '2× · 3× stretch', goal: 'Posterior chain, core, eccentric quad — the modality you\'ll actually do' },
+  { range: 'W9',      program: 'Row Bootcamp — 1 early week',     freq: '1×',              goal: "Don't go into FOCO sore" },
+  { range: 'W10–12',  program: 'Row Bootcamp',                    freq: '2× · 3× stretch', goal: 'Room for strength as cycling drops' },
+  { range: 'W13',     program: 'Row Bootcamp · maintain',         freq: '2×',              goal: 'No new stimulus — preserve' },
+  { range: 'W14',     program: 'Maintain · Bergen race week',     freq: '1×',              goal: "Don't fatigue legs" },
+  { range: 'W15–18',  program: 'Row Bootcamp · maintain',         freq: '1×',              goal: 'Stay loose, no soreness' },
+  { range: 'W19',     program: 'Rest · WLW race week',            freq: '0',               goal: 'Nothing heroic' },
 ]
 
 const TRAIL_ROUTES: { name: string; distance: string; elevation: string; base: string; notes: string }[] = [
@@ -131,9 +130,11 @@ function computeActuals(weekStart: string, activities: Activity[]): WeekActuals 
   const inWeek = activities.filter(a => a.activity_date >= weekStart && a.activity_date <= endStr)
   const runs = inWeek.filter(a => a.activity_type === 'run' || a.activity_type === 'trail_run')
   const rides = inWeek.filter(a => isBikeActivity(a.activity_type))
+  // Count strength days: legacy "strength" work + Row Bootcamp (the new
+  // primary). Plain Z2 "Row" doesn't count — only bootcamp.
   const strengthDates = new Set(
     inWeek
-      .filter(a => (a.title?.toLowerCase().includes('strength') ?? false) && (a.duration_seconds ?? 0) > 600)
+      .filter(a => /strength|bootcamp/i.test(a.title ?? '') && (a.duration_seconds ?? 0) > 600)
       .map(a => a.activity_date),
   )
   return {
@@ -369,6 +370,7 @@ export function TrainingProgramSection() {
           label="STR"
           thisWk={currentActuals.strength}
           thisTgt={currentWeek?.target_strength_sessions ?? 0}
+          stretchTgt={currentWeek?.strength_stretch_sessions ?? null}
           cumActual={cumulative.acc.strength}
           cumTarget={cumulative.tgt.strength}
           unit="×"
@@ -565,10 +567,11 @@ export function TrainingProgramSection() {
 
 // ── Subcomponents ──────────────────────────────────────────────────────
 
-function MetricTile({ label, thisWk, thisTgt, cumActual, cumTarget, unit, peak = false }: {
+function MetricTile({ label, thisWk, thisTgt, stretchTgt = null, cumActual, cumTarget, unit, peak = false }: {
   label: string
   thisWk: number
   thisTgt: number
+  stretchTgt?: number | null   // optional secondary target shown as "· N stretch"
   cumActual: number
   cumTarget: number
   unit: string
@@ -577,6 +580,7 @@ function MetricTile({ label, thisWk, thisTgt, cumActual, cumTarget, unit, peak =
   const thisPct = thisTgt > 0 ? Math.round((thisWk / thisTgt) * 100) : (thisWk > 0 ? 100 : 0)
   const cumPct = cumTarget > 0 ? Math.round((cumActual / cumTarget) * 100) : 0
   const fmt = (n: number) => unit === '×' ? String(Math.round(n)) : r1(n).toString()
+  const showStretch = stretchTgt != null && stretchTgt > thisTgt
   return (
     <div style={{ background: '#fff', borderRadius: 10, border: `0.5px solid ${C.ink20}`, padding: '10px 12px' }}>
       <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.15em', marginBottom: 6 }}>
@@ -590,7 +594,7 @@ function MetricTile({ label, thisWk, thisTgt, cumActual, cumTarget, unit, peak =
             {fmt(thisWk)}
           </span>
           <span className="mono" style={{ fontSize: 'var(--fs-11)', color: C.ink40 }}>
-            / {fmt(thisTgt)}{unit === '×' ? '×' : ''}
+            / {fmt(thisTgt)}{unit === '×' ? '×' : ''}{showStretch ? ` · ${fmt(stretchTgt)} stretch` : ''}
           </span>
         </div>
       </div>
