@@ -14,18 +14,21 @@ Every morning it surfaces my Most Important Tasks — not what's loudest, what a
 _Update this at the start of every Claude Code session._
 
 ```
-NEXT PRIORITY: Verify the Apple Health Shortcut's sleep filter — currently
-              relying on server-side clamp (>12h → null) + manual overrides
-              because the iOS Shortcut UI doesn't expose the value/category
-              filter cleanly. Watch is logging stages correctly; pipeline
-              just needs to dedupe overlapping samples.
+NEXT PRIORITY: Live-test the WLW training system end to end — MIT cadence
+              framework (per-category intervals, no aggregate %), Row Bootcamp
+              strength template (2× target / 3× stretch), and the swap-aware
+              WTomorrow engine. Watch the morning briefing for a week to
+              confirm it reads cadence + TRAINING WEEK prescription correctly.
+              Still open: Apple Health Shortcut sleep filter (server clamps
+              >12h/<30m as defense; Shortcut UI can't dedupe overlapping
+              samples cleanly).
 ```
 
 ---
 
-## What's Live (as of May 13, 2026)
+## What's Live (as of May 29, 2026)
 
-**Migrations applied:** 001–029 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
+**Migrations applied:** 001–037 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
 
 | Area | Status |
 |------|--------|
@@ -33,7 +36,7 @@ NEXT PRIORITY: Verify the Apple Health Shortcut's sleep filter — currently
 | Widget grid — time-aware (morning/mid/afternoon/evening) | ✓ |
 | Morning briefing (Anthropic claude-sonnet-4-6, Edge Function) | ✓ |
 | Recovery score + tier (go_hard/moderate/recovery) | ✓ |
-| Program tracker — Total Strength prescription + Strava sync | ✓ |
+| Strength template — Row Bootcamp (2×/wk target, 3× stretch); Total Strength retired but history kept | ✓ |
 | Inbox — FAB capture + swipe triage (left=delete, right=MIT) | ✓ |
 | Todo lists — career/family/home, urgency fire/deck/rain | ✓ |
 | Persistent reminders | ✓ |
@@ -51,7 +54,9 @@ NEXT PRIORITY: Verify the Apple Health Shortcut's sleep filter — currently
 | 50 Hikes with Kids tracker — seasonal suggestion, log, expanded list | ✓ |
 | Withings OAuth + body metrics — connect + sync to body_metrics, weight/body-fat in trends | ✓ |
 | Trends engine — report card rows + weekly_summaries Edge Function + per-row sparklines | ✓ |
-| MIT widget — 7d completion rate from daily_plans, ±vs-prior-week, last 5 days dotted | ✓ |
+| MIT cadence framework — per-category intervals (career 3 / family 2 / home 5 / projects 5 days, in `briefing_profile.category_cadence_days`); LIT/DARK not % completion | ✓ |
+| MIT auto-registration — milestone check / opportunity-update / todo-complete / hike-log auto-fill the matching MIT row | ✓ |
+| Career weekday-only — Sat/Sun empty Career is by design, excluded from cadence math | ✓ |
 | Family source of truth — `family_members` (Ben/Tangier + 3 kids, birthdays → computed ages) | ✓ |
 | Anchor events — `anchor_events` (WLW + Career Anchor), editable in Career panel | ✓ |
 | Dynamic location — snap to Denver / Howard from geolocation; falls through to Denver | ✓ |
@@ -66,6 +71,17 @@ NEXT PRIORITY: Verify the Apple Health Shortcut's sleep filter — currently
 | Data export — Log page ◆ EXPORT downloads a Markdown brief for upload into a Claude conversation | ✓ |
 | Trends auto-refresh — Strava / Withings sync bumps a `dataVersion` so TrendsPage refetches without remount | ✓ |
 | Health webhook hardening — sleep clamp (>12h or <30m → null), force-regenerate briefing on each sync | ✓ |
+| Morning auto-sync — Apple Health webhook chains Strava + Withings sync before the briefing fires (no more manual Sync taps) | ✓ |
+| Steps backfill — Shortcut sends `steps_history` (last N days) so a missed firing self-heals | ✓ |
+| Withings body comp — visceral fat, vascular age, pulse wave velocity, BMR; one row per weigh-in (migration 031 collapsed splits) | ✓ |
+| Weight de-emphasized — observational only; body goal is training-driven (WLW), no "lbs to target" framing anywhere | ✓ |
+| Trends — "Miles ridden" report-card row; readiness card taps through to the training plan | ✓ |
+| 19-week WLW training program — inline on Training tab: phase-colored hero, dual-view report card, weekly templates, quality streams, strength progression, trail rotation, principles (all in `training_weeks` + `training-templates.ts`) | ✓ |
+| WTomorrow — template-lead, swap-aware recommendation (credits a mid-week long run against Saturday's slot; recovery + weather overrides) | ✓ |
+| Briefing TRAINING WEEK block — feeds the current plan week's phase / targets / quality + strength prescription into the model | ✓ |
+| Editable training events — name/date/type/location/distance/elevation/start-time inline on EventDetail | ✓ |
+| Timezone hardening — `logicalToday()` (America/Denver) everywhere; no UTC date-rollover bugs | ✓ |
+| Auth — `user` reference memoized by id so TOKEN_REFRESHED on tab-focus doesn't remount forms / wipe in-progress input | ✓ |
 
 ---
 
@@ -102,17 +118,19 @@ NEXT PRIORITY: Verify the Apple Health Shortcut's sleep filter — currently
 ## Key Domain Rules
 
 1. **Elevation** — HR zones for Denver 5,318ft. Sea level = ~8bpm higher. Flag when traveling.
-2. **GLP-1** — 7-day rolling weight averages. Muscle mass % is the primary metric.
+2. **Weight is observational, not a goal** — body goal is training-driven (WLW + the 19-week plan). Reference RHR / recovery / sleep / training volume for body status, never "lbs to target." GLP-1 since Nov 2024; muscle mass % more interesting than weight.
 3. **Drinks = ratio not streak** — `drinks_consumed integer`. Goal ≤ 2.0/day avg.
-4. **Labor Day Sept 1 2026** — career block non-negotiable. Show countdown.
+4. **Labor Day Sept 1 2026** — career block non-negotiable. Show countdown. This is the [CAREER] anchor — never conflate with weight or training.
 5. **Run Club sacred** — Monday evenings, Wash Park. Never override.
 6. **4pm is the critical hour** — weather-appropriate project slot.
-7. **Program tracker = prescription only** — Strava logs actuals.
+7. **Strength = Row Bootcamp** (Total Strength retired) — 2×/wk target, 3× stretch. Detection matches `/strength|bootcamp/i`. Strava logs actuals.
 8. **Inbox = zero friction** — FAB always visible, zero categorization at capture.
 9. **Evening is protected** — never colonize it with MITs.
-10. **West Line Winder = anchor event** — Sept 26, Buena Vista. Howard runs = race training.
-11. **MIT completion rate = meta-metric** — more important than any single fitness number.
-12. **Wright Adventures = the meaning** — Labor Day: WA income or get a real job.
+10. **West Line Winder = anchor event** — Sept 26, Buena Vista (18.6mi / ~4,200ft). Bergen Peak HM (Aug 22) is the key predictor. The 19-week plan is the body goal.
+11. **MIT cadence > completion %** — each category has its own expected interval (career 3 / family 2 / home 5 / projects 5 days). Goal is forward motion, not uniform daily quota. Flag DARK (past interval); never aggregate into a single %.
+12. **Career is weekday-only** — empty Career on Sat/Sun is by design; cadence counts weekday gaps only.
+13. **Bike ✗ if wet recently or forecast-today wet** — not just "currently raining." Running in the rain is fine (runOk is temperature-only).
+14. **Wright Adventures = the meaning** — Labor Day: WA income or get a real job.
 
 ---
 
@@ -120,7 +138,7 @@ NEXT PRIORITY: Verify the Apple Health Shortcut's sleep filter — currently
 
 ```
 ✓ 01. Project init — Vite + React 19 + TypeScript + Tailwind + Supabase
-✓ 02. Schema — migrations 001-029, RLS (full coverage after 029 fix), seed data
+✓ 02. Schema — migrations 001-037, RLS (full coverage after 029 fix), seed data
 ✓ 03. Auth — email + Google OAuth
 ✓ 04. Widget grid — time-aware views
 ✓ 05. Inbox — FAB, swipe triage
@@ -147,6 +165,15 @@ NEXT PRIORITY: Verify the Apple Health Shortcut's sleep filter — currently
 ✓ 24. Smart trainer — auto-derive weekly targets from upcoming training_goals
 ✓ 25. Anchor deep-link — Trends → Training EventDetail via `training_goal_id` FK
 ✓ 26. Data export — Markdown brief for Claude analysis
+✓ 28. MIT auto-registration — milestones / updates / todos / hikes auto-fill the matching MIT row
+✓ 29. MIT cadence framework — per-category intervals replace the aggregate % completion metric
+✓ 30. Weight de-emphasis — observational only; body goal = training-driven (WLW)
+✓ 31. Withings depth — visceral fat / vascular age / PWV / BMR; one-row-per-weigh-in; refresh action fix
+✓ 32. Morning auto-sync — webhook chains Strava + Withings before the briefing
+✓ 33. 19-week WLW training program — inline Training-tab section + briefing TRAINING WEEK feed
+✓ 34. Strength template — Row Bootcamp replaces Total Strength (2× / 3× stretch)
+✓ 35. WTomorrow — template-lead, swap-aware recommendation engine
+✓ 36. Timezone hardening — logicalToday() everywhere; stable auth user reference
 
   27. Apple Health sleep filter — Shortcut still over-counts; webhook clamps as defense  ← OPEN
 ```
@@ -168,4 +195,4 @@ NEXT PRIORITY: Verify the Apple Health Shortcut's sleep filter — currently
 
 ---
 
-*Last updated: May 13, 2026*
+*Last updated: May 29, 2026*
