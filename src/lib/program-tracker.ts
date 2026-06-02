@@ -27,6 +27,17 @@ interface ProgramSchedule {
 }
 
 const SCHEDULES: Record<string, ProgramSchedule> = {
+  // Row Bootcamp is the current primary strength modality (replaced Total
+  // Strength, 2026-05-29). 2× target per week — the 3× stretch goal lives in
+  // the plan UI's strength_stretch_sessions, not here. No body-part split:
+  // each bootcamp is rower intervals + floor strength, so getTitle falls back
+  // to the bare "Row Bootcamp · W#D#" label.
+  'Row Bootcamp': {
+    workoutsPerWeek: [2, 2, 2, 2],
+    dayLabels: {},
+  },
+  // Total Strength is retired from the forward plan but kept here so historical
+  // program rows / synced Strava sessions still resolve their titles.
   'Total Strength': {
     workoutsPerWeek: [3, 3, 4, 4],
     dayLabels: {
@@ -65,13 +76,14 @@ function nextPosition(programName: string, sessionsCompleted: number): { week: n
 }
 
 // How many strength sessions the active program prescribes for the current
-// calendar week. Returns 3 as a baseline when no program is active.
+// calendar week. Returns 2 as a baseline when no program is active — the
+// Row Bootcamp era target (2× / 3× stretch).
 export function weeklyStrengthSessions(program: ProgramState | null): number {
-  if (!program) return 3
+  if (!program) return 2
   const schedule = SCHEDULES[program.program_name]
-  if (!schedule) return 3
+  if (!schedule) return 2
   const idx = Math.max(0, Math.min(schedule.workoutsPerWeek.length - 1, program.current_week - 1))
-  return schedule.workoutsPerWeek[idx] ?? 3
+  return schedule.workoutsPerWeek[idx] ?? 2
 }
 
 function totalWorkouts(programName: string): number {

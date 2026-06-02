@@ -205,6 +205,46 @@ function ageOnDate(birthday: string, today: string): number {
 
 interface AnchorRow { slug: string; title: string; event_date: string; location: string | null; notes: string | null }
 interface FamilyRow { name: string; role: string; birthday: string }
+interface TrainingGoalRow { event_name: string; event_date: string; status: string }
+
+// Mirrored from src/lib/weekCharacter.ts — phase + character (Build / Recovery /
+// Race / Taper) is the meaningful week label; the week number drops to metadata.
+function raceShortName(eventName: string): string {
+  const n = eventName.toLowerCase()
+  if (n.includes('fibark')) return 'FIBArk'
+  if (n.includes('foco')) return 'FOCO'
+  if (n.includes('hurricane')) return 'Hurricane'
+  if (n.includes('bergen')) return 'Bergen'
+  if (n.includes('west line') || n.includes('winder')) return 'WLW'
+  return eventName.split(/\s+/)[0]
+}
+
+function shiftDaysStr(dateStr: string, days: number): string {
+  const d = new Date(dateStr + 'T12:00:00')
+  d.setDate(d.getDate() + days)
+  return d.toISOString().substring(0, 10)
+}
+
+// Returns the character phrase for a plan week given the week's phase/marker and
+// the user's active races. weekEndStr is the inclusive Sunday of the week.
+function weekCharacterPhrase(
+  phaseId: string | null,
+  keyMarker: string | null,
+  weekStart: string,
+  goals: TrainingGoalRow[],
+): string {
+  const weekEndStr = shiftDaysStr(weekStart, 6)
+  const inRange = (from: string, to: string) =>
+    goals.find(g => g.status === 'active' && g.event_date >= from && g.event_date <= to)
+  const raceThis = inRange(weekStart, weekEndStr)
+  if (raceThis) return `${raceShortName(raceThis.event_name)} race week`
+  const raceLast = inRange(shiftDaysStr(weekStart, -7), shiftDaysStr(weekStart, -1))
+  if (raceLast) return `${raceShortName(raceLast.event_name)} recovery`
+  const marker = (keyMarker ?? '').toLowerCase()
+  if (marker.startsWith('🔽') || marker.includes('down') || marker.includes('recovery')) return 'Recovery week'
+  if (phaseId === 'taper') return 'Taper week'
+  return 'Build week'
+}
 
 // Domain tag for each anchor so the prompt sees [CAREER] vs [TRAINING] and the
 // model stops mashing weight metrics with career deadlines.
@@ -327,7 +367,7 @@ async function loadAnchorsAndFamily(admin: any, userId: string, today: string): 
   familyBlock: string
   trainingWeekBlock: string
 }> {
-  const [anchorsRes, familyRes, trainingWeeksRes] = await Promise.all([
+  const [anchorsRes, familyRes, trainingWeeksRes, trainingGoalsRes] = await Promise.all([
     admin.from('anchor_events')
       .select('slug, title, event_date, location, notes')
       .eq('user_id', userId),
@@ -339,11 +379,15 @@ async function loadAnchorsAndFamily(admin: any, userId: string, today: string): 
       .select('week_start, phase_id, phase_label, focus, notes, key_marker, quality_prescription, strength_prescription, target_run_miles, target_long_run_miles, target_cycling_miles, target_strength_sessions')
       .eq('user_id', userId)
       .order('week_start', { ascending: true }),
+    admin.from('training_goals')
+      .select('event_name, event_date, status')
+      .eq('user_id', userId),
   ])
 
   const anchors = (anchorsRes.data ?? []) as AnchorRow[]
   const family = (familyRes.data ?? []) as FamilyRow[]
   const trainingWeeks = (trainingWeeksRes.data ?? []) as TrainingWeekRow[]
+  const trainingGoals = (trainingGoalsRes.data ?? []) as TrainingGoalRow[]
 
   const anchorLines = anchors.map(a => {
     const days = daysBetween(today, a.event_date)
@@ -382,7 +426,11 @@ async function loadAnchorsAndFamily(admin: any, userId: string, today: string): 
   if (idx >= 0) {
     const w = trainingWeeks[idx]
     const lines: string[] = []
-    lines.push(`TRAINING WEEK (WLW prep, W${idx + 1} of ${trainingWeeks.length}${w.phase_id ? ` · ${w.phase_id.toUpperCase()}` : ''}):`)
+    // Lead with phase + character (the meaningful label); week number stays as
+    // trailing metadata only.
+    const phasePrefix = w.phase_id ? w.phase_id.toUpperCase() : (w.phase_label ?? '').toUpperCase()
+    const character = weekCharacterPhrase(w.phase_id, w.key_marker, w.week_start, trainingGoals)
+    lines.push(`TRAINING WEEK (${[phasePrefix, character].filter(Boolean).join(' · ')} — WLW prep, wk ${idx + 1}/${trainingWeeks.length}):`)
     if (w.key_marker) lines.push(`- Key marker: ${w.key_marker}`)
     if (w.focus) lines.push(`- Focus: ${w.focus}`)
     const targets: string[] = []

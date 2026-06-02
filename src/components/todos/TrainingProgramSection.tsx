@@ -3,8 +3,10 @@ import { C } from '../../tokens'
 import { Ring } from '../ui/Ring'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { getAllTrainingWeeks, type TrainingWeek, type TrainingPhase } from '../../lib/training'
+import { getAllTrainingWeeks, getTrainingGoals, type TrainingWeek, type TrainingPhase, type TrainingGoal } from '../../lib/training'
 import { WEEKLY_TEMPLATES } from '../../lib/training-templates'
+import { weekCharacter, type WeekCharacter } from '../../lib/weekCharacter'
+import { deriveRotationIndex, thursdayPrescription, THURSDAY_ROTATION, PELOTON_SYNC_WARNING, FLAT_ROUTES, type ThursdayPrescription } from '../../lib/thursdayRotation'
 import { isBikeActivity } from '../../lib/trends'
 import { daysUntil } from '../../lib/countdown'
 import { useAnchorEvent } from '../../hooks/useAnchorEvent'
@@ -157,6 +159,7 @@ const r1 = (n: number) => Math.round(n * 10) / 10
 export function TrainingProgramSection() {
   const { user } = useAuth()
   const [weeks, setWeeks] = useState<TrainingWeek[]>([])
+  const [goals, setGoals] = useState<TrainingGoal[]>([])
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
   // 'all' shows everything chronologically; a specific phase narrows the
@@ -168,6 +171,7 @@ export function TrainingProgramSection() {
   const [showQuality, setShowQuality] = useState(false)
   const [showStrength, setShowStrength] = useState(false)
   const [showTrails, setShowTrails] = useState(false)
+  const [showThursday, setShowThursday] = useState(false)
   const [showPrinciples, setShowPrinciples] = useState(false)
   const wlw = useAnchorEvent('wlw')
   const wlwDays = daysUntil(wlw.event_date)
@@ -183,14 +187,18 @@ export function TrainingProgramSection() {
       }
       const planStart = w[0].week_start
       const planEnd = weekEndDate(w[w.length - 1].week_start)
-      const { data } = await supabase
-        .from('activities')
-        .select('activity_date, activity_type, title, distance_miles, duration_seconds')
-        .eq('user_id', user.id)
-        .gte('activity_date', planStart)
-        .lte('activity_date', planEnd)
+      const [{ data }, goalsData] = await Promise.all([
+        supabase
+          .from('activities')
+          .select('activity_date, activity_type, title, distance_miles, duration_seconds')
+          .eq('user_id', user.id)
+          .gte('activity_date', planStart)
+          .lte('activity_date', planEnd),
+        getTrainingGoals(user.id).catch(() => [] as TrainingGoal[]),
+      ])
       if (cancelled) return
       setWeeks(w)
+      setGoals(goalsData)
       setActivities((data ?? []) as Activity[])
       setLoading(false)
     }).catch(() => {
@@ -239,6 +247,13 @@ export function TrainingProgramSection() {
     return { acc, tgt }
   }, [weeks, actualsByIdx, currentIdx])
 
+  // Thursday rotation pointer — derived from completed Thursday quality
+  // sessions since plan start (advances on completion, not calendar).
+  const rotationIndex = useMemo(
+    () => deriveRotationIndex(activities, weeks[0]?.week_start ?? today),
+    [activities, weeks, today],
+  )
+
   if (loading) {
     return <div style={{ gridColumn: 'span 12', padding: '20px 0', color: C.ink40, fontSize: 'var(--fs-13)', textAlign: 'center' }}>Loading training program…</div>
   }
@@ -261,6 +276,18 @@ export function TrainingProgramSection() {
     : 0
 
   const hero = PHASE_HERO[currentPhase]
+
+  // Live Thursday prescription for the current week (phase + character override
+  // the rotation pointer). Used to override the Thursday template row and feed
+  // the Thursday quality reference card.
+  // The rotation only governs BASE/BUILD Thursdays — those are the quality
+  // days. PEAK/TAPER Thursdays stay easy per their templates, so we don't
+  // inject rotation intensity into them.
+  const currentChar = currentWeek ? weekCharacter(currentWeek, goals) : null
+  const isQualityPhase = currentPhase === 'base' || currentPhase === 'build'
+  const thursdayRx: ThursdayPrescription | null = currentWeek && currentChar && isQualityPhase
+    ? thursdayPrescription({ phase: currentPhase, characterKind: currentChar.kind, rotationIndex })
+    : null
 
   return (
     <div style={{ gridColumn: 'span 12' }}>
@@ -288,7 +315,7 @@ export function TrainingProgramSection() {
           <Ring pct={overallPct} color={C.cream} label={currentWeek ? String(currentIdx + 1) : '—'} size={72} sw={6} />
           <div style={{ flex: 1 }}>
             <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.18em', opacity: 0.85 }}>
-              {currentWeek ? `${PHASE_LABEL[currentPhase]} · W${currentIdx + 1} OF ${weeks.length}` : 'TRAINING PROGRAM'}
+              {currentWeek ? weekCharacter(currentWeek, goals).label : 'TRAINING PROGRAM'}
             </div>
             <div className="badge" style={{ fontSize: 'var(--fs-22)', lineHeight: 1, marginTop: 4, letterSpacing: '0.02em' }}>
               WEST LINE WINDER
@@ -449,7 +476,10 @@ export function TrainingProgramSection() {
       {/* Weekly day-of-week template for the active phase (current phase
           when ALL is selected). Always visible — this is the "what does
           a normal week in this block look like" view. */}
-      <WeeklyTemplate phase={phaseFilter === 'all' ? currentPhase : phaseFilter} />
+      {(() => {
+        const displayPhase = phaseFilter === 'all' ? currentPhase : phaseFilter
+        return <WeeklyTemplate phase={displayPhase} thursday={displayPhase === currentPhase ? thursdayRx : null} />
+      })()}
 
       {/* Week list — current + upcoming visible, done weeks collapsed at the
           bottom (toggle), so the user always lands on what's ahead. Phase
@@ -486,6 +516,7 @@ export function TrainingProgramSection() {
                       isCurrent={isCurrent}
                       showActuals={isCurrent}
                       actuals={actualsByIdx[idx]}
+                      character={weekCharacter(w, goals)}
                     />
                   </div>
                 )
@@ -527,6 +558,7 @@ export function TrainingProgramSection() {
                           isCurrent={false}
                           showActuals
                           actuals={actualsByIdx[idx]}
+                          character={weekCharacter(w, goals)}
                         />
                       )
                     })}
@@ -542,6 +574,9 @@ export function TrainingProgramSection() {
           into when planning rather than scanning every load. */}
       <CollapsibleCard title="QUALITY STREAMS" open={showQuality} onToggle={() => setShowQuality(v => !v)}>
         <QualityStreamsCard />
+      </CollapsibleCard>
+      <CollapsibleCard title="THURSDAY QUALITY" open={showThursday} onToggle={() => setShowThursday(v => !v)}>
+        <ThursdayRotationCard rotationIndex={rotationIndex} prescription={thursdayRx} />
       </CollapsibleCard>
       <CollapsibleCard title="STRENGTH PROGRESSION" open={showStrength} onToggle={() => setShowStrength(v => !v)}>
         <StrengthProgressionCard />
@@ -650,20 +685,23 @@ function PhaseChip({ active, color, label, sub, onClick }: {
   )
 }
 
-function WeekRow({ week, index, color, isCurrent, showActuals, actuals }: {
+function WeekRow({ week, index, color, isCurrent, showActuals, actuals, character }: {
   week: TrainingWeek
   index: number
   color: string
   isCurrent: boolean
   showActuals: boolean
   actuals: WeekActuals
+  character: WeekCharacter
 }) {
   // Rest / recovery / down weeks get a softer phase-tinted highlight too —
   // not as strong as the current-week treatment, but visually distinct from
-  // an ordinary week so down weeks aren't overlooked.
-  const isRest = (week.key_marker ?? '').startsWith('🔽')
-  const bg = isCurrent ? `${color}1F` : isRest ? `${color}10` : '#fff'
-  const borderLeft = isCurrent || isRest || week.key_marker
+  // an ordinary week so down weeks aren't overlooked. Race weeks get the same
+  // treatment so they stand out in the plan view.
+  const isRest = (week.key_marker ?? '').startsWith('🔽') || character.kind === 'recovery'
+  const isRace = character.kind === 'race'
+  const bg = isCurrent ? `${color}1F` : (isRest || isRace) ? `${color}10` : '#fff'
+  const borderLeft = isCurrent || isRest || isRace || week.key_marker
     ? `3px solid ${color}`
     : `0.5px solid ${C.ink20}`
   return (
@@ -685,17 +723,25 @@ function WeekRow({ week, index, color, isCurrent, showActuals, actuals }: {
           THIS WEEK
         </div>
       )}
-      {!isCurrent && isRest && (
+      {!isCurrent && (isRace || isRest) && (
         <div className="mono" style={{
           position: 'absolute', top: 8, right: 10,
           fontSize: 'var(--fs-10)', letterSpacing: '0.15em',
           color, opacity: 0.85,
         }}>
-          REST
+          {isRace ? 'RACE' : 'REST'}
+        </div>
+      )}
+      {/* Phase + character is the meaningful label; the week number drops to
+          muted metadata. Skip the character line for plain build weeks (noise)
+          and for down weeks already named by their key_marker. */}
+      {(character.kind === 'race' || (character.kind !== 'build' && !week.key_marker)) && (
+        <div className="mono" style={{ fontSize: 'var(--fs-11)', color, letterSpacing: '0.05em', fontWeight: 700, marginBottom: 3 }}>
+          {character.phrase}
         </div>
       )}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-        <span className="mono" style={{ fontSize: 'var(--fs-11)', color: week.key_marker ? color : C.ink40, letterSpacing: '0.1em', fontWeight: 700 }}>
+        <span className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.1em' }}>
           W{String(index).padStart(2, '0')}
         </span>
         <span className="mono" style={{ fontSize: 'var(--fs-11)', color: C.ink40 }}>
@@ -787,9 +833,18 @@ function WeekMetric({ label, target, actual, unit }: {
 
 // ─── Weekly day-of-week template for the current phase ────────────────────
 
-function WeeklyTemplate({ phase }: { phase: TrainingPhase }) {
-  const days = WEEKLY_TEMPLATES[phase]
+function WeeklyTemplate({ phase, thursday }: { phase: TrainingPhase; thursday?: ThursdayPrescription | null }) {
+  const baseDays = WEEKLY_TEMPLATES[phase]
   const color = PHASE_COLOR[phase]
+  // Override the Thursday row with the live rotation prescription so the
+  // template reflects what's actually prescribed this week (skip / downgrade).
+  const days = thursday
+    ? baseDays.map(d => d.day !== 'Thu' ? d : (
+        thursday.skip
+          ? { day: 'Thu', primary: 'Easy run (no quality)', sub: thursday.note }
+          : { day: 'Thu', primary: thursday.type!.label, sub: thursday.note || thursday.type!.detail }
+      ))
+    : baseDays
   return (
     <div style={{ background: '#fff', borderRadius: 12, border: `0.5px solid ${C.ink20}`, padding: '12px 14px', marginBottom: 10 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -929,6 +984,74 @@ function TrailRotationCard() {
       ))}
       <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, lineHeight: 1.5, marginTop: 4, paddingTop: 10, borderTop: `0.5px solid ${C.ink20}` }}>
         Altitude exposure ladder: Howard (~6,600) → Catkin (~6,800) → SMR (~8,700) → Bergen summit (9,708) → WLW.
+      </div>
+    </div>
+  )
+}
+
+// ─── Thursday outdoor-quality rotation reference ──────────────────────────
+
+function ThursdayRotationCard({ rotationIndex, prescription }: {
+  rotationIndex: number
+  prescription: ThursdayPrescription | null
+}) {
+  // The prescription's type (after phase/character override) is "current".
+  // Fall back to the raw pointer when there's no current week yet.
+  const currentKey = prescription?.skip
+    ? null
+    : (prescription?.type?.key ?? THURSDAY_ROTATION[rotationIndex % THURSDAY_ROTATION.length].key)
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 12 }}>
+      {prescription && (
+        <div style={{
+          background: prescription.skip ? `${C.rust}10` : `${C.teal}10`,
+          border: `0.5px solid ${prescription.skip ? C.rust : C.teal}40`,
+          borderRadius: 8, padding: '8px 10px',
+        }}>
+          <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em', marginBottom: 2 }}>
+            THIS WEEK
+          </div>
+          <div style={{ fontSize: 'var(--fs-13)', color: C.dark, fontWeight: 600 }}>
+            {prescription.skip ? 'Skip quality — easy only' : prescription.type!.label}
+          </div>
+          {prescription.note && (
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink60, lineHeight: 1.4, marginTop: 2 }}>
+              {prescription.note}
+            </div>
+          )}
+        </div>
+      )}
+
+      {THURSDAY_ROTATION.map(r => {
+        const isCurrent = r.key === currentKey
+        return (
+          <div key={r.key} style={{
+            display: 'grid', gridTemplateColumns: '16px 1fr', gap: 8, alignItems: 'baseline',
+            opacity: currentKey && !isCurrent ? 0.6 : 1,
+          }}>
+            <span className="mono" style={{ fontSize: 'var(--fs-12)', color: isCurrent ? C.teal : C.ink40 }}>
+              {isCurrent ? '▶' : '·'}
+            </span>
+            <div>
+              <div style={{ fontSize: 'var(--fs-12)', color: C.dark }}>
+                <span style={{ fontWeight: isCurrent ? 700 : 600 }}>{r.label}</span>
+                <span className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, marginLeft: 6 }}>{r.detail}</span>
+              </div>
+              <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink60, lineHeight: 1.4 }}>
+                {r.pelotonClass
+                  ? `Peloton ${r.pelotonClass} · ${r.pelotonInstructors.join(' / ')}`
+                  : 'Self-directed'}
+              </div>
+            </div>
+          </div>
+        )
+      })}
+
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.rust, lineHeight: 1.5, marginTop: 2, paddingTop: 10, borderTop: `0.5px solid ${C.ink20}` }}>
+        ⚠ {PELOTON_SYNC_WARNING}
+      </div>
+      <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, lineHeight: 1.5 }}>
+        Flat routes for instructor-paced work: {FLAT_ROUTES.join(' · ')}. Avoid hilly routes.
       </div>
     </div>
   )

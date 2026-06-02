@@ -4,8 +4,9 @@ import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getAllPrograms, type ProgramState } from '../../../lib/program-tracker'
-import { getCurrentTrainingWeek, type TrainingWeek } from '../../../lib/training'
+import { getCurrentTrainingWeek, getAllTrainingWeeks, type TrainingWeek } from '../../../lib/training'
 import { templateForDow, computeWeekProgress, classifyPrimary, type WeekProgress } from '../../../lib/training-templates'
+import { deriveRotationIndex, thursdayPrescription, PELOTON_SYNC_WARNING } from '../../../lib/thursdayRotation'
 import { loadRecovery } from '../../../lib/recovery'
 import { useWeather } from '../../../hooks/useWeather'
 import { supabase } from '../../../lib/supabase'
@@ -220,6 +221,7 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
   const [progress, setProgress] = useState<WeekProgress>({ longRunDone: false, pzMaxDone: false, strengthCount: 0, runMiles: 0, bikeMiles: 0 })
   const [programs, setPrograms] = useState<ProgramState[]>([])
   const [recoveryTier, setRecoveryTier] = useState<string>('unknown')
+  const [rotationIndex, setRotationIndex] = useState<number | null>(null)
   const { weather } = useWeather()
 
   useEffect(() => {
@@ -239,7 +241,8 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
         .eq('user_id', user.id)
         .gte('activity_date', monday)
         .lte('activity_date', today),
-    ]).then(([weekRes, programsRes, recoveryRes, activitiesRes]) => {
+      getAllTrainingWeeks(user.id),
+    ]).then(async ([weekRes, programsRes, recoveryRes, activitiesRes, weeksRes]) => {
       const w = weekRes.status === 'fulfilled' ? weekRes.value : null
       setWeek(w)
       setPrograms(programsRes.status === 'fulfilled' ? programsRes.value : [])
@@ -248,6 +251,20 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
       }
       const acts = activitiesRes.status === 'fulfilled' ? (activitiesRes.value.data ?? []) : []
       setProgress(computeWeekProgress(w, acts as Parameters<typeof computeWeekProgress>[1]))
+
+      // Thursday rotation pointer — count completed Thursday quality sessions
+      // since plan start (consistent with the Training tab's derivation).
+      const weeks = weeksRes.status === 'fulfilled' ? weeksRes.value : []
+      const planStart = weeks[0]?.week_start
+      if (planStart) {
+        const { data } = await (supabase as any)
+          .from('activities')
+          .select('activity_type, activity_date')
+          .eq('user_id', user.id)
+          .gte('activity_date', planStart)
+          .lte('activity_date', today)
+        setRotationIndex(deriveRotationIndex((data ?? []) as { activity_type: string; activity_date: string }[], planStart))
+      }
     })
   }, [user])
 
@@ -265,6 +282,23 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
     : null
 
   const rec = buildRec({ week, progress, recoveryTier, runOk, bikeOk, programs, dow })
+
+  // When tomorrow is Thursday and the plan calls for outdoor quality, surface
+  // which rotation type is up (phase-aware) plus the Peloton class + sync note.
+  // The full phase/character override lives on the Training tab; here we cover
+  // the common phase + down-week cases without loading goals.
+  const thursdayRx = (dow === 4 && rotationIndex !== null && rec.type === 'run'
+    && (week?.phase_id === 'base' || week?.phase_id === 'build'))
+    ? thursdayPrescription({
+        phase: week.phase_id,
+        characterKind: (week.key_marker ?? '').startsWith('🔽') ? 'recovery' : 'build',
+        rotationIndex,
+      })
+    : null
+  if (thursdayRx && !thursdayRx.skip && thursdayRx.type) {
+    rec.headline = thursdayRx.type.label
+    rec.why = thursdayRx.note || thursdayRx.type.detail
+  }
 
   return (
     <Glass dark={dark} span={12} pad={14} flat style={{ background: C.tealDk, border: 'none' }}>
@@ -318,6 +352,18 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
           }}>
             {rec.program}
           </div>
+        )}
+
+        {/* Thursday rotation: Peloton class + Strava sync reminder */}
+        {thursdayRx && !thursdayRx.skip && thursdayRx.type?.pelotonClass && (
+          <>
+            <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.85, marginLeft: 24 }}>
+              Peloton {thursdayRx.type.pelotonClass} · {thursdayRx.type.pelotonInstructors.join(' / ')}
+            </div>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.rust, marginLeft: 24, lineHeight: 1.4 }}>
+              ⚠ {PELOTON_SYNC_WARNING}
+            </div>
+          </>
         )}
 
         {/* Weather line */}

@@ -143,7 +143,7 @@ export function WWorkout({ dark, span = 7 }: WWorkoutProps) {
   }
 
   // No activity yet — show prescribed
-  const title = program?.next_workout_title ?? 'Total Strength'
+  const title = program?.next_workout_title ?? 'Row Bootcamp'
   const parts = title.split('·').map((p: string) => p.trim())
 
   return (

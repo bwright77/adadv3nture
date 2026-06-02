@@ -14,21 +14,24 @@ Every morning it surfaces my Most Important Tasks — not what's loudest, what a
 _Update this at the start of every Claude Code session._
 
 ```
-NEXT PRIORITY: Live-test the WLW training system end to end — MIT cadence
-              framework (per-category intervals, no aggregate %), Row Bootcamp
-              strength template (2× target / 3× stretch), and the swap-aware
-              WTomorrow engine. Watch the morning briefing for a week to
-              confirm it reads cadence + TRAINING WEEK prescription correctly.
-              Still open: Apple Health Shortcut sleep filter (server clamps
-              >12h/<30m as defense; Shortcut UI can't dedupe overlapping
+NEXT PRIORITY: Live-test the consolidated training-plan updates — FIBArk 10K
+              (Jun 21) seeded, with a race-pace card on EventDetail; week labels
+              now lead with phase + character (Build / Recovery / Race / Taper)
+              and week numbers are demoted to metadata; Thursday outdoor-quality
+              4-week rotation (cruise → strides → tempo → race-pace intervals),
+              derived from completed Thursday sessions and phase-gated to
+              BASE/BUILD. Confirm the FIBArk week renders "BUILD · FIBArk race
+              week" and the briefing TRAINING WEEK header leads with phase +
+              character. Still open: Apple Health Shortcut sleep filter (server
+              clamps >12h/<30m as defense; Shortcut UI can't dedupe overlapping
               samples cleanly).
 ```
 
 ---
 
-## What's Live (as of May 29, 2026)
+## What's Live (as of Jun 2, 2026)
 
-**Migrations applied:** 001–037 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
+**Migrations applied:** 001–038 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
 
 | Area | Status |
 |------|--------|
@@ -82,6 +85,9 @@ NEXT PRIORITY: Live-test the WLW training system end to end — MIT cadence
 | Editable training events — name/date/type/location/distance/elevation/start-time inline on EventDetail | ✓ |
 | Timezone hardening — `logicalToday()` (America/Denver) everywhere; no UTC date-rollover bugs | ✓ |
 | Auth — `user` reference memoized by id so TOKEN_REFRESHED on tab-focus doesn't remount forms / wipe in-progress input | ✓ |
+| FIBArk 10K tune-up — Jun 21 trail race (migration 038); race-pace targets (`src/lib/raceTargets.ts`) surface a pace-breakdown card on EventDetail (FIBArk / Bergen / WLW) | ✓ |
+| Week character taxonomy — `src/lib/weekCharacter.ts` computes Build / Recovery / Race / Taper from phase + key_marker + race-in-week; UI leads with "PHASE · character", week numbers demoted to metadata (hero, week rows, briefing header) | ✓ |
+| Thursday outdoor-quality rotation — `src/lib/thursdayRotation.ts` 4-week cycle (cruise → strides → tempo → race-pace intervals), pointer derived from completed Thursday runs, phase-gated to BASE/BUILD, race/recovery/taper overrides; Peloton class recs + Strava-sync warning on the Training tab card + WTomorrow | ✓ |
 
 ---
 
@@ -131,6 +137,9 @@ NEXT PRIORITY: Live-test the WLW training system end to end — MIT cadence
 12. **Career is weekday-only** — empty Career on Sat/Sun is by design; cadence counts weekday gaps only.
 13. **Bike ✗ if wet recently or forecast-today wet** — not just "currently raining." Running in the rain is fine (runOk is temperature-only).
 14. **Wright Adventures = the meaning** — Labor Day: WA income or get a real job.
+15. **Week label = phase + character, not number** — lead with "BUILD · FIBArk race week" / "BASE · Recovery week". Character is computed (`weekCharacter.ts`), never stored. Week numbers are metadata only (URLs, plan view, analytics) — never on the daily surfaces, briefing header, or workout cards.
+16. **Thursday = outdoor quality rotation** — cruise → strides → tempo → race-pace intervals, advancing on completed Thursday runs (not calendar). Only governs BASE/BUILD; PEAK/TAPER Thursdays stay easy. Race weeks skip it. WLW sustained pace (11:00–11:30/mi) is the primary tempo/interval reference. Peloton Outdoor classes don't auto-sync to Strava — record with the watch.
+17. **FIBArk 10K (Jun 21) = tune-up, not anchor** — fitness benchmark on the road to Bergen (Aug 22) and WLW (Sep 26). `role` framing lives in notes (no `role` column). Target 56–58 min.
 
 ---
 
@@ -174,6 +183,7 @@ NEXT PRIORITY: Live-test the WLW training system end to end — MIT cadence
 ✓ 34. Strength template — Row Bootcamp replaces Total Strength (2× / 3× stretch)
 ✓ 35. WTomorrow — template-lead, swap-aware recommendation engine
 ✓ 36. Timezone hardening — logicalToday() everywhere; stable auth user reference
+✓ 37. Training-plan consolidation — FIBArk 10K (migration 038) + race-pace targets card; week character taxonomy (phase + character, numbers demoted); Thursday outdoor-quality 4-week rotation (activity-derived, phase-gated)
 
   27. Apple Health sleep filter — Shortcut still over-counts; webhook clamps as defense  ← OPEN
 ```
@@ -195,4 +205,4 @@ NEXT PRIORITY: Live-test the WLW training system end to end — MIT cadence
 
 ---
 
-*Last updated: May 29, 2026*
+*Last updated: Jun 2, 2026*

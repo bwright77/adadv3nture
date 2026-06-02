@@ -7,6 +7,7 @@ import { getAllPrograms, addProgram, advanceProgram, setProgramPosition, deactiv
 import { updateTrainingGoalImageUrl, updateTrainingGoalWebsiteUrl } from '../../lib/training'
 import { isDerivedWeek } from '../../lib/trainingPlan'
 import { daysUntil as daysUntilDate } from '../../lib/countdown'
+import { matchRaceTarget } from '../../lib/raceTargets'
 
 function CardImageBanner({ url, color, radius = '0 14px 0 0' }: { url: string; color: string; radius?: string }) {
   return (
@@ -376,6 +377,44 @@ function EventDetail({ goal, onClose, onUpdate }: {
             )}
           </div>
         </div>
+
+        {(() => {
+          const rt = matchRaceTarget(goal)
+          if (!rt) return null
+          return (
+            <div style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', marginBottom: 16, border: `0.5px solid ${C.ink20}`, borderLeft: `3px solid ${color}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
+                <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em' }}>RACE PACE</div>
+                <div className="mono" style={{ fontSize: 'var(--fs-11)', color }}>
+                  TARGET {rt.targetFinish}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                {rt.segments.map(seg => (
+                  <div key={seg.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
+                    <span style={{ fontSize: 'var(--fs-12)', color: seg.key === 'blended' || seg.key === 'sustained' ? C.dark : C.ink60 }}>
+                      {seg.label}
+                    </span>
+                    <span className="mono" style={{ fontSize: 'var(--fs-12)', fontWeight: seg.key === 'blended' || seg.key === 'sustained' ? 700 : 600, color: C.dark, whiteSpace: 'nowrap' }}>
+                      {rt.paces[seg.key]}/mi
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {rt.courseMapUrl && (
+                <a
+                  href={rt.courseMapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mono"
+                  style={{ display: 'inline-block', marginTop: 10, fontSize: 'var(--fs-11)', color, textDecoration: 'none' }}
+                >
+                  ↗ Course map
+                </a>
+              )}
+            </div>
+          )
+        })()}
 
         <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.12em', marginBottom: 8 }}>NOTES</div>
         <textarea
