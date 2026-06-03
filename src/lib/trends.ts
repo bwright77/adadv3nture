@@ -48,6 +48,8 @@ export interface RaceReadiness {
   longestRunMiles: number | null
   weeklyMilesAvg: number | null
   nextMilestone: string
+  racePassed: boolean
+  bankedMiles: number       // run miles in the window — the cake, not the cherry
 }
 
 export interface TrendData {
@@ -251,15 +253,23 @@ export async function getTrends(userId: string): Promise<TrendData> {
   const recScore = Math.min(100, avgRecovery)
   const readinessPct = Math.round(volScore * 0.3 + lrScore * 0.3 + consScore * 0.25 + recScore * 0.15)
 
-  const readinessLabel =
-    readinessPct >= 80 ? 'ON TRACK · BUILD BLOCK' :
+  // Aspirational-goal accounting: once race day passes, honor the cake (the
+  // base built over the block), not the absent cherry. "Look at the miles I
+  // banked" — never a red "failed," whether or not the race got run.
+  const racePassed = daysUntil < 0
+  const bankedMiles = Math.round(sum(runs.map(r => r.distance_miles)))
+
+  const readinessLabel = racePassed
+    ? `${bankedMiles} MILES BANKED`
+    : readinessPct >= 80 ? 'ON TRACK · BUILD BLOCK' :
     readinessPct >= 60 ? 'BUILDING · STAY CONSISTENT' :
     readinessPct >= 40 ? 'EARLY BUILD · TRUST PROCESS' :
     'DAY 1 · FOUNDATION'
 
   const weeksUntil = Math.floor(daysUntil / 7)
-  const nextMilestone =
-    weeksUntil > 16 ? `need ${Math.ceil(targetLR * 1.2)}mi long run by July 1` :
+  const nextMilestone = racePassed
+    ? `The training was the win — the race was the cherry. Set the next goal.`
+    : weeksUntil > 16 ? `need ${Math.ceil(targetLR * 1.2)}mi long run by July 1` :
     weeksUntil > 8 ? `peak week target: 18mi long run` :
     `taper begins in ${weeksUntil - 2} weeks`
 
@@ -348,6 +358,8 @@ export async function getTrends(userId: string): Promise<TrendData> {
       longestRunMiles: longestRun,
       weeklyMilesAvg,
       nextMilestone,
+      racePassed,
+      bankedMiles,
     },
     computedAt: new Date().toISOString(),
   }

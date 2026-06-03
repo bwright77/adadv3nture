@@ -120,7 +120,7 @@ export function TrendsPage({ bgPhoto, version = 0, onOpenTrainingEvent, onOpenTr
                 <span style={{ flex: 1 }} />
                 <div style={{ textAlign: 'right' }}>
                   <div className="mono" style={{ fontSize: 'var(--fs-12)', color: C.teal, fontWeight: 700 }}>{r.label}</div>
-                  <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.6, marginTop: 2 }}>{r.daysUntil}d · {Math.floor(r.daysUntil / 7)}wk out</div>
+                  <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.6, marginTop: 2 }}>{r.racePassed ? 'RACE DONE' : `${r.daysUntil}d · ${Math.floor(r.daysUntil / 7)}wk out`}</div>
                 </div>
               </div>
               {/* Phase progress bars (8 weeks shown) */}

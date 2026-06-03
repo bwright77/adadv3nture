@@ -4,6 +4,7 @@ import { C } from '../tokens'
 import { BriefingVoiceCard } from '../components/log/BriefingVoiceCard'
 import { PushOptInCard } from '../components/log/PushOptInCard'
 import { ExportCard } from '../components/log/ExportCard'
+import { WBackfill } from '../components/dashboard/widgets/WBackfill'
 
 function formatPace(secondsPerMile: number | null): string {
   if (!secondsPerMile) return '—'
@@ -119,6 +120,11 @@ export function LogPage({ onDataSynced }: LogPageProps = {}) {
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <div className="badge" style={{ fontSize: 'var(--fs-22)', color: C.dark }}>ACTIVITY LOG</div>
+      </div>
+
+      {/* Backfill — fill any past day that went unlogged (invitation, not gate) */}
+      <div style={{ marginBottom: 16 }}>
+        <WBackfill />
       </div>
 
       {/* Connections */}

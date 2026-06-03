@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { logicalToday, mondayOf } from './utils'
+import { logicalToday, mondayOf, addDaysStr } from './utils'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any
 
@@ -313,6 +313,27 @@ export async function getWAWeekProgress(userId: string): Promise<WAWeekProgress>
 
   const done = (data ?? []).filter(r => r.career_done).length
   return { done: Math.min(done, 5), target: 5, weekStart }
+}
+
+// ─── Cross-day backfill ────────────────────────────────────────────────────
+// "Completeness, not enforcement." Missing MOOD is the honest flag that a day
+// went unlogged (the one true subjective entry no sensor fills). Surface those
+// past days as an invitation to fill — never a gate. Returns open days within
+// the lookback window, most-recent first, today excluded (today is in progress).
+export async function getOpenDays(userId: string, lookbackDays = 10): Promise<string[]> {
+  const today = logicalToday()
+  const dates: string[] = []
+  for (let i = 1; i <= lookbackDays; i++) dates.push(addDaysStr(today, -i))   // today-1 … today-N
+
+  const { data } = await supabase
+    .from('daily_plans')
+    .select('plan_date, mood_score')
+    .eq('user_id', userId)
+    .gte('plan_date', dates[dates.length - 1])
+    .lt('plan_date', today) as unknown as { data: { plan_date: string; mood_score: number | null }[] | null }
+
+  const moodByDate = new Map((data ?? []).map(r => [r.plan_date, r.mood_score]))
+  return dates.filter(d => (moodByDate.get(d) ?? null) === null)
 }
 
 export async function saveThinkingAnswer(userId: string, answer: string): Promise<void> {

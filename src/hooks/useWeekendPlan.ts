@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { logicalToday } from '../lib/utils'
 
 export type AdventureType = 'run' | 'ride' | 'ski' | 'hike' | 'family' | 'project' | 'other'
 
@@ -20,11 +21,6 @@ export interface LastEffort {
   daysAgo: number
 }
 
-function todayStr(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
 export function useWeekendPlan() {
   const { user } = useAuth()
   const [plan, setPlan] = useState<WeekendPlan | null>(null)
@@ -34,7 +30,7 @@ export function useWeekendPlan() {
   const fetch = useCallback(async () => {
     if (!user) return
     const db = supabase as any
-    const today = todayStr()
+    const today = logicalToday()
 
     const [{ data: planData }, { data: effortData }] = await Promise.all([
       db.from('weekend_plans').select('*').eq('user_id', user.id).eq('plan_date', today).maybeSingle(),
@@ -65,7 +61,7 @@ export function useWeekendPlan() {
   async function upsertPlan(fields: Omit<WeekendPlan, 'id' | 'plan_date'>) {
     if (!user) return
     const db = supabase as any
-    const today = todayStr()
+    const today = logicalToday()
     const { data } = await db.from('weekend_plans').upsert({
       user_id: user.id,
       plan_date: today,
