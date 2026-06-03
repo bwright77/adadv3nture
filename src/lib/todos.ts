@@ -34,6 +34,18 @@ export async function getTodos(userId: string, category: TodoCategory): Promise<
   return (data ?? []) as Todo[]
 }
 
+// Fire todos across every category — feeds the summer fire-interrupt banner.
+export async function getFireTodos(userId: string): Promise<Todo[]> {
+  const { data } = await supabase
+    .from('todos')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('urgency', 'fire')
+    .neq('status', 'done')
+    .order('priority_order', { ascending: true })
+  return (data ?? []) as Todo[]
+}
+
 export async function getCompletedTodos(userId: string, category: TodoCategory): Promise<Todo[]> {
   const { data, error } = await supabase
     .from('todos')

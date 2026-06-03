@@ -143,7 +143,9 @@ export function WWeatherFull({ dark }: Props) {
         name: loc.label,
         elevationFt: parseInt(loc.elev.replace(/[^\d]/g, ''), 10) || null,
         label: `${loc.label} · ${loc.elev}`,
+        slug: null,
         isKnown: true,
+        relief: null,
       }))
     ).then(results => {
       setConditions(results.map(r => r.status === 'fulfilled' ? r.value : null))

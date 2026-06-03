@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { logicalToday } from './utils'
+import { logicalToday, mondayOf } from './utils'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any
 
@@ -19,6 +19,9 @@ export interface DailyPlan {
   career_note: string | null
   projects_done: boolean
   projects_note: string | null
+  adventure_done: boolean
+  adventure_note: string | null
+  adventure_category: string | null
 }
 
 export type ReviewCategory = 'family_creative' | 'home' | 'career' | 'projects'
@@ -119,7 +122,7 @@ export async function getTodayPlan(userId: string): Promise<DailyPlan | null> {
 export async function getPlanForDate(userId: string, date: string): Promise<DailyPlan | null> {
   const { data } = await supabase
     .from('daily_plans')
-    .select('id, plan_date, morning_briefing, briefing_generated_at, thinking_prompt, thinking_prompt_answer, drinks_today, family_creative_done, family_creative_note, home_done, home_note, career_done, career_note, projects_done, projects_note')
+    .select('id, plan_date, morning_briefing, briefing_generated_at, thinking_prompt, thinking_prompt_answer, drinks_today, family_creative_done, family_creative_note, home_done, home_note, career_done, career_note, projects_done, projects_note, adventure_done, adventure_note, adventure_category')
     .eq('user_id', userId)
     .eq('plan_date', date)
     .maybeSingle() as unknown as { data: DailyPlan | null }
@@ -286,6 +289,30 @@ export async function getMITCadence(userId: string): Promise<MITCadence> {
     }
   })
   return { freshness, cadence }
+}
+
+// ─── WA week ring ────────────────────────────────────────────────────────
+// Summer watcher: "real WA progress 5×/week." Derived from career_done (Ben's
+// career work is effectively WA right now) — count the days this ISO week the
+// career MIT was touched, capped at the 5-weekday target. No new schema.
+export interface WAWeekProgress {
+  done: number          // career_done days this week (capped at target)
+  target: number        // 5
+  weekStart: string     // Monday (YYYY-MM-DD)
+}
+
+export async function getWAWeekProgress(userId: string): Promise<WAWeekProgress> {
+  const today = logicalToday()
+  const weekStart = mondayOf(today)
+  const { data } = await supabase
+    .from('daily_plans')
+    .select('plan_date, career_done')
+    .eq('user_id', userId)
+    .gte('plan_date', weekStart)
+    .lte('plan_date', today) as unknown as { data: { plan_date: string; career_done: boolean }[] | null }
+
+  const done = (data ?? []).filter(r => r.career_done).length
+  return { done: Math.min(done, 5), target: 5, weekStart }
 }
 
 export async function saveThinkingAnswer(userId: string, answer: string): Promise<void> {

@@ -218,7 +218,11 @@ export function WReview({ dark, hideCareer, forDate, labelOverride, onSaved }: W
                 }}>
                   {row.label}
                 </span>
-                {staleDays >= 2 && !done && (
+                {/* Staleness is a GUARD signal — only Career (the runway that
+                    can't slip) gets the sharp "Nd / rust" nudge. Family, Home and
+                    Projects are tracked-but-silent: their dimming lives in the calm
+                    pilot-light fade, not a nagging badge that reads as "behind." */}
+                {row.category === 'career' && staleDays >= 2 && !done && (
                   <span className="mono" style={{
                     fontSize: 'var(--fs-10)', letterSpacing: '0.08em',
                     color: isDark3 ? C.rust : (dark ? 'rgba(245,237,214,0.45)' : C.ink40),

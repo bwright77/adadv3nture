@@ -80,8 +80,9 @@ export function MorningView({ activeTod, isOverride, onSetOverride }: MorningVie
   const { location, loading: locationLoading } = useLocation()
   const [briefingData, setBriefingData] = useState<BriefingData | null>(null)
   const [briefingLoading, setBriefingLoading] = useState(true)
-  // null while we check; true means yesterday is still incomplete → block briefing.
-  const [yesterdayGate, setYesterdayGate] = useState<boolean | null>(null)
+  // null while we check; true means yesterday's review is still open → surface
+  // a fill invitation (NOT a wall — the briefing runs regardless).
+  const [yesterdayOpen, setYesterdayOpen] = useState<boolean | null>(null)
   const yesterday = logicalYesterday()
 
   // Check yesterday's MIT row once on mount.
@@ -89,14 +90,14 @@ export function MorningView({ activeTod, isOverride, onSetOverride }: MorningVie
     if (!user) return
     let cancelled = false
     getPlanForDate(user.id, yesterday)
-      .then(p => { if (!cancelled) setYesterdayGate(isPlanReviewIncomplete(p)) })
-      .catch(() => { if (!cancelled) setYesterdayGate(false) })
+      .then(p => { if (!cancelled) setYesterdayOpen(isPlanReviewIncomplete(p)) })
+      .catch(() => { if (!cancelled) setYesterdayOpen(false) })
     return () => { cancelled = true }
   }, [user, yesterday])
 
-  // Fire the briefing only once yesterday's gate is cleared.
+  // Fire the briefing as soon as location is ready — never gated on yesterday.
   useEffect(() => {
-    if (!user || locationLoading || yesterdayGate !== false) return
+    if (!user || locationLoading) return
     setBriefingLoading(true)
     supabase.functions.invoke<BriefingData>('morning-briefing', {
       body: {
@@ -112,12 +113,12 @@ export function MorningView({ activeTod, isOverride, onSetOverride }: MorningVie
         if (!error && data) setBriefingData(data)
       })
       .finally(() => setBriefingLoading(false))
-  }, [user, locationLoading, location.lat, location.lon, yesterdayGate])
+  }, [user, locationLoading, location.lat, location.lon])
 
   async function recheckYesterday() {
     if (!user) return
     const p = await getPlanForDate(user.id, yesterday)
-    setYesterdayGate(isPlanReviewIncomplete(p))
+    setYesterdayOpen(isPlanReviewIncomplete(p))
   }
 
   return (
@@ -128,28 +129,25 @@ export function MorningView({ activeTod, isOverride, onSetOverride }: MorningVie
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
         gap: 10, padding: '0 14px 100px',
       }}>
-        {yesterdayGate ? (
+        {yesterdayOpen && (
           <>
             <div style={{ gridColumn: 'span 12', padding: '8px 4px 0' }}>
               <div className="mono" style={{
                 fontSize: 'var(--fs-10)', letterSpacing: '0.15em',
                 color: 'rgba(245,237,214,0.55)', marginBottom: 4,
               }}>
-                ◆ FIRST · LOG YESTERDAY
+                ◆ YESTERDAY'S STILL OPEN
               </div>
               <div style={{ fontSize: 'var(--fs-14)', color: C.cream, lineHeight: 1.45, opacity: 0.85 }}>
-                Close out {formatFullDate(yesterday)} so the morning briefing has something honest to read. Every row needs a note or a ✓ before the briefing runs.
+                No rush — close out {formatFullDate(yesterday)} whenever you get a sec so tomorrow's briefing reads from something honest. Today's already ran.
               </div>
             </div>
             <WReview dark forDate={yesterday} labelOverride={`Yesterday in review · ${formatFullDate(yesterday)}`} onSaved={recheckYesterday} />
           </>
-        ) : (
-          <>
-            <WMorningHero dark briefingText={briefingData?.briefing ?? null} briefingLoading={briefingLoading} />
-            <WWorkout dark />
-            <WThinkingPrompt dark prompt={briefingData?.thinking_prompt ?? null} loading={briefingLoading} />
-          </>
         )}
+        <WMorningHero dark briefingText={briefingData?.briefing ?? null} briefingLoading={briefingLoading} />
+        <WWorkout dark />
+        <WThinkingPrompt dark prompt={briefingData?.thinking_prompt ?? null} loading={briefingLoading} />
         <WWeather dark />
         <WDrinks dark />
         <WSteps dark />

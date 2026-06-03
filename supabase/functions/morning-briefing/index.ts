@@ -180,6 +180,77 @@ Respond ONLY with valid JSON (no markdown, no code blocks):
 {"briefing": "...", "thinking_prompt": "..."}`
 }
 
+// ─── Summer Mode ─────────────────────────────────────────────────────────────
+const SUMMER_START = '2026-06-02'
+const SUMMER_END = '2026-08-26'
+function isSummerDate(today: string): boolean {
+  return today >= SUMMER_START && today <= SUMMER_END
+}
+
+// Childcare-relief gradient — what help a place affords (mirrors src/lib/locations.ts).
+function reliefForLocation(name: string): string {
+  const n = name.toLowerCase()
+  if (n.includes('howard')) return 'grandparents are nearby (Howard)'
+  if (n.includes('greeley') || n.includes('evans')) return 'in-laws are nearby'
+  if (n.includes('denver')) return 'home base (Denver) — backyard, hoop, easy self-occupy'
+  return 'no extra childcare relief today'
+}
+
+function buildSummerSystemPrompt(
+  profile: BriefingProfile,
+  voice: 'solo' | 'camp' | 'weekend',
+  reliefNote: string,
+): string {
+  const weekendShape = voice === 'weekend'
+  const voiceBlock = voice === 'solo'
+    ? `WEEK-TYPE: SOLO WEEKDAY. Kids are with Ben all day. The adventure is the
+headline — "what adventure are we doing today?!" leads. Rough rhythm: ~9–12
+adventure → ~12–4 WA siesta (the real Wright Adventures block — focused but
+interruptible, movie on for the kids) → 4–6 Tangier picks up (training can land
+here) → 6 dinner → 6–9 family flex (can absorb a workout) → 9pm → MIND (his,
+protected). Lead with the adventure; fit the one WA move into the siesta.
+Today's relief: ${reliefNote}.`
+    : voice === 'camp'
+    ? `WEEK-TYPE: CAMP WEEKDAY. Kids are at camp — the daytime is HIS. Lean back
+toward the school-year shape: a real workout window + a deep WA block. Adventure
+is demoted (the kids got theirs at camp). Push WA harder — 5×/week is the target
+and the daytime's free. Today's relief: ${reliefNote}.`
+    : `WEEK-TYPE: SUMMER WEEKEND. Loose, two-parent, trip/big-stuff. Deliberately
+not boxed — no block prescription. Dawn long run if the plan calls for it, then
+the family's the move.`
+
+  return `You are Ben's summer daily briefing for adadv3nture.
+
+About Ben:
+${aboutLines(profile, weekendShape)}
+
+It's SUMMER (school out). The suggester is turned up, the watcher turned down.
+Only three things may interrupt the vibe, in order: (1) anything on FIRE,
+(2) Wright Adventures progress — target 5×/week, cannot slip, and (3) training,
+nudged as ENERGY/CARE ("you feel better when you move"), never as race-debt.
+Family and Home are tracked but NOT nagged in summer — a dim flame is fine for a
+season. Adventure is delight, never a quota: getting out at all is the win; a
+weekly real adventure (a hike is the canonical one) is a bonus, never a debt.
+
+${voiceBlock}
+
+Current family + anchors are in the context message — use the given dates and
+days-until numbers verbatim. Do NOT compute dates yourself. Weight is
+observational, never a goal — frame body status through training readiness, not
+a number. The [CAREER] and [TRAINING] anchor domains must stay separate.
+
+The organizing question is "what's the best move today?" given the week-type
+above. ${weekendShape ? 'Recovery gates the size; weather picks the place.' : 'Protect the right block for the day; name the adventure and the one WA move.'}
+
+Tone: Direct. Warm. Specific. Summer exhale, but WA is real. Max 150 words.
+Always end with ONE specific next action — an actual step, not a category.
+
+Also generate ONE thinking prompt — something worth turning over today, not fluff.
+
+Respond ONLY with valid JSON (no markdown, no code blocks):
+{"briefing": "...", "thinking_prompt": "..."}`
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function prevDate(dateStr: string, daysBack: number): string {
@@ -562,13 +633,9 @@ Deno.serve(async (req: Request) => {
     // `user` shape with the id the downstream code already uses.
     const user = { id: userId }
 
-    // Determine day_type — client can override, otherwise detect from server date
+    // day_type is finalized after `today` (summer needs the date) — see below.
     const serverDow = new Date().getDay()
     const serverIsWeekend = serverDow === 0 || serverDow === 6
-    const dayType: 'weekday' | 'weekend' =
-      body.day_type === 'weekend' ? 'weekend'
-      : body.day_type === 'weekday' ? 'weekday'
-      : serverIsWeekend ? 'weekend' : 'weekday'
 
     // Optional client-supplied location. Validate the shape; otherwise default to Denver.
     const rawLoc = body.location as Partial<BriefingLocation> | undefined
@@ -585,6 +652,26 @@ Deno.serve(async (req: Request) => {
     const admin = createClient(supabaseUrl, serviceKey)
     const today = todayInAppTimezone()
 
+    // Summer Mode — server-derives the week-type voice (client may override via
+    // day_type: 'summer-solo' | 'summer-camp' | 'summer-weekend'). Solo/camp use
+    // the weekday context shape; weekend uses the weekend shape.
+    let summerVoice: 'solo' | 'camp' | 'weekend' | null = null
+    if (isSummerDate(today)) {
+      const bodyDt = typeof body.day_type === 'string' ? body.day_type : ''
+      if (bodyDt.startsWith('summer-')) {
+        summerVoice = bodyDt.slice('summer-'.length) as 'solo' | 'camp' | 'weekend'
+      } else {
+        const { data: u } = await admin.from('users').select('summer_week_type').eq('id', user.id).maybeSingle()
+        summerVoice = ((u as { summer_week_type?: 'solo' | 'camp' | 'weekend' | null } | null)?.summer_week_type) ?? 'solo'
+      }
+    }
+
+    const dayType: 'weekday' | 'weekend' =
+      summerVoice ? (summerVoice === 'weekend' ? 'weekend' : 'weekday')
+      : body.day_type === 'weekend' ? 'weekend'
+      : body.day_type === 'weekday' ? 'weekday'
+      : serverIsWeekend ? 'weekend' : 'weekday'
+
     // Force regeneration when the caller explicitly asks — used by the
     // apple-health-webhook chain so that a briefing generated earlier
     // (before recovery_signals landed) gets overwritten with fresh data.
@@ -594,12 +681,22 @@ Deno.serve(async (req: Request) => {
     if (!forceRegenerate) {
       const { data: existing } = await admin
         .from('daily_plans')
-        .select('morning_briefing, thinking_prompt, weekend_briefing, weekend_thinking_prompt')
+        .select('morning_briefing, thinking_prompt, weekend_briefing, weekend_thinking_prompt, summer_briefing, summer_thinking_prompt')
         .eq('user_id', user.id)
         .eq('plan_date', today)
         .maybeSingle()
 
-      if (dayType === 'weekend' && existing?.weekend_briefing) {
+      if (summerVoice && existing?.summer_briefing) {
+        return new Response(
+          JSON.stringify({
+            briefing: existing.summer_briefing,
+            thinking_prompt: existing.summer_thinking_prompt,
+            cached: true,
+          }),
+          { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
+        )
+      }
+      if (!summerVoice && dayType === 'weekend' && existing?.weekend_briefing) {
         return new Response(
           JSON.stringify({
             briefing: existing.weekend_briefing,
@@ -609,7 +706,7 @@ Deno.serve(async (req: Request) => {
           { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
         )
       }
-      if (dayType === 'weekday' && existing?.morning_briefing) {
+      if (!summerVoice && dayType === 'weekday' && existing?.morning_briefing) {
         return new Response(
           JSON.stringify({
             briefing: existing.morning_briefing,
@@ -633,9 +730,14 @@ Deno.serve(async (req: Request) => {
     const profile = ((profileRes.data as { briefing_profile: BriefingProfile } | null)?.briefing_profile) ?? {}
     const { anchorBlock, familyBlock, trainingWeekBlock } = anchorsAndFamily
 
-    const systemPrompt = dayType === 'weekend'
-      ? buildWeekendSystemPrompt(profile)
-      : buildWeekdaySystemPrompt(profile)
+    const reliefNote = summerVoice === 'camp'
+      ? 'daytime is free (camp) — least excuse to bank a real WA session'
+      : reliefForLocation(location.name)
+    const systemPrompt = summerVoice
+      ? buildSummerSystemPrompt(profile, summerVoice, reliefNote)
+      : dayType === 'weekend'
+        ? buildWeekendSystemPrompt(profile)
+        : buildWeekdaySystemPrompt(profile)
 
     if (dayType === 'weekend') {
       // ── Weekend context ────────────────────────────────────────────────────
@@ -935,7 +1037,15 @@ ${mitCadenceLines}`
     const thinkingPrompt = parsed.thinking_prompt ?? null
 
     // ── Cache ────────────────────────────────────────────────────────────────
-    const upsertFields = dayType === 'weekend'
+    const upsertFields = summerVoice
+      ? {
+          user_id: user.id,
+          plan_date: today,
+          summer_briefing: briefing,
+          summer_thinking_prompt: thinkingPrompt,
+          summer_briefing_generated_at: new Date().toISOString(),
+        }
+      : dayType === 'weekend'
       ? {
           user_id: user.id,
           plan_date: today,

@@ -37,6 +37,7 @@ adadv3nture/
 │   ├── apple-health-setup.md
 │   ├── design-system.md
 │   ├── intelligence.md
+│   ├── philosophy.md
 │   ├── reference.md
 │   ├── schema.md
 │   └── user-context.md

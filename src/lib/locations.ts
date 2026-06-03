@@ -1,18 +1,34 @@
 // Known places — snap browser geolocation to a friendly name + elevation.
 // Adding new locations is the only place to edit; widgets/hooks read from here.
 
+// Childcare-relief gradient — how much daytime help a place affords. Drives the
+// summer adventure suggester + briefing ("daytime's free, bank a WA session").
+// 'free' is the camp week-type, which has no geography — it's supplied by week-type,
+// not by snapping to a location.
+export type Relief = 'grandparents' | 'in_laws' | 'home' | 'free'
+
+export const RELIEF_LABEL: Record<Relief, string> = {
+  grandparents: 'grandparents nearby',
+  in_laws: 'in-laws nearby',
+  home: 'home base',
+  free: 'daytime free',
+}
+
 export interface KnownLocation {
-  slug: 'denver' | 'howard'
+  slug: 'denver' | 'howard' | 'greeley' | 'evans'
   name: string
   elevationFt: number
   lat: number
   lon: number
   radiusMi: number      // snap to this location if within this radius
+  relief: Relief
 }
 
 export const KNOWN_LOCATIONS: KnownLocation[] = [
-  { slug: 'denver', name: 'Denver',  elevationFt: 5318,  lat: 39.7392,  lon: -104.9903, radiusMi: 25 },
-  { slug: 'howard', name: 'Howard',  elevationFt: 6490,  lat: 38.4339,  lon: -105.8295, radiusMi: 15 },
+  { slug: 'denver',  name: 'Denver',  elevationFt: 5318, lat: 39.7392, lon: -104.9903, radiusMi: 25, relief: 'home' },
+  { slug: 'howard',  name: 'Howard',  elevationFt: 6490, lat: 38.4339, lon: -105.8295, radiusMi: 15, relief: 'grandparents' },
+  { slug: 'greeley', name: 'Greeley', elevationFt: 4658, lat: 40.4233, lon: -104.7091, radiusMi: 12, relief: 'in_laws' },
+  { slug: 'evans',   name: 'Evans',   elevationFt: 4715, lat: 40.3766, lon: -104.6919, radiusMi: 8,  relief: 'in_laws' },
 ]
 
 export function haversineMi(
@@ -40,9 +56,11 @@ export interface ResolvedLocation {
   lat: number
   lon: number
   name: string                       // 'Denver' | 'Howard' | 'Current location'
+  slug: KnownLocation['slug'] | null
   elevationFt: number | null
   label: string                      // 'Denver · 5,318ft' | 'Current location'
   isKnown: boolean
+  relief: Relief | null              // null when unknown; camp 'free' comes from week-type
 }
 
 export const DEFAULT_LOCATION: ResolvedLocation = (() => {
@@ -51,9 +69,11 @@ export const DEFAULT_LOCATION: ResolvedLocation = (() => {
     lat: denver.lat,
     lon: denver.lon,
     name: denver.name,
+    slug: denver.slug,
     elevationFt: denver.elevationFt,
     label: `${denver.name} · ${denver.elevationFt.toLocaleString()}ft`,
     isKnown: true,
+    relief: denver.relief,
   }
 })()
 
@@ -64,17 +84,21 @@ export function resolveLocation(coords: { lat: number; lon: number }): ResolvedL
       lat: known.lat,
       lon: known.lon,
       name: known.name,
+      slug: known.slug,
       elevationFt: known.elevationFt,
       label: `${known.name} · ${known.elevationFt.toLocaleString()}ft`,
       isKnown: true,
+      relief: known.relief,
     }
   }
   return {
     lat: coords.lat,
     lon: coords.lon,
     name: 'Current location',
+    slug: null,
     elevationFt: null,
     label: 'Current location',
     isKnown: false,
+    relief: null,
   }
 }

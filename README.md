@@ -8,9 +8,13 @@
 
 I'm building a career, raising three kids, keeping a house running, training for a 30K in September, and staying connected to the things that are just mine.
 
-**adadv3nture** is how I use software to do all of it better. One place where career, family, home, body, and personal projects all live together. Every morning it surfaces my Most Important Tasks across all five — not what's loudest, not what's overdue, but what actually moves the needle today.
+**The point of adadv3nture is to collect me.** It gathers the scattered signal of a life — sensors, calendars, todos, one subjective read — into a single place, and reflects back where I'm diverging from where I meant to go. It is *not* a goal-achievement app, *not* a tracker that needs feeding, *not* a gate I have to clear before it lets me in. It watches the slow-moving stuff I can't hold in my head while parenting three kids and building a business — and helps me stay whole and pointed somewhere while life does what life does.
 
-Strava. Apple Health. Google Calendar. Weather. Recovery. MITs. All of it, one place. The control center for my life.
+Two faculties read the same collected data in opposite directions: a **Watcher** that notices when something that genuinely can't slip is dimming and nudges (with care, not debt), and a **Suggester** that proposes the next move and works on good days *and* bad. Each life category reports as one **pilot light** — lit or dimming. Every morning the briefing names the single highest-leverage move — not what's loudest, what actually moves the needle.
+
+Strava. Apple Health. Google Calendar. Weather. Recovery. MITs. All of it, one place — collected, not enforced.
+
+📖 **The durable framing:** [docs/philosophy.md](docs/philosophy.md) — what the app is *for*, checked against, not the reverse.
 
 ---
 
@@ -30,6 +34,9 @@ Fully separate widget composition for Saturday and Sunday — same Glass card sy
 | Sunday Evening | Week ahead (Mon calendar + Run Club + training targets), review, tomorrow |
 
 Weekend morning briefing uses a distinct system prompt — "What's the move today?" instead of MIT neglect-scoring. Pulls live Denver weather server-side.
+
+### Summer Mode
+A seasonal re-weighting of the dashboard (auto-active Jun 2–Aug 26). It promotes the *suggester* and narrows the *watcher*: an **Adventure of the Day** hero rides above the time grid — "what adventure are we doing today?!" — backed by a catalog generalized from the 50 Hikes / weekend spots data, suggesting by place + weather. A **week-type toggle** (Solo / Camp / Weekend, set in the hero, persisted server-side) re-weights the band and the briefing voice. The summer watcher only lets three things interrupt: **fire** todos (a banner), **Wright Adventures** progress (a 5×/week ring), and **training** (as energy, not debt). Family/Home stay tracked-but-visible, never nagged. Getting out at all is the win — logged outings light a **season heat-map** (a memory artifact, not a streak; a missed week is just an unlit cell). A "normal day ›" link drops back to the standard dashboard.
 
 ### Widget Grid
 iOS-style widget grid built from composable Glass cards:

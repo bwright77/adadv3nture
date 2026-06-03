@@ -75,6 +75,22 @@ export function logicalYesterday(): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
 }
 
+/** YYYY-MM-DD of the Monday that starts the ISO week containing `dateStr`. */
+export function mondayOf(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00Z')
+  const dow = d.getUTCDay()                 // 0=Sun .. 6=Sat
+  const shift = dow === 0 ? -6 : 1 - dow    // back up to Monday
+  d.setUTCDate(d.getUTCDate() + shift)
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
+}
+
+/** YYYY-MM-DD `n` days after `dateStr` (n may be negative). */
+export function addDaysStr(dateStr: string, n: number): string {
+  const d = new Date(dateStr + 'T12:00:00Z')
+  d.setUTCDate(d.getUTCDate() + n)
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
+}
+
 function ordinalSuffix(n: number): string {
   const s = ['th', 'st', 'nd', 'rd']
   const v = n % 100

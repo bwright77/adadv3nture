@@ -13,6 +13,14 @@ import { WeekendDawnView } from './components/dashboard/WeekendDawnView'
 import { WeekendDayView } from './components/dashboard/WeekendDayView'
 import { WeekendEveningView } from './components/dashboard/WeekendEveningView'
 import { WeekendSundayEveningView } from './components/dashboard/WeekendSundayEveningView'
+import { FireBanner } from './components/dashboard/FireBanner'
+import { AdventureHero } from './components/dashboard/AdventureHero'
+import { WWAWeek } from './components/dashboard/WWAWeek'
+import { SeasonHeatmap } from './components/dashboard/SeasonHeatmap'
+import { isSummerDate } from './hooks/useSummerMode'
+import { useWeekType } from './hooks/useWeekType'
+import { logicalToday } from './lib/utils'
+import type { TodoCategory } from './lib/todos'
 import { InboxPage } from './pages/InboxPage'
 import { TrendsPage } from './pages/TrendsPage'
 import { LogPage } from './pages/LogPage'
@@ -48,6 +56,14 @@ function Dashboard() {
     return wbOverride
   })()
   useEffect(() => { setWbOverride(null) }, [realWb])
+
+  // Summer Mode — auto-activates on the date range; override (e.g. "normal day")
+  // auto-clears when the real season flips, mirroring the time-of-day override.
+  const realSummer = isSummerDate(logicalToday())
+  const [summerOverride, setSummerOverride] = useState<boolean | null>(null)
+  const summerMode = summerOverride ?? realSummer
+  useEffect(() => { setSummerOverride(null) }, [realSummer])
+  const { weekType, setWeekType } = useWeekType()
 
   const activeVeilKey = dayType === 'weekend' ? wb : tod
   const bgPhoto = useBgPhoto(tod)
@@ -96,6 +112,10 @@ function Dashboard() {
 
   const openInbox = () => setTab('inbox')
 
+  function openFireTodo(category: TodoCategory) {
+    openListTab(category === 'body' ? 'training' : category)
+  }
+
   const isDark = tab === 'home'
 
   return (
@@ -113,6 +133,18 @@ function Dashboard() {
 
       <div style={{ position: 'relative', zIndex: 2, overflowX: 'clip', minHeight: '100dvh' }}>
         {tab === 'home' && <div style={{ height: 'calc(env(safe-area-inset-top, 16px) + 28px)' }} />}
+
+        {/* Summer band — adventure on top, structure quiet underneath. Its own
+            grid above the time-of-day View. Card mix re-weights by week-type:
+            solo = full, camp = lean + WA focus, weekend = delight, no career. */}
+        {tab === 'home' && summerMode && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, padding: '0 14px 10px' }}>
+            <FireBanner onOpen={openFireTodo} />
+            <AdventureHero weekType={weekType} setWeekType={setWeekType} onExitSummer={() => setSummerOverride(false)} />
+            {weekType !== 'weekend' && <WWAWeek dark />}
+            {weekType !== 'camp' && <SeasonHeatmap dark />}
+          </div>
+        )}
 
         {/* Weekday views */}
         {tab === 'home' && dayType === 'weekday' && tod === 'morning'     && <MorningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}

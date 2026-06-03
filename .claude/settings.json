@@ -17,7 +17,13 @@
       "Bash(npx --yes sharp-cli@4 --input public/icons/icon-512.png)",
       "Bash(node -e \"const s=require\\('sharp'\\);s\\('public/icons/icon-512.png'\\).metadata\\(\\).then\\(m=>console.log\\(JSON.stringify\\(m,null,2\\)\\)\\)\")",
       "Skill(update-config)",
-      "Skill(update-config:*)"
+      "Skill(update-config:*)",
+      "Bash(grep -nB1 -A 15 \"pills\\\\|filter\\\\|FILTER\\\\|category-pill\" /Users/benjaminwright/Sites/adadv3nture/src/components/todos/Hikes50View.tsx)",
+      "Bash(npx eslint *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(git checkout *)",
+      "Read(//Users/benjaminwright/Downloads/**)",
+      "Bash(echo \"EXIT $?\")"
     ],
     "additionalDirectories": [
       "/Users/benjaminwright/.claude"

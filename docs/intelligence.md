@@ -1,5 +1,11 @@
 # Intelligence Layer
 
+> Framing reference: [philosophy.md](philosophy.md). The intelligence here splits into two
+> faculties — the **Watcher** (backward / diagnostic: detect dimming, nudge what can't slip)
+> and the **Suggester** (forward / generative: propose the next move, works good days and bad).
+> Recovery scoring and pilot-light/drift detection are Watcher; MIT/training/adventure
+> suggestions and inspiration are Suggester. The briefing names "the one thing" as editorial.
+
 ## MIT Framework
 
 **Two non-negotiables (tracked but never compete for MIT slots):**
@@ -26,7 +32,12 @@
 
 **Thinking prompt:** One specific unresolved question from yesterday's MIT data. Chewed on during 7:40am workout. Answered at 9:30am triage.
 
-**Pilot lights:** Each category has a flame. Goal: keep all five lit.
+**Pilot lights — the universal abstraction:** Each category computes "lit vs. dimming" from
+whatever it's made of (opportunities, dated events, project arcs, throughput) and reports one
+flame. Goal: keep the pilot lights lit. **Drift is just a dimming pilot light** — not a separate
+feature. The Watcher only *guards* what degrades life now if it slips (Career/WA runway,
+Training-as-energy); everything else is tracked-but-silent and may dim in a demanding season
+without that being failure. Aspirational goals (50 hikes, parks) show as delight, never nagged.
 
 ## Recovery Score Algorithm
 

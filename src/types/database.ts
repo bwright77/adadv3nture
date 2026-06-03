@@ -16,6 +16,8 @@ export interface Database {
           height_inches: number
           timezone: string
           preferences: Json
+          summer_week_type?: 'solo' | 'camp' | 'weekend' | null
+          summer_week_type_set_on?: string | null
           created_at: string
         }
         Insert: Partial<Database['public']['Tables']['users']['Row']> & { email: string }
@@ -138,6 +140,12 @@ export interface Database {
           mood_score: number | null
           morning_briefing: string | null
           briefing_generated_at: string | null
+          adventure_done?: boolean
+          adventure_note?: string | null
+          adventure_category?: string | null
+          summer_briefing?: string | null
+          summer_thinking_prompt?: string | null
+          summer_briefing_generated_at?: string | null
           created_at: string
         }
         Insert: Omit<Database['public']['Tables']['daily_plans']['Row'], 'id' | 'created_at'>
@@ -241,6 +249,48 @@ export interface Database {
         }
         Insert: Omit<Database['public']['Tables']['annotations']['Row'], 'id' | 'created_at'>
         Update: Partial<Database['public']['Tables']['annotations']['Insert']>
+      }
+      adventures: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          category: 'pool' | 'fishing' | 'library' | 'parks' | 'museum' | 'bouldering' | 'creek' | 'hike' | 'other'
+          place_slug: string | null
+          relief: 'grandparents' | 'in_laws' | 'home' | 'free' | null
+          latitude: number | null
+          longitude: number | null
+          drive_minutes: number | null
+          setting: 'indoor' | 'outdoor' | 'mixed'
+          is_water: boolean
+          best_months: string[] | null
+          age_min: number
+          age_max: number | null
+          duration_mins: number | null
+          mood_fit: string[] | null
+          attributes: string[] | null
+          notes: string | null
+          active: boolean
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['adventures']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['adventures']['Insert']>
+      }
+      adventure_log: {
+        Row: {
+          id: string
+          user_id: string
+          adventure_id: string | null
+          done_date: string
+          category: string
+          is_real: boolean
+          relief: string | null
+          family_rating: number | null
+          notes: string | null
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['adventure_log']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['adventure_log']['Insert']>
       }
     }
     Views: Record<string, never>
