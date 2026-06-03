@@ -7,7 +7,7 @@ import { WDrinks } from './widgets/WDrinks'
 import { WSteps } from './widgets/WSteps'
 import { WInspire } from './widgets/WInspire'
 import { WCalendar } from './widgets/WCalendar'
-import { W50Hikes } from './widgets/W50Hikes'
+import { WFamilyHikes } from './widgets/WFamilyHikes'
 import { WWeatherFull } from './widgets/WWeatherFull'
 import { WAdventureToday } from './widgets/WAdventureToday'
 import { WFamilyDay } from './widgets/WFamilyDay'
@@ -157,7 +157,7 @@ export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }:
         <WWeatherFull dark />
         <WFamilyDay dark />
         <WAdventureToday dark />
-        <W50Hikes dark />
+        <WFamilyHikes dark />
       </div>
     </>
   )

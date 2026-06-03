@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { registerMITActivity } from '../lib/daily-plan'
+import { logicalToday } from '../lib/utils'
 
 export interface Hike {
   id: string
-  book_number: number
+  book_number: number | null      // null for family-added (custom) hikes
+  is_custom: boolean
   name: string
   region: string | null
   hub: string | null
@@ -20,6 +23,20 @@ export interface Hike {
   family_rating: number | null
   notes: string | null
   strava_activity_id: number | null
+}
+
+// Fields for adding a family hike that isn't in the original 50.
+export interface NewHike {
+  name: string
+  hub?: string | null
+  distance_mi?: number | null
+  drive_minutes_denver?: number | null
+  best_months?: string[] | null
+  // Optional immediate completion (logging one we already did).
+  done?: boolean
+  date_done?: string | null
+  family_rating?: number | null
+  notes?: string | null
 }
 
 function suggestHike(hikes: Hike[]): Hike | null {
@@ -46,7 +63,7 @@ function suggestHike(hikes: Hike[]): Hike | null {
   return null
 }
 
-export function use50Hikes() {
+export function useFamilyHikes() {
   const { user } = useAuth()
   const [hikes, setHikes] = useState<Hike[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -54,7 +71,7 @@ export function use50Hikes() {
   const fetch = useCallback(async () => {
     if (!user) return
     const { data } = await (supabase as any)
-      .from('hikes_50')
+      .from('family_hikes')
       .select('*')
       .eq('user_id', user.id)
       .order('book_number')
@@ -64,8 +81,39 @@ export function use50Hikes() {
 
   useEffect(() => { fetch() }, [fetch])
 
+  async function addHike(fields: NewHike): Promise<void> {
+    if (!user) return
+    const isDone = fields.done ?? false
+    await (supabase as any).from('family_hikes').insert({
+      user_id: user.id,
+      name: fields.name,
+      is_custom: true,
+      book_number: null,
+      hub: fields.hub ?? null,
+      distance_mi: fields.distance_mi ?? null,
+      drive_minutes_denver: fields.drive_minutes_denver ?? null,
+      best_months: fields.best_months ?? null,
+      done: isDone,
+      date_done: isDone ? (fields.date_done ?? logicalToday()) : null,
+      family_rating: fields.family_rating ?? null,
+      notes: fields.notes ?? null,
+    })
+    if (isDone) {
+      await registerMITActivity({
+        userId: user.id,
+        category: 'family_creative',
+        markDone: true,
+        note: `Hike: ${fields.name}`,
+      })
+    }
+    await fetch()
+  }
+
   const doneCount = hikes.filter(h => h.done).length
+  // Book progress (of the original 50) drives the goal ring; custom hikes are
+  // bonus, never pushing the ring past 100%.
+  const bookDoneCount = hikes.filter(h => h.done && !h.is_custom).length
   const suggested = suggestHike(hikes)
 
-  return { hikes, doneCount, suggested, isLoading, refetch: fetch }
+  return { hikes, doneCount, bookDoneCount, suggested, isLoading, refetch: fetch, addHike }
 }

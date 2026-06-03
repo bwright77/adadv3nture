@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
-import { use50Hikes } from '../../../hooks/use50Hikes'
+import { useFamilyHikes } from '../../../hooks/useFamilyHikes'
 import { HikeLogSheet } from './HikeLogSheet'
-import type { Hike } from '../../../hooks/use50Hikes'
+import type { Hike } from '../../../hooks/useFamilyHikes'
 
 interface Props { dark?: boolean }
 
@@ -23,17 +23,17 @@ function formatMonths(months: string[] | null): string {
   return `${months[0]}–${months[months.length - 1]}`
 }
 
-export function W50Hikes({ dark }: Props) {
-  const { hikes, doneCount, suggested, isLoading, refetch } = use50Hikes()
+export function WFamilyHikes({ dark }: Props) {
+  const { hikes, doneCount, bookDoneCount, suggested, isLoading, refetch } = useFamilyHikes()
   const [expanded, setExpanded] = useState(false)
   const [logging, setLogging] = useState<Hike | null>(null)
 
-  const pct = (doneCount / 50) * 100
+  const pct = (bookDoneCount / 50) * 100
 
   if (isLoading) {
     return (
       <Glass dark={dark} span={12} pad={16}>
-        <CardLabel dark={dark}>50 Hikes with Kids · Colorado</CardLabel>
+        <CardLabel dark={dark}>Family Hikes</CardLabel>
         <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.4, marginTop: 8 }}>Loading…</div>
       </Glass>
     )
@@ -47,9 +47,9 @@ export function W50Hikes({ dark }: Props) {
           onClick={() => setExpanded(e => !e)}
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: 10 }}
         >
-          <CardLabel dark={dark}>· 50 Hikes with Kids · Colorado</CardLabel>
+          <CardLabel dark={dark}>· Family Hikes</CardLabel>
           <div className="mono" style={{ fontSize: 'var(--fs-13)', opacity: 0.7 }}>
-            {doneCount} / 50 {expanded ? '▲' : '▽'}
+            {bookDoneCount} / 50{doneCount > bookDoneCount ? ` +${doneCount - bookDoneCount}` : ''} {expanded ? '▲' : '▽'}
           </div>
         </div>
 
@@ -115,9 +115,9 @@ export function W50Hikes({ dark }: Props) {
           </div>
         )}
 
-        {!expanded && !suggested && doneCount === 50 && (
+        {!expanded && !suggested && bookDoneCount === 50 && (
           <div className="badge" style={{ fontSize: 'var(--fs-14)', color: C.rust, textAlign: 'center', padding: '12px 0' }}>
-            All 50 hikes complete! 🏔️
+            All 50 book hikes complete! 🏔️
           </div>
         )}
 
@@ -146,9 +146,12 @@ export function W50Hikes({ dark }: Props) {
                   {hike.done ? '✓' : '○'}
                 </div>
 
-                {/* Number */}
-                <div className="mono" style={{ width: 22, flexShrink: 0, fontSize: 'var(--fs-11)', opacity: 0.4, marginTop: 3 }}>
-                  {hike.book_number}
+                {/* Number (✦ = family-added, not in the book) */}
+                <div className="mono" style={{
+                  width: 22, flexShrink: 0, fontSize: 'var(--fs-11)', marginTop: 3,
+                  opacity: hike.is_custom ? 0.6 : 0.4, color: hike.is_custom ? C.rust : 'inherit',
+                }}>
+                  {hike.is_custom ? '✦' : hike.book_number}
                 </div>
 
                 {/* Content */}

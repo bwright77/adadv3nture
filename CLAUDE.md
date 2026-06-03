@@ -57,7 +57,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 
 ## What's Live (as of Jun 3, 2026)
 
-**Migrations applied:** 001–041 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
+**Migrations applied:** 001–042 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
 
 | Area | Status |
 |------|--------|
@@ -80,7 +80,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 | Apple Health — iOS Shortcut → Edge Function → recovery_signals | ✓ |
 | Drinks widget — +/- counter, 7-day avg | ✓ |
 | Weekend Mode — 4 views (Dawn/Day/Sat Eve/Sun Eve), weekend briefing variant | ✓ |
-| 50 Hikes with Kids tracker — seasonal suggestion, log, expanded list | ✓ |
+| Family Hikes tracker (formerly "50 Hikes"; migration 042 renamed `hikes_50`→`family_hikes`, `use50Hikes`→`useFamilyHikes`, `W50Hikes`/`Hikes50View`→`WFamilyHikes`/`FamilyHikesView`) — the book 50 **plus family-added custom hikes** (＋ Add a hike, `is_custom` flag, nullable `book_number`); ring tracks the book-50 goal, customs are bonus; seasonal suggestion, log, expanded list | ✓ |
 | Withings OAuth + body metrics — connect + sync to body_metrics, weight/body-fat in trends | ✓ |
 | Trends engine — report card rows + weekly_summaries Edge Function + per-row sparklines | ✓ |
 | MIT cadence framework — per-category intervals (career 3 / family 2 / home 5 / projects 5 days, in `briefing_profile.category_cadence_days`); LIT/DARK not % completion | ✓ |
@@ -217,7 +217,8 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 ✓ 35. WTomorrow — template-lead, swap-aware recommendation engine
 ✓ 36. Timezone hardening — logicalToday() everywhere; stable auth user reference
 ✓ 37. Training-plan consolidation — FIBArk 10K (migration 038) + race-pace targets card; week character taxonomy (phase + character, numbers demoted); Thursday outdoor-quality 4-week rotation (activity-derived, phase-gated)
-✓ 38. Summer Mode v1 — seasonal re-weighting (migrations 039-041): adventure catalog + two-tier log + heat-map, summer band (fire interrupt + adventure hero + WA ring), week-type Solo/Camp/Weekend, summer briefing voices. Deferred: v2 suggester scoring, v3 learns-from-logs, multi-day backfill picker
+✓ 38. Summer Mode v1 — seasonal re-weighting (migrations 039-041): adventure catalog + two-tier log + heat-map, summer band (fire interrupt + adventure hero + WA ring), week-type Solo/Camp/Weekend, summer briefing voices. Deferred: v2 suggester scoring, v3 learns-from-logs, multi-day backfill
+✓ 39. Philosophy follow-ups + Family Hikes — cross-day backfill (getOpenDays + WBackfill on Log page), WLW banked-miles reframe, weekend-plan logicalToday() fix; "50 Hikes" → "Family Hikes" full rename (migration 042) with family-added custom hikes (＋ Add a hike) picker
 
   27. Apple Health sleep filter — Shortcut still over-counts; webhook clamps as defense  ← OPEN
 ```

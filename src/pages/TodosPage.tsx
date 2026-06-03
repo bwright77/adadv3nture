@@ -11,7 +11,7 @@ import {
 } from '../lib/reminders'
 import { registerMITActivity, mapTodoCategoryToMIT } from '../lib/daily-plan'
 import { TrainingView } from '../components/todos/TrainingView'
-import { Hikes50View } from '../components/todos/Hikes50View'
+import { FamilyHikesView } from '../components/todos/FamilyHikesView'
 import { ProjectsView } from '../components/todos/ProjectsView'
 import { CareerView } from '../components/todos/CareerView'
 
@@ -483,8 +483,8 @@ export function TodosPage({ bgPhoto, initialTab, initialTrainingEvent }: TodosPa
             </div>
           )}
 
-          {/* 50 Hikes with Kids — only on the Family tab, below all todos */}
-          {cat === 'family' && <Hikes50View />}
+          {/* Family Hikes — only on the Family tab, below all todos */}
+          {cat === 'family' && <FamilyHikesView />}
         </div>}
       </div>
     </div>

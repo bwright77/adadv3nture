@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { C } from '../../tokens'
-import { use50Hikes, type Hike } from '../../hooks/use50Hikes'
+import { useFamilyHikes, type Hike } from '../../hooks/useFamilyHikes'
 import { HikeLogSheet } from '../dashboard/widgets/HikeLogSheet'
+import { AddHikeSheet } from './AddHikeSheet'
 import { Ring } from '../ui/Ring'
 
 type Difficulty = NonNullable<Hike['difficulty']>
@@ -66,9 +67,11 @@ function HikeRow({ hike, expanded, onToggle, onLog }: {
           {hike.done ? '✓' : '○'}
         </span>
         <span className="mono" style={{
-          width: 22, flexShrink: 0, fontSize: 'var(--fs-11)', opacity: 0.4, marginTop: 3,
-        }}>
-          {hike.book_number}
+          width: 22, flexShrink: 0, fontSize: 'var(--fs-11)',
+          opacity: hike.is_custom ? 0.6 : 0.4, marginTop: 3,
+          color: hike.is_custom ? C.rust : 'inherit',
+        }} title={hike.is_custom ? 'Family-added hike' : `Book #${hike.book_number}`}>
+          {hike.is_custom ? '✦' : hike.book_number}
         </span>
         <span style={{ flex: 1, minWidth: 0 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -148,11 +151,12 @@ function HikeRow({ hike, expanded, onToggle, onLog }: {
   )
 }
 
-export function Hikes50View() {
-  const { hikes, doneCount, suggested, isLoading, refetch } = use50Hikes()
+export function FamilyHikesView() {
+  const { hikes, doneCount, bookDoneCount, suggested, isLoading, refetch, addHike } = useFamilyHikes()
   const [filter, setFilter] = useState<Filter>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [logging, setLogging] = useState<Hike | null>(null)
+  const [adding, setAdding] = useState(false)
 
   if (isLoading) {
     return (
@@ -167,7 +171,10 @@ export function Hikes50View() {
     if (filter === 'todo') return !h.done
     return true
   })
-  const pct = (doneCount / 50) * 100
+  // Ring tracks the original-50 goal; custom hikes are bonus on top.
+  const pct = (bookDoneCount / 50) * 100
+  const customDone = doneCount - bookDoneCount
+  const allDone = hikes.length > 0 && hikes.every(h => h.done)
 
   // Difficulty buckets — segments by tier, widths proportional to total,
   // opacity proportional to in-bucket completion.
@@ -199,7 +206,7 @@ export function Hikes50View() {
           const target = suggested ?? hikes.find(h => !h.done)
           if (target) setLogging(target)
         }}
-        disabled={doneCount === 50}
+        disabled={allDone}
         style={{
           display: 'block', width: '100%', textAlign: 'left',
           marginBottom: 14, padding: 18, borderRadius: 18,
@@ -218,16 +225,16 @@ export function Hikes50View() {
           <path d="M0 60 L0 35 L40 18 L70 28 L110 8 L150 22 L190 12 L230 26 L270 14 L300 22 L300 60 Z" fill={C.cream} />
         </svg>
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <Ring pct={pct} color={C.cream} label={String(doneCount)} size={72} sw={6} />
+          <Ring pct={pct} color={C.cream} label={String(bookDoneCount)} size={72} sw={6} />
           <div style={{ flex: 1 }}>
             <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.18em', opacity: 0.85 }}>
-              50 HIKES · {50 - doneCount} TO GO
+              {doneCount} LOGGED
             </div>
             <div className="badge" style={{ fontSize: 'var(--fs-22)', lineHeight: 1, marginTop: 4, letterSpacing: '0.02em' }}>
-              50 HIKES WITH KIDS
+              FAMILY HIKES
             </div>
             <div className="badge" style={{ fontSize: 'var(--fs-13)', opacity: 0.85, marginTop: 1 }}>
-              COLORADO · {doneCount}/50 DONE
+              {bookDoneCount}/50 FROM THE BOOK{customDone > 0 ? ` · ${customDone} MORE` : ''}
             </div>
             {(avgRating != null || totalMiles > 0) && (
               <div className="mono" style={{ fontSize: 'var(--fs-11)', marginTop: 6, opacity: 0.85, lineHeight: 1.4 }}>
@@ -282,8 +289,8 @@ export function Hikes50View() {
         )}
       </button>
 
-      {/* Filter chips */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+      {/* Filter chips + add */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12, alignItems: 'center' }}>
         {(['all', 'todo', 'done'] as Filter[]).map(f => {
           const selected = filter === f
           return (
@@ -299,10 +306,21 @@ export function Hikes50View() {
                 cursor: 'pointer', fontWeight: 600,
               }}
             >
-              {f === 'all' ? 'All 50' : f === 'todo' ? 'Todo' : 'Done'}
+              {f === 'all' ? 'All' : f === 'todo' ? 'Todo' : 'Done'}
             </button>
           )
         })}
+        <button
+          onClick={() => setAdding(true)}
+          style={{
+            marginLeft: 'auto', padding: '5px 12px', borderRadius: 999,
+            background: 'transparent', color: C.rust,
+            border: `1px solid ${C.rust}`, fontSize: 'var(--fs-12)',
+            fontFamily: 'inherit', cursor: 'pointer', fontWeight: 600,
+          }}
+        >
+          ＋ Add a hike
+        </button>
       </div>
 
       {/* List */}
@@ -330,6 +348,13 @@ export function Hikes50View() {
           hike={logging}
           onClose={() => setLogging(null)}
           onSaved={refetch}
+        />
+      )}
+
+      {adding && (
+        <AddHikeSheet
+          onClose={() => setAdding(false)}
+          onAdd={addHike}
         />
       )}
     </div>

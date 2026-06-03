@@ -3,7 +3,7 @@ import { supabase } from '../../../lib/supabase'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { registerMITActivity } from '../../../lib/daily-plan'
-import type { Hike } from '../../../hooks/use50Hikes'
+import type { Hike } from '../../../hooks/useFamilyHikes'
 
 interface Props {
   hike: Hike
@@ -65,7 +65,7 @@ export function HikeLogSheet({ hike, dark, onClose, onSaved }: Props) {
 
   async function save() {
     setSaving(true)
-    await (supabase as any).from('hikes_50').update({
+    await (supabase as any).from('family_hikes').update({
       done: true,
       date_done: dateDone,
       family_rating: rating || null,
@@ -87,7 +87,7 @@ export function HikeLogSheet({ hike, dark, onClose, onSaved }: Props) {
     <div style={overlay} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div style={sheet}>
         <div className="badge" style={{ fontSize: 'var(--fs-11)', opacity: 0.45, marginBottom: 4 }}>
-          LOG COMPLETION · #{hike.book_number}
+          LOG COMPLETION{hike.book_number != null ? ` · #${hike.book_number}` : ' · FAMILY HIKE'}
         </div>
         <div className="badge" style={{ fontSize: 'var(--fs-16)', marginBottom: 20 }}>
           {hike.name}

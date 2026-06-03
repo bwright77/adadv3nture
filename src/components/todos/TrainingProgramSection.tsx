@@ -297,7 +297,7 @@ export function TrainingProgramSection() {
       </div>
 
       {/* Hero card — phase-colored gradient so at a glance you know where
-          you are in the program. Pattern mirrors Hikes50View's hero. */}
+          you are in the program. Pattern mirrors FamilyHikesView's hero. */}
       <div style={{
         marginBottom: 14, padding: 18, borderRadius: 18,
         background: `linear-gradient(135deg, ${hero.from} 0%, ${hero.to} 100%)`,

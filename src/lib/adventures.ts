@@ -33,7 +33,7 @@ export async function getAdventures(userId: string): Promise<Adventure[]> {
 }
 
 // ─── Suggester v1 — context-aware, hand-fed (no scoring yet) ───────────────
-// Tiered pools mirror use50Hikes.suggestHike(): prefer the current place + a
+// Tiered pools mirror useFamilyHikes.suggestHike(): prefer the current place + a
 // weather-clear + in-season option, then relax constraints one tier at a time.
 export interface SuggestContext {
   monthAbbr: string          // 'Jun' — current month, matched against best_months

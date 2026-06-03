@@ -28,8 +28,8 @@ Fully separate widget composition for Saturday and Sunday — same Glass card sy
 
 | View | Key Widgets |
 |------|-------------|
-| Dawn | Morning briefing (weekend voice), workout, conditions, family day, 50 Hikes |
-| The Day | Adventure today, long effort tracker, project session, 50 Hikes |
+| Dawn | Morning briefing (weekend voice), workout, conditions, family day, Family Hikes |
+| The Day | Adventure today, long effort tracker, project session, Family Hikes |
 | Saturday Evening | Day review, drinks, calendar, inspiration |
 | Sunday Evening | Week ahead (Mon calendar + Run Club + training targets), review, tomorrow |
 
@@ -65,7 +65,7 @@ iOS-style widget grid built from composable Glass cards:
 | Family Day | Chase / Ada / Sylvia cards + age-appropriate spot suggestions |
 | Project Session | Lowest-progress project + next milestone + hours before dinner |
 | Week Ahead | Monday calendar, Run Club reminder, training targets |
-| 50 Hikes | Progress tracker + seasonal suggestion + log completions |
+| Family Hikes | Progress tracker (book 50 + custom) + seasonal suggestion + log completions |
 
 ### Morning Briefing
 AI-generated daily briefing via Anthropic claude-sonnet-4-6 (server-side Edge Function only). Personal narrative ("About Ben") lives in `users.briefing_profile` JSONB — editable from a card on the Log page — so identity, current focus, health context, goals, and tone notes change without touching code. Anchor dates and family ages are pulled per request from `anchor_events` and `family_members`; the function pre-computes "days away" and injects them so the model never has to do date math. Weekday: recovery signals, mood, portfolio review, pilot light staleness — ends with one specific next action. Weekend: "What's the move?" voice — weather, family, recovery, no career urgency.
@@ -88,8 +88,8 @@ Event cards for target races (FOCO Fondo, Ride the Hurricane, West Line Winder 3
 ### Projects
 Active projects with milestones, progress percentage, next action, and update log. Weekend surfaces the lowest-progress active project for deep session work.
 
-### 50 Hikes with Kids
-Tracks progress through *50 Hikes with Kids: Colorado* (Gorton & Tillack). Surfaces a seasonal suggestion each weekend morning — prioritizes current-month hikes within 90 minutes of Denver. Tap to log completion with family star rating.
+### Family Hikes
+Started as *50 Hikes with Kids: Colorado* (Gorton & Tillack) — a forward-looking list to work through — and now holds **any family hike**, not just the book's 50. Surfaces a seasonal suggestion each weekend morning (prioritizes current-month hikes within 90 minutes of Denver), and **＋ Add a hike** records ones that aren't in the book (as a "want to do" for inspiration, or logged as already done). The progress ring still tracks the original 50; custom hikes are bonus. Tap to log completion with a family star rating.
 
 ### Inspiration Widget
 Adventure photos from Supabase Storage surfaced by date proximity — "5 years ago today." Tap to expand into full-screen swipe gallery. Reminds you who you are when "why bother" creeps in.
@@ -159,7 +159,7 @@ Log page ◆ EXPORT card downloads a Markdown brief of everything (identity, anc
 - `training_goals` + `training_weeks` — event targets and weekly actuals
 - `projects` + `project_milestones` — active projects
 - `oauth_tokens` — Strava, Withings, Google OAuth tokens
-- `hikes_50` — 50 Hikes with Kids tracker (done, rating, notes per hike)
+- `family_hikes` — Family Hikes tracker (book 50 + family-added custom hikes; done, rating, notes per hike)
 - `weekend_plans` — one-row-per-day adventure planning
 - `weekend_spots` — curated family/adventure destinations
 - `family_members` — Ben/Tangier + 3 kids (birthdays, role, emoji, vibe) — source of truth for kid ages

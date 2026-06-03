@@ -23,7 +23,8 @@
       "Bash(echo \"EXIT: $?\")",
       "Bash(git checkout *)",
       "Read(//Users/benjaminwright/Downloads/**)",
-      "Bash(echo \"EXIT $?\")"
+      "Bash(echo \"EXIT $?\")",
+      "Bash(git mv *)"
     ],
     "additionalDirectories": [
       "/Users/benjaminwright/.claude"
