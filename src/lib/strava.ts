@@ -15,7 +15,7 @@ export function getStravaAuthUrl(userId: string): string {
   return `https://www.strava.com/oauth/authorize?${params}`
 }
 
-async function getValidToken(userId: string): Promise<string | null> {
+export async function getValidToken(userId: string): Promise<string | null> {
   const { data } = await supabase
     .from('oauth_tokens')
     .select('access_token, expires_at')

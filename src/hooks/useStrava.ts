@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { isStravaConnected, syncActivities, getRecentActivities, getStravaAuthUrl } from '../lib/strava'
+import { enrichRecentStreams } from '../lib/strava-streams'
 import type { Database } from '../types/database'
 
 type Activity = Database['public']['Tables']['activities']['Row']
@@ -33,6 +34,9 @@ export function useStrava() {
       setConnected(true)
       const updated = await getRecentActivities(user.id)
       setActivities(updated)
+      // Enrich a capped batch of recent activities with HR streams in the
+      // background — throttled, so the sync spinner doesn't wait on it.
+      enrichRecentStreams(user.id).catch(() => { /* rate limit / streams absent */ })
     } catch {
       // token may have been revoked
       setConnected(false)

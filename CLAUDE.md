@@ -57,7 +57,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 
 ## What's Live (as of Jun 3, 2026)
 
-**Migrations applied:** 001–042 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
+**Migrations applied:** 001–043 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
 
 | Area | Status |
 |------|--------|
@@ -80,6 +80,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 | Apple Health — iOS Shortcut → Edge Function → recovery_signals | ✓ |
 | Drinks widget — +/- counter, 7-day avg | ✓ |
 | Weekend Mode — 4 views (Dawn/Day/Sat Eve/Sun Eve), weekend briefing variant | ✓ |
+| Strava streams — `src/lib/strava-streams.ts` pulls per-second HR/pace/altitude streams per activity (migration 043 `activity_streams`), derives HR time-in-zone (Karvonen Z1–5, RHR 63/MHR 191) + aerobic decoupling (speed-per-beat drift, >5% = fading durability for WLW). `enrichRecentStreams()` runs fire-and-forget after a manual Strava sync, capped + throttled (resumes on 429). Data persisted; not yet surfaced in UI | ✓ |
 | Family Hikes tracker (formerly "50 Hikes"; migration 042 renamed `hikes_50`→`family_hikes`, `use50Hikes`→`useFamilyHikes`, `W50Hikes`/`Hikes50View`→`WFamilyHikes`/`FamilyHikesView`) — the book 50 **plus family-added custom hikes** (＋ Add a hike, `is_custom` flag, nullable `book_number`); ring tracks the book-50 goal, customs are bonus; seasonal suggestion, log, expanded list | ✓ |
 | Withings OAuth + body metrics — connect + sync to body_metrics, weight/body-fat in trends | ✓ |
 | Trends engine — report card rows + weekly_summaries Edge Function + per-row sparklines | ✓ |
