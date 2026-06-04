@@ -88,8 +88,12 @@ two prescription strings:
   maintenance loading). This is separate from the standalone WORKOUT
   block, which names the specific next strength session in the program.
 When you suggest a body / workout action, name it from the plan — "PZ Max
-on the Peloton this morning," "long run is 14mi with descents" — instead
-of inventing one or relying solely on the standalone workout prescription.
+on the Peloton this morning" — instead of inventing one or relying solely on
+the standalone workout prescription. BUT: the run / long-run / bike numbers are
+WEEKLY targets, not today's session. The long run is its own dedicated day —
+never assign it to today unless the context says today is the long-run day, and
+never state a specific today mileage you weren't given. A hike or family outing
+is NOT a training run and never counts toward a run target.
 
 Portfolio categories (match the Lists tabs): CAREER (non-negotiable, this is
 where Wright Adventures opportunities live), FAMILY, HOME, PROJECTS (personal
@@ -186,6 +190,14 @@ const SUMMER_END = '2026-08-26'
 function isSummerDate(today: string): boolean {
   return today >= SUMMER_START && today <= SUMMER_END
 }
+// The only camp weeks (kids away). Keep in sync with src/hooks/useSummerMode.ts.
+const CAMP_WEEKS: { start: string; end: string }[] = [
+  { start: '2026-06-08', end: '2026-06-12' },  // day camp
+  { start: '2026-07-06', end: '2026-07-10' },  // YMCA camp
+]
+function isCampWeek(today: string): boolean {
+  return CAMP_WEEKS.some(w => today >= w.start && today <= w.end)
+}
 
 // Childcare-relief gradient — what help a place affords (mirrors src/lib/locations.ts).
 function reliefForLocation(name: string): string {
@@ -240,7 +252,25 @@ observational, never a goal — frame body status through training readiness, no
 a number. The [CAREER] and [TRAINING] anchor domains must stay separate.
 
 The organizing question is "what's the best move today?" given the week-type
-above. ${weekendShape ? 'Recovery gates the size; weather picks the place.' : 'Protect the right block for the day; name the adventure and the one WA move.'}
+above. ${weekendShape ? 'Recovery gates the size; weather picks the place.' : 'Protect the right block for the day, and the one WA move.'}
+
+GROUND RULES — do not violate:
+- FACTS ONLY. Use only the activities, reviews, and notes in the context, with
+  their stated dates. Never invent an outing, hike, trail, route, or place name.
+  Never say something happened "yesterday" unless the context dates it to
+  yesterday — if yesterday shows "Not logged," say nothing about it. Do not
+  manufacture a recap or a "10/10 day."
+- TRAINING ≠ ADVENTURE. A hike or family outing is NOT a training run and never
+  "counts toward" a run or long-run target. Runs are runs; a hike is a hike.
+- WEEKLY ≠ TODAY. The TRAINING WEEK mileage / long-run numbers are the WHOLE
+  WEEK's targets. The long run is its own dedicated day — do NOT assign it to
+  today. You are NOT told today's exact run, so never state a specific mileage
+  for today; frame movement as energy/care, not a prescription.
+- ADVENTURES: do not name a specific trail or route — you aren't given one.
+  Invite Ben to pick from the adventure card instead. Any family outing must be
+  kid-scale (short, easy), never a big/technical trail.${voice === 'camp' ? `
+- CAMP: the kids are AT CAMP today — never propose a "with the kids" outing.
+  The daytime is his: training + a deep WA block.` : ''}
 
 Tone: Direct. Warm. Specific. Summer exhale, but WA is real. Max 150 words.
 Always end with ONE specific next action — an actual step, not a category.
@@ -657,12 +687,20 @@ Deno.serve(async (req: Request) => {
     // the weekday context shape; weekend uses the weekend shape.
     let summerVoice: 'solo' | 'camp' | 'weekend' | null = null
     if (isSummerDate(today)) {
-      const bodyDt = typeof body.day_type === 'string' ? body.day_type : ''
-      if (bodyDt.startsWith('summer-')) {
-        summerVoice = bodyDt.slice('summer-'.length) as 'solo' | 'camp' | 'weekend'
+      if (isCampWeek(today)) {
+        // The camp schedule is authoritative — kids are away this week.
+        summerVoice = 'camp'
       } else {
-        const { data: u } = await admin.from('users').select('summer_week_type').eq('id', user.id).maybeSingle()
-        summerVoice = ((u as { summer_week_type?: 'solo' | 'camp' | 'weekend' | null } | null)?.summer_week_type) ?? 'solo'
+        const bodyDt = typeof body.day_type === 'string' ? body.day_type : ''
+        let v: 'solo' | 'camp' | 'weekend'
+        if (bodyDt.startsWith('summer-')) {
+          v = bodyDt.slice('summer-'.length) as 'solo' | 'camp' | 'weekend'
+        } else {
+          const { data: u } = await admin.from('users').select('summer_week_type').eq('id', user.id).maybeSingle()
+          v = ((u as { summer_week_type?: 'solo' | 'camp' | 'weekend' | null } | null)?.summer_week_type) ?? 'solo'
+        }
+        // Not a camp week → never 'camp' (ignore a stale stored/sent value).
+        summerVoice = v === 'camp' ? 'solo' : v
       }
     }
 
@@ -939,14 +977,17 @@ ${weightContextLine(weight, weightMeasuredAt)}`
         }
         pilotLights[cat] = days
       }
-      const yReview = reviewRows[0]
+      // MUST be yesterday's actual row — reviewRows[0] is just the most recent
+      // logged day, which could be Saturday if the days since went unlogged.
+      // Labeling a stale row "yesterday" makes the briefing fabricate a recap.
+      const yReview = reviewRows.find(r => r.plan_date === yesterday) ?? null
       const yesterdayReviewLines = yReview
         ? applicableCatsFor(yReview.plan_date).map(cat => {
             const done = yReview[`${cat}_done` as keyof ReviewRow]
             const note = yReview[`${cat}_note` as keyof ReviewRow] as string | null
             return `  ${catLabels[cat]}: ${done ? `✓${note ? ` (${note})` : ''}` : '—'}`
           }).join('\n')
-        : '  No review data for yesterday'
+        : '  Not logged — say nothing about yesterday'
 
       // Cadence-aware MIT signal. Each category has its own expected interval;
       // "DARK" = past it. No aggregate %, no uniform-quota framing.

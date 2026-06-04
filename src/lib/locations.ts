@@ -26,7 +26,7 @@ export interface KnownLocation {
 
 export const KNOWN_LOCATIONS: KnownLocation[] = [
   { slug: 'denver',  name: 'Denver',  elevationFt: 5318, lat: 39.7392, lon: -104.9903, radiusMi: 25, relief: 'home' },
-  { slug: 'howard',  name: 'Howard',  elevationFt: 6490, lat: 38.4339, lon: -105.8295, radiusMi: 15, relief: 'grandparents' },
+  { slug: 'howard',  name: 'Howard',  elevationFt: 6681, lat: 38.4339, lon: -105.8295, radiusMi: 15, relief: 'grandparents' },
   { slug: 'greeley', name: 'Greeley', elevationFt: 4658, lat: 40.4233, lon: -104.7091, radiusMi: 12, relief: 'in_laws' },
   { slug: 'evans',   name: 'Evans',   elevationFt: 4715, lat: 40.3766, lon: -104.6919, radiusMi: 8,  relief: 'in_laws' },
 ]
