@@ -24,11 +24,9 @@ function formatMonths(months: string[] | null): string {
 }
 
 export function WFamilyHikes({ dark }: Props) {
-  const { hikes, doneCount, bookDoneCount, suggested, isLoading, refetch } = useFamilyHikes()
+  const { hikes, doneCount, suggested, isLoading, refetch } = useFamilyHikes()
   const [expanded, setExpanded] = useState(false)
   const [logging, setLogging] = useState<Hike | null>(null)
-
-  const pct = (bookDoneCount / 50) * 100
 
   if (isLoading) {
     return (
@@ -49,16 +47,8 @@ export function WFamilyHikes({ dark }: Props) {
         >
           <CardLabel dark={dark}>· Family Hikes</CardLabel>
           <div className="mono" style={{ fontSize: 'var(--fs-13)', opacity: 0.7 }}>
-            {bookDoneCount} / 50{doneCount > bookDoneCount ? ` +${doneCount - bookDoneCount}` : ''} {expanded ? '▲' : '▽'}
+            {doneCount} done {expanded ? '▲' : '▽'}
           </div>
-        </div>
-
-        {/* Progress bar */}
-        <div style={{
-          height: 4, borderRadius: 2, background: dark ? 'rgba(255,255,255,0.12)' : 'rgba(26,18,8,0.1)',
-          marginBottom: expanded ? 16 : 14, overflow: 'hidden',
-        }}>
-          <div style={{ height: '100%', width: `${pct}%`, background: C.rust, borderRadius: 2, transition: 'width 0.4s ease' }} />
         </div>
 
         {/* Collapsed: suggested hike */}
@@ -115,12 +105,6 @@ export function WFamilyHikes({ dark }: Props) {
           </div>
         )}
 
-        {!expanded && !suggested && bookDoneCount === 50 && (
-          <div className="badge" style={{ fontSize: 'var(--fs-14)', color: C.rust, textAlign: 'center', padding: '12px 0' }}>
-            All 50 book hikes complete! 🏔️
-          </div>
-        )}
-
         {/* Expanded: full list */}
         {expanded && (
           <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
@@ -144,14 +128,6 @@ export function WFamilyHikes({ dark }: Props) {
                   fontSize: 'var(--fs-13)',
                 }}>
                   {hike.done ? '✓' : '○'}
-                </div>
-
-                {/* Number (✦ = family-added, not in the book) */}
-                <div className="mono" style={{
-                  width: 22, flexShrink: 0, fontSize: 'var(--fs-11)', marginTop: 3,
-                  opacity: hike.is_custom ? 0.6 : 0.4, color: hike.is_custom ? C.rust : 'inherit',
-                }}>
-                  {hike.is_custom ? '✦' : hike.book_number}
                 </div>
 
                 {/* Content */}

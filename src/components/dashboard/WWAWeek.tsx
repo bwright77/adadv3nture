@@ -38,19 +38,31 @@ export function WWAWeek({ dark }: Props) {
     <Glass dark={dark} span={12} pad={14}>
       <CardLabel dark={dark}>Wright Adventures · this week</CardLabel>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
-        {/* WA week ring — 5 segments, filled = a day WA moved */}
-        <div>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-            {Array.from({ length: target }).map((_, i) => (
+        {/* WA week progress — a single bar that fills with the week's momentum,
+            with faint ticks marking the 5× target. Reads as progress, not as
+            empty/dead slots. */}
+        <div style={{ flex: 1, minWidth: 0, maxWidth: 220 }}>
+          <div style={{
+            position: 'relative', height: 10, borderRadius: 5,
+            background: dark ? 'rgba(245,237,214,0.14)' : 'rgba(26,18,8,0.08)',
+            overflow: 'hidden', marginBottom: 6,
+          }}>
+            {/* Filled momentum */}
+            <div style={{
+              position: 'absolute', inset: 0, width: `${Math.min(1, done / target) * 100}%`,
+              background: `linear-gradient(90deg, ${C.rust}, ${C.rust}cc)`,
+              borderRadius: 5, transition: 'width 0.4s ease',
+            }} />
+            {/* Target ticks */}
+            {Array.from({ length: target - 1 }).map((_, i) => (
               <span key={i} style={{
-                width: 18, height: 18, borderRadius: '50%',
-                background: i < done ? C.rust : 'transparent',
-                border: `2px solid ${i < done ? C.rust : (dark ? 'rgba(245,237,214,0.3)' : C.ink20)}`,
+                position: 'absolute', top: 0, bottom: 0, left: `${((i + 1) / target) * 100}%`,
+                width: 1, background: dark ? 'rgba(26,18,8,0.35)' : 'rgba(255,255,255,0.7)',
               }} />
             ))}
           </div>
           <div className="mono" style={{ fontSize: 'var(--fs-11)', color: dark ? 'rgba(245,237,214,0.6)' : C.ink60 }}>
-            {done}/{target} this week · {done >= target ? 'lit' : 'keep moving'}
+            {done} of {target} this week · {done >= target ? 'lit' : 'keep moving'}
           </div>
         </div>
 

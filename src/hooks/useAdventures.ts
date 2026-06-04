@@ -33,6 +33,7 @@ export function useAdventures() {
   const ctx: SuggestContext = {
     monthAbbr,
     placeSlug: location.slug,
+    coords: { lat: location.lat, lon: location.lon },
     afternoonWet: weather?.afternoonWet ?? false,
     highF: weather?.highF ?? null,
   }

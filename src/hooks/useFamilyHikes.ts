@@ -109,11 +109,10 @@ export function useFamilyHikes() {
     await fetch()
   }
 
+  // Family Hikes is an open, aspirational collection — hikes we've done
+  // together, growing over time. No fixed goal to "complete" (no book-50).
   const doneCount = hikes.filter(h => h.done).length
-  // Book progress (of the original 50) drives the goal ring; custom hikes are
-  // bonus, never pushing the ring past 100%.
-  const bookDoneCount = hikes.filter(h => h.done && !h.is_custom).length
   const suggested = suggestHike(hikes)
 
-  return { hikes, doneCount, bookDoneCount, suggested, isLoading, refetch: fetch, addHike }
+  return { hikes, doneCount, suggested, isLoading, refetch: fetch, addHike }
 }

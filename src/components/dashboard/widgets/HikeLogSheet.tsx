@@ -87,7 +87,7 @@ export function HikeLogSheet({ hike, dark, onClose, onSaved }: Props) {
     <div style={overlay} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div style={sheet}>
         <div className="badge" style={{ fontSize: 'var(--fs-11)', opacity: 0.45, marginBottom: 4 }}>
-          LOG COMPLETION{hike.book_number != null ? ` · #${hike.book_number}` : ' · FAMILY HIKE'}
+          LOG COMPLETION
         </div>
         <div className="badge" style={{ fontSize: 'var(--fs-16)', marginBottom: 20 }}>
           {hike.name}

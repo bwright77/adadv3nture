@@ -73,7 +73,7 @@ interface RegisterMITActivityArgs {
  *   - Project milestone checked off  → markDone=true, note=milestone title
  *   - Project update logged          → markDone=false, note=update text
  *   - Family/home/career/projects todo completed → markDone=true, note=todo title
- *   - 50 Hikes hike marked done      → markDone=true, note='Hike: <title>'
+ *   - Family hike marked done        → markDone=true, note='Hike: <title>'
  *
  * Additive semantics: done is monotonic (true wins), notes append with ' · '
  * unless the new text is already a substring of the existing note. Never

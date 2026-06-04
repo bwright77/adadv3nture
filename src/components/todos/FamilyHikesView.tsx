@@ -3,15 +3,6 @@ import { C } from '../../tokens'
 import { useFamilyHikes, type Hike } from '../../hooks/useFamilyHikes'
 import { HikeLogSheet } from '../dashboard/widgets/HikeLogSheet'
 import { AddHikeSheet } from './AddHikeSheet'
-import { Ring } from '../ui/Ring'
-
-type Difficulty = NonNullable<Hike['difficulty']>
-const DIFFICULTY_ORDER: Difficulty[] = ['easy', 'moderate', 'challenging']
-const DIFFICULTY_LABEL: Record<Difficulty, string> = {
-  easy: 'Easy',
-  moderate: 'Moderate',
-  challenging: 'Challenging',
-}
 
 type Filter = 'all' | 'todo' | 'done'
 
@@ -65,13 +56,6 @@ function HikeRow({ hike, expanded, onToggle, onLog }: {
           fontSize: 'var(--fs-14)',
         }}>
           {hike.done ? '✓' : '○'}
-        </span>
-        <span className="mono" style={{
-          width: 22, flexShrink: 0, fontSize: 'var(--fs-11)',
-          opacity: hike.is_custom ? 0.6 : 0.4, marginTop: 3,
-          color: hike.is_custom ? C.rust : 'inherit',
-        }} title={hike.is_custom ? 'Family-added hike' : `Book #${hike.book_number}`}>
-          {hike.is_custom ? '✦' : hike.book_number}
         </span>
         <span style={{ flex: 1, minWidth: 0 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -152,7 +136,7 @@ function HikeRow({ hike, expanded, onToggle, onLog }: {
 }
 
 export function FamilyHikesView() {
-  const { hikes, doneCount, bookDoneCount, suggested, isLoading, refetch, addHike } = useFamilyHikes()
+  const { hikes, doneCount, suggested, isLoading, refetch, addHike } = useFamilyHikes()
   const [filter, setFilter] = useState<Filter>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [logging, setLogging] = useState<Hike | null>(null)
@@ -171,20 +155,7 @@ export function FamilyHikesView() {
     if (filter === 'todo') return !h.done
     return true
   })
-  // Ring tracks the original-50 goal; custom hikes are bonus on top.
-  const pct = (bookDoneCount / 50) * 100
-  const customDone = doneCount - bookDoneCount
   const allDone = hikes.length > 0 && hikes.every(h => h.done)
-
-  // Difficulty buckets — segments by tier, widths proportional to total,
-  // opacity proportional to in-bucket completion.
-  const totalRated = hikes.filter(h => h.difficulty).length || 50
-  const buckets = DIFFICULTY_ORDER.map(diff => {
-    const bucket = hikes.filter(h => h.difficulty === diff)
-    const total = bucket.length
-    const done = bucket.filter(h => h.done).length
-    return { diff, total, done, ratio: total > 0 ? done / total : 0 }
-  })
 
   // Average family rating across completed hikes
   const rated = hikes.filter(h => h.done && h.family_rating)
@@ -214,7 +185,7 @@ export function FamilyHikesView() {
           color: C.cream, position: 'relative', overflow: 'hidden',
           boxShadow: '0 10px 30px rgba(91,188,184,0.3)',
           border: 'none', fontFamily: 'inherit',
-          cursor: doneCount === 50 ? 'default' : 'pointer',
+          cursor: allDone ? 'default' : 'pointer',
         }}
       >
         {/* Mountain silhouette — same shape as the Anchor card */}
@@ -225,16 +196,21 @@ export function FamilyHikesView() {
           <path d="M0 60 L0 35 L40 18 L70 28 L110 8 L150 22 L190 12 L230 26 L270 14 L300 22 L300 60 Z" fill={C.cream} />
         </svg>
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <Ring pct={pct} color={C.cream} label={String(bookDoneCount)} size={72} sw={6} />
+          {/* A growing count, not a goal dial — the number of hikes we've done together. */}
+          <div style={{
+            width: 72, height: 72, borderRadius: '50%', flexShrink: 0,
+            border: `2px solid rgba(245,237,214,0.4)`,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <div className="badge" style={{ fontSize: 'var(--fs-26)', lineHeight: 1 }}>{doneCount}</div>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.7, marginTop: 2 }}>done</div>
+          </div>
           <div style={{ flex: 1 }}>
-            <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.18em', opacity: 0.85 }}>
-              {doneCount} LOGGED
-            </div>
-            <div className="badge" style={{ fontSize: 'var(--fs-22)', lineHeight: 1, marginTop: 4, letterSpacing: '0.02em' }}>
+            <div className="badge" style={{ fontSize: 'var(--fs-22)', lineHeight: 1, letterSpacing: '0.02em' }}>
               FAMILY HIKES
             </div>
-            <div className="badge" style={{ fontSize: 'var(--fs-13)', opacity: 0.85, marginTop: 1 }}>
-              {bookDoneCount}/50 FROM THE BOOK{customDone > 0 ? ` · ${customDone} MORE` : ''}
+            <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.85, marginTop: 4 }}>
+              hikes we've done together
             </div>
             {(avgRating != null || totalMiles > 0) && (
               <div className="mono" style={{ fontSize: 'var(--fs-11)', marginTop: 6, opacity: 0.85, lineHeight: 1.4 }}>
@@ -246,40 +222,7 @@ export function FamilyHikesView() {
           </div>
         </div>
 
-        {/* Difficulty progression bar */}
-        <div style={{ position: 'relative', marginTop: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            {buckets.map(b => (
-              <div key={b.diff} className="mono" style={{
-                fontSize: 'var(--fs-10)',
-                opacity: b.done > 0 ? 1 : 0.45,
-                color: C.cream,
-              }}>
-                {DIFFICULTY_LABEL[b.diff]}
-              </div>
-            ))}
-          </div>
-          <div style={{
-            height: 4, borderRadius: 2,
-            background: 'rgba(245,237,214,0.2)',
-            display: 'flex', overflow: 'hidden',
-          }}>
-            {buckets.map(b => (
-              <div key={b.diff} style={{
-                height: '100%',
-                width: `${(b.total / totalRated) * 100}%`,
-                background: b.done > 0
-                  ? `rgba(245,237,214,${0.4 + b.ratio * 0.5})`
-                  : 'rgba(245,237,214,0.25)',
-              }} />
-            ))}
-          </div>
-          <div className="mono" style={{ fontSize: 'var(--fs-10)', marginTop: 4, opacity: 0.55 }}>
-            {buckets.map(b => `${DIFFICULTY_LABEL[b.diff]} ${b.done}/${b.total}`).join(' · ')}
-          </div>
-        </div>
-
-        {suggested && doneCount < 50 && (
+        {suggested && !allDone && (
           <div className="mono" style={{
             position: 'relative', marginTop: 12,
             fontSize: 'var(--fs-11)', opacity: 0.85, lineHeight: 1.4,

@@ -23,8 +23,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
   )
 }
 
-// Add a family hike that isn't one of the original 50 — as a "want to do" for
-// inspiration, or logged as already done.
+// Add a family hike — as a "want to do" for inspiration, or logged as already done.
 export function AddHikeSheet({ onClose, onAdd }: Props) {
   const [name, setName] = useState('')
   const [hub, setHub] = useState('')
@@ -78,7 +77,7 @@ export function AddHikeSheet({ onClose, onAdd }: Props) {
           ADD A FAMILY HIKE
         </div>
         <div className="badge" style={{ fontSize: 'var(--fs-16)', marginBottom: 20 }}>
-          One that's not in the book
+          Add one you want to do, or log one you've done
         </div>
 
         <div style={{ marginBottom: 16 }}>
