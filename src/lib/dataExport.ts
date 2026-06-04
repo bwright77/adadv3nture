@@ -201,6 +201,7 @@ export async function exportToMarkdown(userId: string, opts: ExportOptions): Pro
       const meta: string[] = []
       if (pp.status) meta.push(pp.status)
       if (pp.progress_pct != null) meta.push(`${pp.progress_pct}% complete`)
+      if (pp.next_touch_date) meta.push(`next touch ${pp.next_touch_date}`)
       if (pp.deadline_date) meta.push(`hard deadline ${pp.deadline_date}`)
       if (pp.soft_deadline_date) meta.push(`soft deadline ${pp.soft_deadline_date}`)
       if (meta.length) w(`_${meta.join(' · ')}_`)

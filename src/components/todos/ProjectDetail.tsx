@@ -56,14 +56,14 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
   const [imageDraft, setImageDraft] = useState(project.image_url ?? '')
   const [editingUrl, setEditingUrl] = useState(false)
   const [urlDraft, setUrlDraft] = useState(project.website_url ?? '')
-  const [editingDeadline, setEditingDeadline] = useState<'soft' | 'hard' | null>(null)
-  const [softDraft, setSoftDraft] = useState(project.soft_deadline_date ?? '')
-  const [hardDraft, setHardDraft] = useState(project.deadline_date ?? '')
+  // Date pills are generic over a field — career projects get a single
+  // "Next touch" follow-up date; everything else keeps soft + hard deadlines.
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [dateDraft, setDateDraft] = useState('')
 
-  async function handleSaveDeadline(which: 'soft' | 'hard', value: string) {
-    const field = which === 'soft' ? 'soft_deadline_date' : 'deadline_date'
+  async function handleSaveDate(field: string, value: string) {
     await updateProjectDeadlines(project.id, { [field]: value || null })
-    setEditingDeadline(null)
+    setEditingField(null)
     onUpdate()
   }
 
@@ -219,8 +219,14 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
     onUpdate()
   }
 
-  const softDays = daysUntil(project.soft_deadline_date)
-  const hardDays = daysUntil(project.deadline_date)
+  // Career = relationship-driven → a single "next touch" follow-up date.
+  // Other projects → real soft + hard deadlines.
+  const dateFields = project.category === 'career'
+    ? [{ field: 'next_touch_date', label: 'NEXT TOUCH', addLabel: 'next touch', value: project.next_touch_date, urgentAt: 2 }]
+    : [
+        { field: 'soft_deadline_date', label: 'SOFT', addLabel: 'soft date', value: project.soft_deadline_date, urgentAt: 14 },
+        { field: 'deadline_date', label: 'DEADLINE', addLabel: 'deadline', value: project.deadline_date, urgentAt: 7 },
+      ]
 
   return (
     <div style={{
@@ -258,33 +264,32 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
           )}
 
           <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-            {(['soft', 'hard'] as const).map(which => {
-              const isEditing = editingDeadline === which
-              const isSoft = which === 'soft'
-              const value = isSoft ? project.soft_deadline_date : project.deadline_date
-              const days = isSoft ? softDays : hardDays
-              const draft = isSoft ? softDraft : hardDraft
-              const setDraft = isSoft ? setSoftDraft : setHardDraft
-              const urgent = isSoft ? (days != null && days <= 14) : (days != null && days <= 7)
-              const accentBg = urgent ? (isSoft ? 'rgba(196,82,42,0.25)' : 'rgba(196,82,42,0.35)') : 'rgba(255,255,255,0.1)'
-              const accentBorder = urgent && isSoft ? `1px solid ${C.rust}` : '1px solid rgba(255,255,255,0.15)'
+            {dateFields.map(f => {
+              const isEditing = editingField === f.field
+              const days = daysUntil(f.value)
+              const urgent = days != null && days <= f.urgentAt
+              const overdue = days != null && days < 0
+              const accentBg = urgent ? 'rgba(196,82,42,0.3)' : 'rgba(255,255,255,0.1)'
+              const accentBorder = urgent ? `1px solid ${C.rust}` : '1px solid rgba(255,255,255,0.15)'
+              // Friendly relative phrasing — overdue follow-ups read "3D ago", not "-3D".
+              const relative = days == null ? '' : days < 0 ? `${Math.abs(days)}D ago` : days === 0 ? 'today' : `${days}D`
 
               if (isEditing) {
                 return (
-                  <div key={which} style={{
+                  <div key={f.field} style={{
                     padding: '4px 8px', borderRadius: 999,
                     background: 'rgba(255,255,255,0.12)',
                     border: '1px solid rgba(255,255,255,0.25)',
                     display: 'flex', gap: 6, alignItems: 'center',
                   }}>
                     <span className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(245,237,214,0.55)', letterSpacing: '0.1em' }}>
-                      {isSoft ? 'SOFT' : 'DEADLINE'}
+                      {f.label}
                     </span>
                     <input
                       type="date"
                       autoFocus
-                      value={draft}
-                      onChange={e => setDraft(e.target.value)}
+                      value={dateDraft}
+                      onChange={e => setDateDraft(e.target.value)}
                       style={{
                         background: 'transparent', border: 'none', color: C.cream,
                         fontSize: 'var(--fs-13)', fontFamily: 'inherit', outline: 'none', padding: '2px 0',
@@ -292,21 +297,21 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
                       }}
                     />
                     <button
-                      onClick={() => handleSaveDeadline(which, draft)}
+                      onClick={() => handleSaveDate(f.field, dateDraft)}
                       style={{ background: 'rgba(255,255,255,0.2)', color: C.cream, border: 'none', borderRadius: 6, padding: '2px 8px', fontSize: 'var(--fs-11)', fontWeight: 700, cursor: 'pointer' }}
                     >
                       Save
                     </button>
-                    {value && (
+                    {f.value && (
                       <button
-                        onClick={() => handleSaveDeadline(which, '')}
+                        onClick={() => handleSaveDate(f.field, '')}
                         style={{ background: 'none', color: 'rgba(245,237,214,0.6)', border: 'none', padding: '2px 4px', fontSize: 'var(--fs-11)', cursor: 'pointer' }}
                       >
                         Clear
                       </button>
                     )}
                     <button
-                      onClick={() => setEditingDeadline(null)}
+                      onClick={() => setEditingField(null)}
                       style={{ background: 'none', color: 'rgba(245,237,214,0.45)', border: 'none', padding: '2px 4px', fontSize: 'var(--fs-11)', cursor: 'pointer' }}
                     >
                       ×
@@ -315,14 +320,11 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
                 )
               }
 
-              if (value && days !== null) {
+              if (f.value && days !== null) {
                 return (
                   <button
-                    key={which}
-                    onClick={() => {
-                      setDraft(value)
-                      setEditingDeadline(which)
-                    }}
+                    key={f.field}
+                    onClick={() => { setDateDraft(f.value as string); setEditingField(f.field) }}
                     style={{
                       padding: '4px 10px', borderRadius: 999,
                       background: accentBg,
@@ -332,10 +334,10 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
                     }}
                   >
                     <span className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(245,237,214,0.55)', letterSpacing: '0.1em' }}>
-                      {isSoft ? 'SOFT' : 'DEADLINE'}
+                      {overdue ? 'FOLLOW UP' : f.label}
                     </span>
-                    <span className="badge" style={{ fontSize: 'var(--fs-13)', color: urgent && isSoft ? C.rust : C.cream }}>
-                      {formatDate(value)} · {days}D
+                    <span className="badge" style={{ fontSize: 'var(--fs-13)', color: urgent ? C.rust : C.cream }}>
+                      {formatDate(f.value)} · {relative}
                     </span>
                   </button>
                 )
@@ -344,11 +346,8 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
               // Unset — show a subtle "+ add" pill so the user can attach a date
               return (
                 <button
-                  key={which}
-                  onClick={() => {
-                    setDraft('')
-                    setEditingDeadline(which)
-                  }}
+                  key={f.field}
+                  onClick={() => { setDateDraft(''); setEditingField(f.field) }}
                   style={{
                     padding: '4px 10px', borderRadius: 999,
                     background: 'rgba(255,255,255,0.05)',
@@ -357,7 +356,7 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
                     fontSize: 'var(--fs-11)', letterSpacing: '0.05em',
                   }}
                 >
-                  + {isSoft ? 'soft date' : 'deadline'}
+                  + {f.addLabel}
                 </button>
               )
             })}

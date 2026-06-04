@@ -57,7 +57,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 
 ## What's Live (as of Jun 3, 2026)
 
-**Migrations applied:** 001–049 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
+**Migrations applied:** 001–050 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
 
 | Area | Status |
 |------|--------|
@@ -97,7 +97,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 | Polish pass — mobile empty states, event countdowns, mobile keyboard handling | ✓ |
 | Briefing dispatch — Apple Health webhook chains briefing + sends push (VAPID keys set) | ✓ |
 | Smart trainer — `deriveTrainingWeek()` computes weekly targets from upcoming events; manual override still available | ✓ |
-| Editable opportunity deadlines — tap soft/deadline pills in Career → inline date picker | ✓ |
+| Career opportunity dates = **next touch / follow-up**, not deadlines — opportunities are relationship-driven, so `projects.next_touch_date` (migration 050) drives the card (countdown → "FOLLOW UP · Nd ago" when overdue), the add form ("NEXT TOUCH" labeled), and the detail (single editable pill). Real deadlines (soft/hard pills) remain for non-career projects (the bike show, etc.); ProjectDetail's date pills are category-driven | ✓ |
 | Anchor deep-link — Trends anchor card → linked `training_goal` EventDetail in Training tab | ✓ |
 | Data export — Log page ◆ EXPORT downloads a Markdown brief for upload into a Claude conversation | ✓ |
 | Trends auto-refresh — Strava / Withings sync bumps a `dataVersion` so TrendsPage refetches without remount | ✓ |

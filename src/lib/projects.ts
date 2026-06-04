@@ -13,6 +13,7 @@ export interface Project {
   category: ProjectCategory
   deadline_date: string | null
   soft_deadline_date: string | null
+  next_touch_date: string | null   // career: "circle back by" nudge (not a deadline)
   progress_pct: number
   next_action: string | null
   status: ProjectStatus
@@ -120,11 +121,12 @@ export async function updateProjectWebsiteUrl(id: string, url: string): Promise<
 // Pass empty string or null to clear the deadline.
 export async function updateProjectDeadlines(
   id: string,
-  patch: { soft_deadline_date?: string | null; deadline_date?: string | null },
+  patch: { soft_deadline_date?: string | null; deadline_date?: string | null; next_touch_date?: string | null },
 ): Promise<void> {
   const update: Record<string, string | null> = {}
   if ('soft_deadline_date' in patch) update.soft_deadline_date = patch.soft_deadline_date || null
   if ('deadline_date' in patch) update.deadline_date = patch.deadline_date || null
+  if ('next_touch_date' in patch) update.next_touch_date = patch.next_touch_date || null
   const { error } = await db.from('projects').update(update).eq('id', id)
   if (error) throw new Error(error.message)
 }
@@ -175,11 +177,15 @@ export async function addProject(
   title: string,
   category: ProjectCategory,
   deadline_date: string | null,
-  opts?: { website_url?: string }
+  opts?: { website_url?: string; next_touch_date?: string | null }
 ): Promise<Project> {
   const { data, error } = await db
     .from('projects')
-    .insert({ user_id: userId, title, category, deadline_date, website_url: opts?.website_url ?? null })
+    .insert({
+      user_id: userId, title, category, deadline_date,
+      next_touch_date: opts?.next_touch_date ?? null,
+      website_url: opts?.website_url ?? null,
+    })
     .select()
     .single()
   if (error) throw new Error(error.message)

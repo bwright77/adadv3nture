@@ -24,10 +24,8 @@ function CareerCard({ project, primaryContact, onOpen }: {
   primaryContact: ProjectContact | undefined
   onOpen: () => void
 }) {
-  const softDays = daysUntil(project.soft_deadline_date)
-  const hardDays = daysUntil(project.deadline_date)
-  const displayDays = softDays ?? hardDays
-  const displayDate = project.soft_deadline_date ?? project.deadline_date
+  const touchDays = daysUntil(project.next_touch_date)
+  const touchDate = project.next_touch_date
 
   return (
     <button
@@ -85,13 +83,23 @@ function CareerCard({ project, primaryContact, onOpen }: {
             )}
           </div>
 
-          {displayDate && displayDays !== null && displayDays >= 0 && (
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div className="badge" style={{ fontSize: 'var(--fs-22)', lineHeight: 1, color: displayDays <= 14 ? C.rust : C.dark }}>
-                {displayDays}
-              </div>
-              <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.1em' }}>DAYS</div>
-              <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, marginTop: 1 }}>{formatDate(displayDate)}</div>
+          {touchDate && touchDays !== null && (
+            <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 66 }}>
+              <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.1em' }}>NEXT TOUCH</div>
+              {touchDays < 0 ? (
+                <>
+                  <div className="badge" style={{ fontSize: 'var(--fs-14)', lineHeight: 1.1, color: C.rust, marginTop: 2 }}>FOLLOW UP</div>
+                  <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.rust, marginTop: 1 }}>{Math.abs(touchDays)}d ago</div>
+                </>
+              ) : (
+                <>
+                  <div className="badge" style={{ fontSize: 'var(--fs-22)', lineHeight: 1, color: touchDays <= 3 ? C.rust : C.dark, marginTop: 2 }}>
+                    {touchDays === 0 ? 'TODAY' : touchDays}
+                  </div>
+                  {touchDays !== 0 && <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.1em' }}>DAYS</div>}
+                </>
+              )}
+              <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, marginTop: 1 }}>{formatDate(touchDate)}</div>
             </div>
           )}
         </div>{/* end flex row */}
@@ -207,7 +215,7 @@ function DecisionDateCard() {
 function AddOpportunityForm({ onSave, onCancel }: { onSave: (p: Project) => void; onCancel: () => void }) {
   const { user } = useAuth()
   const [title, setTitle] = useState('')
-  const [deadline, setDeadline] = useState('')
+  const [nextTouch, setNextTouch] = useState('')
   const [websiteUrl, setWebsiteUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -217,7 +225,10 @@ function AddOpportunityForm({ onSave, onCancel }: { onSave: (p: Project) => void
     if (!user || !title.trim()) return
     setSaving(true)
     try {
-      const p = await addProject(user.id, title.trim(), 'career', deadline || null, { website_url: websiteUrl.trim() || undefined })
+      const p = await addProject(user.id, title.trim(), 'career', null, {
+        website_url: websiteUrl.trim() || undefined,
+        next_touch_date: nextTouch || null,
+      })
       onSave(p)
     } catch { setSaving(false) }
   }
@@ -236,12 +247,17 @@ function AddOpportunityForm({ onSave, onCancel }: { onSave: (p: Project) => void
           placeholder="Opportunity / org name"
           style={inputStyle}
         />
-        <input
-          type="date"
-          value={deadline}
-          onChange={e => setDeadline(e.target.value)}
-          style={inputStyle}
-        />
+        <div>
+          <label className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.08em', display: 'block', marginBottom: 4 }}>
+            NEXT TOUCH — when to follow up (optional)
+          </label>
+          <input
+            type="date"
+            value={nextTouch}
+            onChange={e => setNextTouch(e.target.value)}
+            style={inputStyle}
+          />
+        </div>
         <input
           value={websiteUrl}
           onChange={e => setWebsiteUrl(e.target.value)}
