@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useLocation } from './useLocation'
 import { registerMITActivity } from '../lib/daily-plan'
 import { logicalToday } from '../lib/utils'
+import { haversineMi } from '../lib/locations'
 
 export interface Hike {
   id: string
@@ -18,6 +20,8 @@ export interface Hike {
   drive_minutes_denver: number | null
   best_months: string[] | null
   alltrails_url: string | null
+  trailhead_lat: number | null
+  trailhead_lng: number | null
   done: boolean
   date_done: string | null
   family_rating: number | null
@@ -39,32 +43,52 @@ export interface NewHike {
   notes?: string | null
 }
 
-function suggestHike(hikes: Hike[]): Hike | null {
+// A day-trip-from-here radius. Geo-sensitive: a hike is only suggested if its
+// trailhead is reachable from where you actually are — so a Front Range hike
+// isn't offered while you're in Howard. (drive_minutes_denver is Denver-relative
+// and useless when away from Denver, so it's no longer the gate.)
+const MAX_HIKE_MILES = 90
+
+function suggestHike(hikes: Hike[], coords: { lat: number; lon: number } | null): Hike | null {
   const undone = hikes.filter(h => !h.done)
   if (undone.length === 0) return null
 
-  const month = new Date().toLocaleString('en-US', { month: 'short' })
-
-  // Priority: seasonal + day-trip → seasonal only → day-trip only → any
-  const seasonal = undone.filter(h => h.best_months?.some(m => m.startsWith(month)))
-  const dayTrip = undone.filter(h => (h.drive_minutes_denver ?? 999) <= 90)
-
-  const candidates = [
-    seasonal.filter(h => (h.drive_minutes_denver ?? 999) <= 90),
-    seasonal,
-    dayTrip,
-    undone,
-  ]
-
-  for (const pool of candidates) {
-    if (pool.length > 0) return pool[0] // already sorted by book_number
+  const month = new Date(logicalToday() + 'T12:00:00').toLocaleString('en-US', { month: 'short' })
+  const hasCoords = (h: Hike): boolean => h.trailhead_lat != null && h.trailhead_lng != null
+  const distOf = (h: Hike): number | null =>
+    coords && hasCoords(h)
+      ? haversineMi(coords, { lat: h.trailhead_lat as number, lon: h.trailhead_lng as number })
+      : null
+  // Reachable today? An unplaced custom hike (no trailhead coords) travels with
+  // you; a located hike must be within range; unknown location → don't filter.
+  const nearby = (h: Hike): boolean => {
+    if (!hasCoords(h)) return true
+    if (!coords) return true
+    return (distOf(h) as number) <= MAX_HIKE_MILES
+  }
+  const seasonal = (h: Hike): boolean => h.best_months?.some(m => m.startsWith(month)) ?? false
+  // Closest first when we can measure; unplaced sink to the end.
+  const byDistance = (a: Hike, b: Hike): number => {
+    const da = distOf(a), db = distOf(b)
+    if (da == null && db == null) return 0
+    if (da == null) return 1
+    if (db == null) return -1
+    return da - db
   }
 
+  const reachable = undone.filter(nearby)
+  // Prefer in-season + reachable, then any reachable. No far-away fallback —
+  // nothing nearby ⇒ null (the hero degrades to its first-undone tap target).
+  const tiers = [reachable.filter(seasonal), reachable]
+  for (const pool of tiers) {
+    if (pool.length > 0) return [...pool].sort(byDistance)[0]
+  }
   return null
 }
 
 export function useFamilyHikes() {
   const { user } = useAuth()
+  const { location } = useLocation()
   const [hikes, setHikes] = useState<Hike[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -112,7 +136,7 @@ export function useFamilyHikes() {
   // Family Hikes is an open, aspirational collection — hikes we've done
   // together, growing over time. No fixed goal to "complete" (no book-50).
   const doneCount = hikes.filter(h => h.done).length
-  const suggested = suggestHike(hikes)
+  const suggested = suggestHike(hikes, { lat: location.lat, lon: location.lon })
 
   return { hikes, doneCount, suggested, isLoading, refetch: fetch, addHike }
 }
