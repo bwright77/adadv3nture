@@ -7,6 +7,9 @@ const db = supabase as any
 
 export type TrainingEventType = 'trail_run' | 'cycling_road' | 'cycling_gravel'
 export type TrainingStatus = 'active' | 'complete' | 'skipped'
+// 'locked' = committed race · 'conditional' = a maybe (logistics-dependent) ·
+// 'aspirational' = someday. Drives prominence on the Training tab.
+export type TrainingCommitment = 'locked' | 'conditional' | 'aspirational'
 
 export interface TrainingGoal {
   id: string
@@ -19,6 +22,7 @@ export interface TrainingGoal {
   elevation_label: string | null
   location: string | null
   is_anchor: boolean
+  commitment: TrainingCommitment
   status: TrainingStatus
   notes: string | null
   image_url: string | null

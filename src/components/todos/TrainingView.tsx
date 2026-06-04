@@ -56,6 +56,7 @@ function EventCard({ goal, onOpen }: { goal: TrainingGoal; onOpen: () => void })
   const days = daysUntil(goal.event_date)
   const color = EVENT_COLOR[goal.event_type] ?? C.rust
   const done = days < 0
+  const conditional = goal.commitment === 'conditional'
 
   return (
     <button
@@ -63,7 +64,8 @@ function EventCard({ goal, onOpen }: { goal: TrainingGoal; onOpen: () => void })
       style={{
         display: 'block', width: '100%', textAlign: 'left',
         position: 'relative', marginBottom: 10,
-        opacity: done ? 0.45 : 1,
+        // A conditional "maybe" sits a step back from the locked races.
+        opacity: done ? 0.45 : conditional ? 0.7 : 1,
         background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', cursor: 'pointer',
       }}
     >
@@ -89,6 +91,12 @@ function EventCard({ goal, onOpen }: { goal: TrainingGoal; onOpen: () => void })
               </span>
               {goal.is_anchor && (
                 <span className="mono" style={{ fontSize: 'var(--fs-10)', color: C.rust, letterSpacing: '0.1em' }}>◆ ANCHOR</span>
+              )}
+              {conditional && (
+                <span className="mono" style={{
+                  fontSize: 'var(--fs-10)', color: C.ink60, letterSpacing: '0.1em',
+                  border: `0.5px dashed ${C.ink40}`, borderRadius: 4, padding: '1px 5px',
+                }}>MAYBE</span>
               )}
             </div>
             <div style={{ fontSize: 'var(--fs-17)', fontWeight: 600, color: C.dark, lineHeight: 1.2, marginBottom: 4 }}>
@@ -232,7 +240,7 @@ function EventDetail({ goal, onClose, onUpdate }: {
         }}>← Back</button>
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div className="mono" style={{ fontSize: 'var(--fs-10)', color: 'rgba(255,255,255,0.75)', letterSpacing: '0.15em', marginBottom: 4 }}>
-            {EVENT_LABEL[goal.event_type]}{goal.is_anchor ? ' · ◆ ANCHOR' : ''}
+            {EVENT_LABEL[goal.event_type]}{goal.is_anchor ? ' · ◆ ANCHOR' : ''}{goal.commitment === 'conditional' ? ' · CONDITIONAL — TBD' : ''}
           </div>
           <div className="badge" style={{ fontSize: 'var(--fs-28)', color: '#fff', lineHeight: 1.1 }}>
             {goal.event_name}

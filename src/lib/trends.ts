@@ -58,17 +58,16 @@ export interface TrendData {
   computedAt: string
 }
 
-const TRAIN_START = new Date('2026-05-08T12:00:00')
-const PEAK_LONG_RUN = 18.6
-const STARTING_LONG_RUN = 6.2
-
-// Peak long-run target is two weeks before the race (taper window).
-function targetLongRunMiles(today: Date, raceDate: Date): number {
-  const peakDate = new Date(raceDate.getTime() - 14 * 86_400_000)
-  const totalMs = peakDate.getTime() - TRAIN_START.getTime()
-  const elapsedMs = Math.max(0, today.getTime() - TRAIN_START.getTime())
-  const progress = Math.min(1, elapsedMs / totalMs)
-  return STARTING_LONG_RUN + (PEAK_LONG_RUN - STARTING_LONG_RUN) * progress
+// The current week's long-run target comes straight from the plan
+// (training_weeks), not an interpolation formula — so readiness scores against
+// what the plan actually prescribes this week. Falls back to 0 (treated as
+// "no target" by the caller) when the week has no row.
+function currentTargetLongRun(today: Date, weeks: { week_start: string; target_long_run_miles: number | null }[]): number {
+  const todayStr = toDateStr(today)
+  const currentWeek = weeks
+    .filter(w => w.week_start <= todayStr)
+    .sort((a, b) => b.week_start.localeCompare(a.week_start))[0]
+  return currentWeek?.target_long_run_miles ?? 0
 }
 
 function formatDelta(delta: number | null, unit = '', decimals = 1): string {
@@ -94,7 +93,7 @@ export async function getTrends(userId: string): Promise<TrendData> {
   const raceAnchor = await getAnchorEvent(userId, 'wlw')
   const raceDate = new Date(raceAnchor.event_date + 'T12:00:00')
 
-  const [metricsRes, activitiesRes, recoveryRes] = await Promise.all([
+  const [metricsRes, activitiesRes, recoveryRes, weeksRes] = await Promise.all([
     supabase
       .from('body_metrics')
       .select('measured_at, weight_lbs, body_fat_pct, muscle_mass_pct')
@@ -115,6 +114,12 @@ export async function getTrends(userId: string): Promise<TrendData> {
       .eq('user_id', userId)
       .gte('signal_date', d14)
       .order('signal_date', { ascending: false }),
+
+    supabase
+      .from('training_weeks')
+      .select('week_start, target_long_run_miles')
+      .eq('user_id', userId)
+      .order('week_start', { ascending: true }),
   ])
 
   const metrics = (metricsRes.data ?? []) as {
@@ -138,6 +143,11 @@ export async function getTrends(userId: string): Promise<TrendData> {
     drinks_consumed: number
     sleep_duration_hours: number | null
     recovery_score: number | null
+  }[]
+
+  const weeks = (weeksRes.data ?? []) as {
+    week_start: string
+    target_long_run_miles: number | null
   }[]
 
   // ── Weight ──────────────────────────────────────────────────
@@ -245,10 +255,11 @@ export async function getTrends(userId: string): Promise<TrendData> {
     ? weeklyMilesArr.reduce((a, b) => a + b, 0) / weeklyMilesArr.length
     : null
 
-  const targetLR = targetLongRunMiles(today, raceDate)
+  const targetLR = currentTargetLongRun(today, weeks)
   const avgRecovery = avg(recovery.map(r => r.recovery_score)) ?? 70
   const volScore = weeklyMilesAvg != null ? Math.min(100, (weeklyMilesAvg / 20) * 100) : 50
-  const lrScore = longestRun != null ? Math.min(100, (longestRun / targetLR) * 100) : 50
+  // No target this week (no plan row) → neutral, same as a missing longest run.
+  const lrScore = longestRun != null && targetLR > 0 ? Math.min(100, (longestRun / targetLR) * 100) : 50
   const consScore = Math.min(100, (wkCurr / 5) * 100)
   const recScore = Math.min(100, avgRecovery)
   const readinessPct = Math.round(volScore * 0.3 + lrScore * 0.3 + consScore * 0.25 + recScore * 0.15)
@@ -266,11 +277,15 @@ export async function getTrends(userId: string): Promise<TrendData> {
     readinessPct >= 40 ? 'EARLY BUILD · TRUST PROCESS' :
     'DAY 1 · FOUNDATION'
 
+  // Peak long run = the biggest target the plan holds across the whole block.
+  const peakLR = weeks.length
+    ? Math.max(...weeks.map(w => w.target_long_run_miles ?? 0))
+    : 0
   const weeksUntil = Math.floor(daysUntil / 7)
   const nextMilestone = racePassed
     ? `The training was the win — the race was the cherry. Set the next goal.`
-    : weeksUntil > 16 ? `need ${Math.ceil(targetLR * 1.2)}mi long run by July 1` :
-    weeksUntil > 8 ? `peak week target: 18mi long run` :
+    : weeksUntil > 16 ? `building toward ${peakLR}mi peak long run` :
+    weeksUntil > 8 ? `peak week target: ${peakLR}mi long run` :
     `taper begins in ${weeksUntil - 2} weeks`
 
   // ── Build report card rows ────────────────────────────────────

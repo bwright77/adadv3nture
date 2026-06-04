@@ -25,7 +25,7 @@ One place where career, family, home, body, and personal projects all live toget
 
 **Goals = three stacked positives:** (1) *setting* the goal is a good in itself; (2) *training toward it* is good in the doing; (3) *completing it* is the cherry — the best part, but a topping on two layers that already stood alone. A miss removes the cherry, not the cake. This splits goals into two kinds treated **oppositely**:
 - **Operational** — real consequences (WA progress; the bike show). The watcher guards these; slipping is real, tell me.
-- **Aspirational** — shared family dreams (50 hikes, a park a month, National Parks). The suggester feeds them; progress shows as **delight, not pace**; the watcher **never nags** them. Letting them breathe is correct use.
+- **Aspirational** — shared family dreams (family hikes, a park a month, National Parks). The suggester feeds them; progress shows as **delight, not pace**; the watcher **never nags** them. Letting them breathe is correct use.
 - The tell: missing it has a *consequence* → operational; just a *someday* → aspirational.
 - **WLW is aspirational wearing operational clothing** — the date/plan are scaffolding for the training; the training still gets nudged, as energy/care, not race-debt.
 
@@ -57,7 +57,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 
 ## What's Live (as of Jun 3, 2026)
 
-**Migrations applied:** 001–046 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
+**Migrations applied:** 001–048 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
 
 | Area | Status |
 |------|--------|
@@ -82,7 +82,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 | Weekend Mode — 4 views (Dawn/Day/Sat Eve/Sun Eve), weekend briefing variant | ✓ |
 | MIT routing fix + Home split — projects never credit Home (only career-tagged → Career; all else → Projects; migration 044 retired the 'home' project category, FJ62→other). FJ62 truck (Elsie) re-homed from ~16 Home todos into the FJ62 project as milestones (migration 045, find-or-create). Home category split across two houses via `todos.home_site` (`birch`=Birch St/Denver primary, `yellow_house`=Yellow House/Howard; migration 046) — context-aware filter chips on the Home tab default to current location (`siteForSlug`), per-row house tag, add-todo defaults to current house. Home stays ONE pilot light | ✓ |
 | Strava streams — `src/lib/strava-streams.ts` pulls per-second HR/pace/altitude streams per activity (migration 043 `activity_streams`), derives HR time-in-zone (Karvonen Z1–5, RHR 63/MHR 191) + aerobic decoupling (speed-per-beat drift, >5% = fading durability for WLW). `enrichRecentStreams()` runs fire-and-forget after a manual Strava sync, capped + throttled (resumes on 429). Data persisted; not yet surfaced in UI | ✓ |
-| Family Hikes tracker (formerly "50 Hikes"; migration 042 renamed `hikes_50`→`family_hikes`, `use50Hikes`→`useFamilyHikes`, `W50Hikes`/`Hikes50View`→`WFamilyHikes`/`FamilyHikesView`) — the book 50 **plus family-added custom hikes** (＋ Add a hike, `is_custom` flag, nullable `book_number`); ring tracks the book-50 goal, customs are bonus; seasonal suggestion, log, expanded list | ✓ |
+| Family Hikes tracker (formerly "50 Hikes"; migration 042 renamed `hikes_50`→`family_hikes`, `use50Hikes`→`useFamilyHikes`, `W50Hikes`/`Hikes50View`→`WFamilyHikes`/`FamilyHikesView`) — an **open, aspirational collection** of hikes done together (no book-50 goal, no completion ring — delight not pace, never nagged). The original 50 + family-added hikes (＋ Add a hike, `is_custom` flag, nullable `book_number`) all live as one flat list; book/custom distinction is no longer surfaced in the UI. Count of hikes done + seasonal suggestion, log, expanded list. The 50 seeded rows remain only as a library of suggestion ideas | ✓ |
 | Withings OAuth + body metrics — connect + sync to body_metrics, weight/body-fat in trends | ✓ |
 | Trends engine — report card rows + weekly_summaries Edge Function + per-row sparklines | ✓ |
 | MIT cadence framework — per-category intervals (career 3 / family 2 / home 5 / projects 5 days, in `briefing_profile.category_cadence_days`); LIT/DARK not % completion | ✓ |
@@ -166,7 +166,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 7. **Strength = Row Bootcamp** (Total Strength retired) — 2×/wk target, 3× stretch. Detection matches `/strength|bootcamp/i`. Strava logs actuals.
 8. **Inbox = zero friction** — FAB always visible, zero categorization at capture.
 9. **Evening is protected** — never colonize it with MITs.
-10. **West Line Winder = anchor event** — Sept 26, Buena Vista (18.6mi / ~4,200ft). Bergen Peak HM (Aug 22) is the key predictor. The 19-week plan is the body goal.
+10. **West Line Winder = anchor event** — Sept 26, Buena Vista (18.1mi / 2,450ft gain; high 8,530 / low 7,930 / avg 8,260). Bergen Peak HM (Aug 22, "Bergen Peak Half Marathon" — 13.1mi / 2,451ft) is the key predictor and a `training_goals` row. The 19-week plan is the body goal. Race events carry a `commitment` (locked/conditional/aspirational); Ride the Hurricane is **conditional** — lower-prominence "MAYBE" in the Training tab, never nagged.
 11. **MIT cadence > completion %** — each category has its own expected interval (career 3 / family 2 / home 5 / projects 5 days). Goal is forward motion, not uniform daily quota. Flag DARK (past interval); never aggregate into a single %.
 12. **Career is weekday-only** — empty Career on Sat/Sun is by design; cadence counts weekday gaps only.
 13. **Bike ✗ if wet recently or forecast-today wet** — not just "currently raining." Running in the rain is fine (runOk is temperature-only).
