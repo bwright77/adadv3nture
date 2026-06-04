@@ -19,16 +19,6 @@ export function logicalDrinkDate(now = new Date()): string {
   return toLocalDateStr(now)
 }
 
-export async function getDrinksForDate(userId: string, date: string): Promise<number> {
-  const { data } = await supabase
-    .from('recovery_signals')
-    .select('drinks_consumed')
-    .eq('user_id', userId)
-    .eq('signal_date', date)
-    .maybeSingle() as { data: { drinks_consumed: number } | null }
-  return data?.drinks_consumed ?? 0
-}
-
 export async function setDrinksForDate(userId: string, date: string, count: number): Promise<void> {
   const { error } = await db
     .from('recovery_signals')

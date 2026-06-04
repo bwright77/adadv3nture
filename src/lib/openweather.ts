@@ -1,4 +1,4 @@
-import { DEFAULT_LOCATION, resolveLocation, type ResolvedLocation } from './locations'
+import { DEFAULT_LOCATION, type ResolvedLocation } from './locations'
 
 const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY as string
 
@@ -216,19 +216,3 @@ export async function getWeather(loc: ResolvedLocation = DEFAULT_LOCATION): Prom
   }
 }
 
-export function getLocationAndWeather(): Promise<WeatherData> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      getWeather().then(resolve).catch(reject)
-      return
-    }
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const loc = resolveLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude })
-        getWeather(loc).then(resolve).catch(reject)
-      },
-      () => getWeather().then(resolve).catch(reject),  // fall back to Denver
-      { timeout: 5000 },
-    )
-  })
-}

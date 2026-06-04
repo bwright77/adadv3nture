@@ -118,10 +118,6 @@ export async function updateReviewRow(
   )
 }
 
-export async function getTodayPlan(userId: string): Promise<DailyPlan | null> {
-  return getPlanForDate(userId, logicalToday())
-}
-
 export async function getPlanForDate(userId: string, date: string): Promise<DailyPlan | null> {
   const { data } = await supabase
     .from('daily_plans')

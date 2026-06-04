@@ -20,13 +20,6 @@ export function daysUntil(dateStr: string): number {
   return Math.round((target.getTime() - todayNoon.getTime()) / MS_PER_DAY)
 }
 
-// Weeks portion of a days remainder. Returns null when days is negative,
-// since "negative weeks" is not a useful display.
-export function weeksFromDays(days: number): number | null {
-  if (days < 0) return null
-  return Math.floor(days / 7)
-}
-
 // Single-line copy for headline countdowns. Handles 0/1/past explicitly.
 export function formatCountdown(days: number): string {
   if (days < 0) return 'passed'

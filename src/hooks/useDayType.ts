@@ -11,10 +11,6 @@ export const WEEKEND_BLOCKS: Record<WeekendBlock, { label: string; sub: string; 
   'weekend-evening-sun': { label: 'SUNDAY',  sub: 'PREP · WEEK AHEAD · RUN CLUB TMR', time: '5PM+'   },
 }
 
-export const WEEKEND_BLOCK_ORDER: WeekendBlock[] = [
-  'weekend-dawn', 'weekend-day', 'weekend-evening-sat', 'weekend-evening-sun',
-]
-
 // 3-item picker: Sat/Sun evening distinction is internal routing, not a user choice
 export const WEEKEND_PICKER_ORDER: WeekendBlock[] = [
   'weekend-dawn', 'weekend-day', 'weekend-evening-sat',

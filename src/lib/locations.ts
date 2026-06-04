@@ -59,10 +59,6 @@ export function siteForSlug(slug: string | null): HomeSite {
   return slug === 'howard' ? 'yellow_house' : 'birch'
 }
 
-export function homeSiteLabel(site: HomeSite): string {
-  return site === 'yellow_house' ? 'Yellow House' : 'Birch St'
-}
-
 export function matchKnownLocation(coords: { lat: number; lon: number }): KnownLocation | null {
   for (const loc of KNOWN_LOCATIONS) {
     if (haversineMi(coords, loc) <= loc.radiusMi) return loc

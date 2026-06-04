@@ -223,10 +223,3 @@ export async function addTrainingWeek(
   return data as TrainingWeek
 }
 
-export async function updateTrainingActuals(
-  id: string,
-  actuals: Partial<Pick<TrainingWeek, 'actual_run_miles' | 'actual_cycling_miles' | 'actual_strength_sessions'>>
-): Promise<void> {
-  const { error } = await db.from('training_weeks').update(actuals).eq('id', id)
-  if (error) throw new Error(error.message)
-}
