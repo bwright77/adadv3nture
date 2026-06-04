@@ -55,7 +55,7 @@ NEXT PRIORITY: Summer band is live + refined (Jun 4). Order: FireBanner → date
 
 ## What's Live (as of Jun 3, 2026)
 
-**Migrations applied:** 001–050 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
+**Migrations applied:** 001–051 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
 
 | Area | Status |
 |------|--------|
@@ -63,7 +63,7 @@ NEXT PRIORITY: Summer band is live + refined (Jun 4). Order: FireBanner → date
 | Widget grid — time-aware (morning/mid/afternoon/evening) | ✓ |
 | Morning briefing (Anthropic claude-sonnet-4-6, Edge Function) | ✓ |
 | Recovery score + tier (go_hard/moderate/recovery) | ✓ |
-| Strength template — Row Bootcamp (2×/wk target, 3× stretch); Total Strength retired but history kept | ✓ |
+| Strength = part of the training schedule — **program-tracker removed entirely** (no Total Strength, no `program_tracker` UI/program cards). Strength is the week's `strength_prescription` ("2× Row Bootcamp", 2×/wk target / 3× stretch) + Strava-logged actuals; no per-day W#D# program. | ✓ |
 | Inbox — FAB capture + swipe triage (left=delete, right=MIT) | ✓ |
 | Todo lists — career/family/home, urgency fire/deck/rain | ✓ |
 | Persistent reminders | ✓ |
@@ -161,7 +161,7 @@ NEXT PRIORITY: Summer band is live + refined (Jun 4). Order: FireBanner → date
 4. **Labor Day Sept 1 2026** — career block non-negotiable. Show countdown. This is the [CAREER] anchor — never conflate with weight or training.
 5. **Run Club sacred** — Monday evenings, Wash Park. Never override.
 6. **4pm is the critical hour** — weather-appropriate project slot.
-7. **Strength = Row Bootcamp** (Total Strength retired) — 2×/wk target, 3× stretch. Detection matches `/strength|bootcamp/i`. Strava logs actuals.
+7. **Strength = Row Bootcamp, part of the weekly schedule** (program-tracker removed; no programs). It's the week's `strength_prescription` (2×/wk target, 3× stretch), detection `/strength|bootcamp/i`, Strava logs actuals. The plan is **prospective** — the briefing/export surface "sessions left to get in this week" (targets − logged), never "do X today" or a day-by-day schedule.
 8. **Inbox = zero friction** — FAB always visible, zero categorization at capture.
 9. **Evening is protected** — never colonize it with MITs.
 10. **West Line Winder = anchor event** — Sept 26, Buena Vista (18.1mi / 2,450ft gain; high 8,530 / low 7,930 / avg 8,260). Bergen Peak HM (Aug 22, "Bergen Peak Half Marathon" — 13.1mi / 2,451ft) is the key predictor and a `training_goals` row. The 19-week plan is the body goal. Race events carry a `commitment` (locked/conditional/aspirational); Ride the Hurricane is **conditional** — lower-prominence "MAYBE" in the Training tab, never nagged.
