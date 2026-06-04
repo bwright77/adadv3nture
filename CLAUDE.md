@@ -57,7 +57,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 
 ## What's Live (as of Jun 3, 2026)
 
-**Migrations applied:** 001–048 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
+**Migrations applied:** 001–049 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
 
 | Area | Status |
 |------|--------|
@@ -116,7 +116,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 | FIBArk 10K tune-up — Jun 21 trail race (migration 038); race-pace targets (`src/lib/raceTargets.ts`) surface a pace-breakdown card on EventDetail (FIBArk / Bergen / WLW) | ✓ |
 | Week character taxonomy — `src/lib/weekCharacter.ts` computes Build / Recovery / Race / Taper from phase + key_marker + race-in-week; UI leads with "PHASE · character", week numbers demoted to metadata (hero, week rows, briefing header) | ✓ |
 | Thursday outdoor-quality rotation — `src/lib/thursdayRotation.ts` 4-week cycle (cruise → strides → tempo → race-pace intervals), pointer derived from completed Thursday runs, phase-gated to BASE/BUILD, race/recovery/taper overrides; Peloton class recs + Strava-sync warning on the Training tab card + WTomorrow | ✓ |
-| Summer Mode v1 (migrations 039–041; auto-active Jun 2–Aug 26) — re-weights the dashboard: a summer band above the time grid with FireBanner (fire todos interrupt any day) + Adventure-of-the-Day hero (`adventures` catalog seeded from weekend_spots/hikes_50; place/weather-aware suggester in `src/lib/adventures.ts`) + WA week-ring (`getWAWeekProgress`, career_done-derived) + season heat-map. Week-type Solo/Camp/Weekend (`users.summer_week_type`, toggle in the hero) re-weights the band + the briefing voice (summer-solo/camp/weekend, server-derived). Adventure is delight-only (got-out dot + weekly real-adventure star, no nag); pilot lights stay visible. Relief gradient on `src/lib/locations.ts` (Howard=grandparents, Greeley/Evans=in-laws, Denver=home, camp=free) | ✓ |
+| Summer Mode v1 (migrations 039–041; auto-active Jun 2–Aug 26) — re-weights the dashboard: a summer band above the time grid with FireBanner (fire todos interrupt any day) + Adventure-of-the-Day hero (`adventures` catalog seeded from weekend_spots/hikes_50; place/weather-aware suggester in `src/lib/adventures.ts`) + WA week-progress (`getWAWeekProgress`, career_done-derived; vivid river-blue fill bar, not dots) + **Summer Snapshots** (`SummerSnapshots.tsx` — add 2-3 photos/week; uploads into `inspiration_photos` so they resurface as "on this day" memories; replaced the season heat-map, which was removed as unhelpful). Cards carry distinct accents (fire=rust, adventure=sand, WA=river-blue, snapshots=teal) to break the monotone. Week-type Solo/Camp/Weekend (`users.summer_week_type`, toggle in the hero) re-weights the band + the briefing voice (summer-solo/camp/weekend, server-derived). Adventure is delight-only (got-out dot + weekly real-adventure star, no nag); pilot lights stay visible. Relief gradient on `src/lib/locations.ts` (Howard=grandparents, Greeley/Evans=in-laws, Denver=home, camp=free) | ✓ |
 
 ---
 

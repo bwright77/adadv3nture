@@ -16,7 +16,7 @@ import { WeekendSundayEveningView } from './components/dashboard/WeekendSundayEv
 import { FireBanner } from './components/dashboard/FireBanner'
 import { AdventureHero } from './components/dashboard/AdventureHero'
 import { WWAWeek } from './components/dashboard/WWAWeek'
-import { SeasonHeatmap } from './components/dashboard/SeasonHeatmap'
+import { SummerSnapshots } from './components/dashboard/SummerSnapshots'
 import { isSummerDate } from './hooks/useSummerMode'
 import { useWeekType } from './hooks/useWeekType'
 import { logicalToday } from './lib/utils'
@@ -169,7 +169,7 @@ function Dashboard() {
             <FireBanner onOpen={openFireTodo} />
             <AdventureHero weekType={weekType} setWeekType={setWeekType} onExitSummer={() => setSummerOverride(false)} />
             {weekType !== 'weekend' && <WWAWeek dark />}
-            {weekType !== 'camp' && <SeasonHeatmap dark />}
+            {weekType !== 'camp' && <SummerSnapshots dark />}
           </div>
         )}
 

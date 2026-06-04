@@ -34,7 +34,8 @@
       "Bash(python3 -c \"import sys,json; r=json.load\\(sys.stdin\\); print\\('deleted', len\\(r\\), 'row\\(s\\)'\\)\")",
       "Bash(python3 -c ' *)",
       "Bash(curl -sL -A 'Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0 Safari/537.36' https://www.alltrails.com/trail/us/colorado/horsetooth-falls--4 -o at.html -w 'HTTP %{http_code}, %{size_download} bytes\\\\n' --max-time 25)",
-      "Bash(node /tmp/backfill_hike_coords.mjs)"
+      "Bash(node /tmp/backfill_hike_coords.mjs)",
+      "Bash(awk '/inspiration_photos/{f=NR} END{print f}' supabase/migrations/001_initial_schema.sql)"
     ],
     "additionalDirectories": [
       "/Users/benjaminwright/.claude",

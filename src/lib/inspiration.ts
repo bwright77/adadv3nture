@@ -113,6 +113,79 @@ export async function getPhotosAroundDate(userId: string, windowDays = 4): Promi
     .map(toPhoto)
 }
 
+// ── Summer snapshots ────────────────────────────────────────────────────────
+// Photos added through the season. They write straight into inspiration_photos,
+// so today's summer snapshot becomes tomorrow's "on this day" memory.
+
+// Photos taken on/after a date (this summer), newest first. Unlike the surfacing
+// queries above this includes today — these are fresh memories, not throwbacks.
+export async function getPhotosSince(userId: string, startDate: string): Promise<InspirationPhoto[]> {
+  const { data } = await supabase
+    .from('inspiration_photos')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('taken_at', startDate)
+    .order('taken_at', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(60) as { data: Parameters<typeof toPhoto>[0][] | null }
+  return (data ?? []).map(toPhoto)
+}
+
+// Downscale to a fast-loading thumbnail (phone photos are multi-MB). Best-effort
+// — a failure just means we fall back to the original for display.
+async function makeThumbnail(file: File, maxPx = 480): Promise<Blob | null> {
+  try {
+    const bitmap = await createImageBitmap(file)
+    const scale = Math.min(1, maxPx / Math.max(bitmap.width, bitmap.height))
+    const w = Math.round(bitmap.width * scale)
+    const h = Math.round(bitmap.height * scale)
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.drawImage(bitmap, 0, 0, w, h)
+    return await new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.8))
+  } catch {
+    return null
+  }
+}
+
+// Upload one photo into the inspiration library. Stores a downscaled thumbnail
+// alongside the original so the snapshot strip stays snappy.
+export async function addInspirationPhoto(
+  userId: string,
+  file: File,
+  opts: { takenAt: string; caption?: string | null; location?: string | null; activityType?: string | null },
+): Promise<void> {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+  const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const path = `${userId}/${stamp}.${ext}`
+
+  const up = await supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type || 'image/jpeg' })
+  if (up.error) throw new Error(up.error.message)
+
+  let thumbPath: string | null = null
+  const thumb = await makeThumbnail(file)
+  if (thumb) {
+    const tPath = `${userId}/${stamp}-thumb.jpg`
+    const tUp = await supabase.storage.from(BUCKET).upload(tPath, thumb, { contentType: 'image/jpeg' })
+    if (!tUp.error) thumbPath = tPath
+  }
+
+  const { error } = await db.from('inspiration_photos').insert({
+    user_id: userId,
+    storage_path: path,
+    thumbnail_path: thumbPath,
+    taken_at: opts.takenAt,
+    caption: opts.caption ?? null,
+    location: opts.location ?? null,
+    activity_type: opts.activityType ?? null,
+    original_filename: file.name,
+  })
+  if (error) throw new Error(error.message)
+}
+
 export async function getDailyInspiration(userId: string): Promise<InspirationPhoto | null> {
   const today = new Date()
   const month = today.getMonth() + 1

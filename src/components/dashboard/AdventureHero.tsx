@@ -49,7 +49,7 @@ export function AdventureHero({ weekType, setWeekType, onExitSummer, dark = true
       <Glass dark={dark} span={12} pad={headline ? 18 : 14}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div style={{ minWidth: 0 }}>
-            <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.16em', color: C.rust, marginBottom: headline ? 6 : 3 }}>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', letterSpacing: '0.16em', color: C.sand, marginBottom: headline ? 6 : 3 }}>
               ☀ SUMMER · {weekType.toUpperCase()}{reliefWord ? ` · ${reliefWord}` : ''}
             </div>
 

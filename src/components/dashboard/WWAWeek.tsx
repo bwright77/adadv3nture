@@ -33,36 +33,42 @@ export function WWAWeek({ dark }: Props) {
 
   const done = wa?.done ?? 0
   const target = wa?.target ?? 5
+  const pct = Math.min(1, done / target) * 100
+  // Wright Adventures brand blues — sets this card apart from the warm cards.
+  const RIVER = '#009DD6'
 
   return (
     <Glass dark={dark} span={12} pad={14}>
-      <CardLabel dark={dark}>Wright Adventures · this week</CardLabel>
+      <CardLabel dark={dark} accent={RIVER}>Wright Adventures · this week</CardLabel>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
         {/* WA week progress — a single bar that fills with the week's momentum,
             with faint ticks marking the 5× target. Reads as progress, not as
             empty/dead slots. */}
         <div style={{ flex: 1, minWidth: 0, maxWidth: 220 }}>
           <div style={{
-            position: 'relative', height: 10, borderRadius: 5,
-            background: dark ? 'rgba(245,237,214,0.14)' : 'rgba(26,18,8,0.08)',
+            position: 'relative', height: 12, borderRadius: 6,
+            background: dark ? 'rgba(245,237,214,0.16)' : 'rgba(26,18,8,0.08)',
             overflow: 'hidden', marginBottom: 6,
           }}>
-            {/* Filled momentum */}
-            <div style={{
-              position: 'absolute', inset: 0, width: `${Math.min(1, done / target) * 100}%`,
-              background: `linear-gradient(90deg, ${C.rust}, ${C.rust}cc)`,
-              borderRadius: 5, transition: 'width 0.4s ease',
-            }} />
+            {/* Filled momentum — vivid river-blue with a soft glow so progress reads at a glance */}
+            {pct > 0 && (
+              <div style={{
+                position: 'absolute', top: 0, bottom: 0, left: 0, width: `${pct}%`,
+                background: `linear-gradient(90deg, ${RIVER}, #4FC3E8)`,
+                borderRadius: 6, transition: 'width 0.4s ease',
+                boxShadow: `0 0 10px ${RIVER}aa`,
+              }} />
+            )}
             {/* Target ticks */}
             {Array.from({ length: target - 1 }).map((_, i) => (
               <span key={i} style={{
                 position: 'absolute', top: 0, bottom: 0, left: `${((i + 1) / target) * 100}%`,
-                width: 1, background: dark ? 'rgba(26,18,8,0.35)' : 'rgba(255,255,255,0.7)',
+                width: 1, background: dark ? 'rgba(245,237,214,0.25)' : 'rgba(255,255,255,0.7)',
               }} />
             ))}
           </div>
           <div className="mono" style={{ fontSize: 'var(--fs-11)', color: dark ? 'rgba(245,237,214,0.6)' : C.ink60 }}>
-            {done} of {target} this week · {done >= target ? 'lit' : 'keep moving'}
+            <span style={{ color: RIVER, fontWeight: 700 }}>{done} of {target}</span> this week · {done >= target ? 'lit' : 'keep moving'}
           </div>
         </div>
 
