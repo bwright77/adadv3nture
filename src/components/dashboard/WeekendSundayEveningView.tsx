@@ -17,24 +17,27 @@ interface Props {
   isOverride: boolean
   onSetWeekendBlock: (wb: WeekendBlock | null) => void
   onOpenListTab?: (tab: ListTab) => void
+  hideHeader?: boolean
 }
 
 // Sunday evening shifts back toward weekday prep.
 // WWeekAhead widget added here in a future batch.
-export function WeekendSundayEveningView({ weekendBlock, isOverride, onSetWeekendBlock, onOpenListTab }: Props) {
+export function WeekendSundayEveningView({ weekendBlock, isOverride, onSetWeekendBlock, onOpenListTab, hideHeader }: Props) {
   const dummyTod: TimeOfDay = 'evening'
 
   return (
     <>
-      <Header
-        activeTod={dummyTod}
-        isOverride={false}
-        onSetOverride={() => null}
-        weekendBlock={weekendBlock}
-        isWeekendOverride={isOverride}
-        onSetWeekendBlock={onSetWeekendBlock}
-        dark
-      />
+      {!hideHeader && (
+        <Header
+          activeTod={dummyTod}
+          isOverride={false}
+          onSetOverride={() => null}
+          weekendBlock={weekendBlock}
+          isWeekendOverride={isOverride}
+          onSetWeekendBlock={onSetWeekendBlock}
+          dark
+        />
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, padding: '0 14px 100px' }}>
         <WWeekAhead dark />
         <WReview dark hideCareer />

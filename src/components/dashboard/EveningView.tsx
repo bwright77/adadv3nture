@@ -15,12 +15,13 @@ interface EveningViewProps {
   isOverride: boolean
   onSetOverride: (tod: TimeOfDay | null) => void
   onOpenListTab?: (tab: ListTab) => void
+  hideHeader?: boolean
 }
 
-export function EveningView({ activeTod, isOverride, onSetOverride, onOpenListTab }: EveningViewProps) {
+export function EveningView({ activeTod, isOverride, onSetOverride, onOpenListTab, hideHeader }: EveningViewProps) {
   return (
     <>
-      <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
+      {!hideHeader && <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />}
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
         gap: 10, padding: '0 14px 100px',

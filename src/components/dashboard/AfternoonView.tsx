@@ -13,12 +13,13 @@ interface AfternoonViewProps {
   activeTod: TimeOfDay
   isOverride: boolean
   onSetOverride: (tod: TimeOfDay | null) => void
+  hideHeader?: boolean
 }
 
-export function AfternoonView({ activeTod, isOverride, onSetOverride }: AfternoonViewProps) {
+export function AfternoonView({ activeTod, isOverride, onSetOverride, hideHeader }: AfternoonViewProps) {
   return (
     <>
-      <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
+      {!hideHeader && <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />}
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
         gap: 10, padding: '0 14px 100px',

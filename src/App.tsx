@@ -17,6 +17,7 @@ import { FireBanner } from './components/dashboard/FireBanner'
 import { AdventureHero } from './components/dashboard/AdventureHero'
 import { WWAWeek } from './components/dashboard/WWAWeek'
 import { SummerSnapshots } from './components/dashboard/SummerSnapshots'
+import { Header } from './components/ui/Header'
 import { isSummerDate } from './hooks/useSummerMode'
 import { useWeekType } from './hooks/useWeekType'
 import { logicalToday } from './lib/utils'
@@ -166,24 +167,32 @@ function Dashboard() {
             solo = full, camp = lean + WA focus, weekend = delight, no career. */}
         {tab === 'home' && summerMode && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, padding: '0 14px 10px' }}>
+            {/* Fire interrupt at the very top, then the date, then the summer
+                widgets — the view below renders without its own header (hideHeader). */}
             <FireBanner onOpen={openFireTodo} />
+            <div style={{ gridColumn: 'span 12' }}>
+              {dayType === 'weekend'
+                ? <Header activeTod={tod} isOverride={false} onSetOverride={setTodOverride} weekendBlock={wb} isWeekendOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} dark />
+                : <Header activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} dark />}
+            </div>
             <AdventureHero weekType={weekType} setWeekType={setWeekType} onExitSummer={() => setSummerOverride(false)} />
             {weekType !== 'weekend' && <WWAWeek dark />}
             {weekType !== 'camp' && <SummerSnapshots dark />}
           </div>
         )}
 
-        {/* Weekday views */}
-        {tab === 'home' && dayType === 'weekday' && tod === 'morning'     && <MorningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
-        {tab === 'home' && dayType === 'weekday' && tod === 'mid-morning' && <MidMorningView  activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenCareer={openCareer} onOpenInbox={openInbox} />}
-        {tab === 'home' && dayType === 'weekday' && tod === 'afternoon'   && <AfternoonView   activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} />}
-        {tab === 'home' && dayType === 'weekday' && tod === 'evening'     && <EveningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenListTab={openListTab} />}
+        {/* Weekday views — header is hoisted into the summer band, so hide the
+            view's own header on summer days to avoid a double date. */}
+        {tab === 'home' && dayType === 'weekday' && tod === 'morning'     && <MorningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} hideHeader={summerMode} />}
+        {tab === 'home' && dayType === 'weekday' && tod === 'mid-morning' && <MidMorningView  activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenCareer={openCareer} onOpenInbox={openInbox} hideHeader={summerMode} />}
+        {tab === 'home' && dayType === 'weekday' && tod === 'afternoon'   && <AfternoonView   activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} hideHeader={summerMode} />}
+        {tab === 'home' && dayType === 'weekday' && tod === 'evening'     && <EveningView     activeTod={tod} isOverride={todOverride !== null} onSetOverride={setTodOverride} onOpenListTab={openListTab} hideHeader={summerMode} />}
 
         {/* Weekend views */}
-        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-dawn'        && <WeekendDawnView        weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} />}
-        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-day'         && <WeekendDayView         weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenInbox={openInbox} />}
-        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sat' && <WeekendEveningView     weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
-        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sun' && <WeekendSundayEveningView weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} />}
+        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-dawn'        && <WeekendDawnView        weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} hideHeader={summerMode} />}
+        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-day'         && <WeekendDayView         weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenInbox={openInbox} hideHeader={summerMode} />}
+        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sat' && <WeekendEveningView     weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} hideHeader={summerMode} />}
+        {tab === 'home' && dayType === 'weekend' && wb === 'weekend-evening-sun' && <WeekendSundayEveningView weekendBlock={wb} isOverride={wbOverride !== null} onSetWeekendBlock={setWbOverride} onOpenListTab={openListTab} hideHeader={summerMode} />}
 
         {tab === 'trends' && <TrendsPage bgPhoto={bgPhoto || undefined} version={dataVersion} onOpenTrainingEvent={openTrainingEvent} onOpenTrainingPlan={() => openListTab('training')} />}
         {tab === 'lists'  && <TodosPage  bgPhoto={bgPhoto || undefined} initialTab={listsInitialTab} initialTrainingEvent={initialTrainingEventId} />}

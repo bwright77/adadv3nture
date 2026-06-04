@@ -28,6 +28,7 @@ interface Props {
   weekendBlock: WeekendBlock
   isOverride: boolean
   onSetWeekendBlock: (wb: WeekendBlock | null) => void
+  hideHeader?: boolean
 }
 
 interface BriefingData {
@@ -72,7 +73,7 @@ function LockStrip({ userId }: { userId: string | undefined }) {
   )
 }
 
-export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }: Props) {
+export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock, hideHeader }: Props) {
   const { user } = useAuth()
   const { location, loading: locationLoading } = useLocation()
   const [briefingData, setBriefingData] = useState<BriefingData | null>(null)
@@ -120,15 +121,17 @@ export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock }:
 
   return (
     <>
-      <Header
-        activeTod={dummyTod}
-        isOverride={false}
-        onSetOverride={() => null}
-        weekendBlock={weekendBlock}
-        isWeekendOverride={isOverride}
-        onSetWeekendBlock={onSetWeekendBlock}
-        dark
-      />
+      {!hideHeader && (
+        <Header
+          activeTod={dummyTod}
+          isOverride={false}
+          onSetOverride={() => null}
+          weekendBlock={weekendBlock}
+          isWeekendOverride={isOverride}
+          onSetWeekendBlock={onSetWeekendBlock}
+          dark
+        />
+      )}
       <LockStrip userId={user?.id} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 10, padding: '0 14px 100px' }}>
         {yesterdayOpen && (

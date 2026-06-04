@@ -35,7 +35,12 @@
       "Bash(python3 -c ' *)",
       "Bash(curl -sL -A 'Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0 Safari/537.36' https://www.alltrails.com/trail/us/colorado/horsetooth-falls--4 -o at.html -w 'HTTP %{http_code}, %{size_download} bytes\\\\n' --max-time 25)",
       "Bash(node /tmp/backfill_hike_coords.mjs)",
-      "Bash(awk '/inspiration_photos/{f=NR} END{print f}' supabase/migrations/001_initial_schema.sql)"
+      "Bash(awk '/inspiration_photos/{f=NR} END{print f}' supabase/migrations/001_initial_schema.sql)",
+      "Bash(sed -n '26,40p' src/components/dashboard/WeekendEveningView.tsx)",
+      "Bash(sed -n '182,187p' src/App.tsx)",
+      "Bash(sed -n '123,132p' src/components/dashboard/WeekendDawnView.tsx)",
+      "Bash(sed -n '27,37p' src/components/dashboard/WeekendDayView.tsx)",
+      "Bash(sed -n '29,38p' src/components/dashboard/WeekendSundayEveningView.tsx)"
     ],
     "additionalDirectories": [
       "/Users/benjaminwright/.claude",

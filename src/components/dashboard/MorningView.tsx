@@ -27,6 +27,7 @@ interface MorningViewProps {
   activeTod: TimeOfDay
   isOverride: boolean
   onSetOverride: (tod: TimeOfDay | null) => void
+  hideHeader?: boolean
 }
 
 interface BriefingData {
@@ -75,7 +76,7 @@ function LockStrip({ userId }: { userId: string | undefined }) {
   )
 }
 
-export function MorningView({ activeTod, isOverride, onSetOverride }: MorningViewProps) {
+export function MorningView({ activeTod, isOverride, onSetOverride, hideHeader }: MorningViewProps) {
   const { user } = useAuth()
   const { location, loading: locationLoading } = useLocation()
   const [briefingData, setBriefingData] = useState<BriefingData | null>(null)
@@ -123,7 +124,7 @@ export function MorningView({ activeTod, isOverride, onSetOverride }: MorningVie
 
   return (
     <>
-      <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
+      {!hideHeader && <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />}
       <LockStrip userId={user?.id} />
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',

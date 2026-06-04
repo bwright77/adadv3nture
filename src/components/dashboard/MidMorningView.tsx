@@ -15,12 +15,13 @@ interface MidMorningViewProps {
   onSetOverride: (tod: TimeOfDay | null) => void
   onOpenCareer?: () => void
   onOpenInbox?: () => void
+  hideHeader?: boolean
 }
 
-export function MidMorningView({ activeTod, isOverride, onSetOverride, onOpenCareer, onOpenInbox }: MidMorningViewProps) {
+export function MidMorningView({ activeTod, isOverride, onSetOverride, onOpenCareer, onOpenInbox, hideHeader }: MidMorningViewProps) {
   return (
     <>
-      <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />
+      {!hideHeader && <Header activeTod={activeTod} isOverride={isOverride} onSetOverride={onSetOverride} dark />}
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
         gap: 10, padding: '0 14px 100px',
