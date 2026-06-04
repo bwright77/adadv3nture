@@ -36,7 +36,7 @@ Fully separate widget composition for Saturday and Sunday — same Glass card sy
 Weekend morning briefing uses a distinct system prompt — "What's the move today?" instead of MIT neglect-scoring. Pulls live Denver weather server-side.
 
 ### Summer Mode
-A seasonal re-weighting of the dashboard (auto-active Jun 2–Aug 26). It promotes the *suggester* and narrows the *watcher*: an **Adventure of the Day** hero rides above the time grid — "what adventure are we doing today?!" — backed by a catalog generalized from the 50 Hikes / weekend spots data, suggesting by place + weather. A **week-type toggle** (Solo / Camp / Weekend, set in the hero, persisted server-side) re-weights the band and the briefing voice. The summer watcher only lets three things interrupt: **fire** todos (a banner), **Wright Adventures** progress (a 5×/week ring), and **training** (as energy, not debt). Family/Home stay tracked-but-visible, never nagged. Getting out at all is the win — logged outings light a **season heat-map** (a memory artifact, not a streak; a missed week is just an unlit cell). A "normal day ›" link drops back to the standard dashboard.
+A seasonal re-weighting of the dashboard (auto-active Jun 2–Aug 26). It promotes the *suggester* and narrows the *watcher*. The band reads top-to-bottom: **fire** todos (a banner), then the date, then an **Adventure of the Day** hero — "what adventure are we doing today?!" — backed by a catalog generalized from the family-hikes / weekend-spots data and suggested by *reachable* place + weather. **Week-type** (Solo / Camp / Weekend) re-weights the band and the briefing voice; **camp is schedule-driven** (the real camp weeks are encoded), with the hero toggle for Solo/Weekend. The summer watcher only lets three things interrupt: fire todos, **Wright Adventures** progress (a filling progress bar toward 5×/week), and **training** (as energy, not debt). Family/Home stay tracked-but-visible, never nagged. Getting out at all is the win — **Summer Snapshots** lets you drop a couple photos a week that flow into the inspiration library (delight, not a tracker). A "normal day ›" link drops back to the standard dashboard.
 
 ### Widget Grid
 iOS-style widget grid built from composable Glass cards:
@@ -44,7 +44,7 @@ iOS-style widget grid built from composable Glass cards:
 | Widget | What it shows |
 |--------|--------------|
 | Morning Hero | Recovery gauge + workout prescription + AI briefing |
-| Workout | Today's program session (Total Strength W1D1, etc.) |
+| Workout | Today's program session (Row Bootcamp, etc.) |
 | Thinking Prompt | One question to chew on during the workout |
 | Recovery | Score + tier (Go Hard / Moderate / Recovery) |
 | Steps | Yesterday's step count + 7-day sparkline + reflective subtitle (`↑1.4k vs 7d avg`) |
@@ -65,7 +65,7 @@ iOS-style widget grid built from composable Glass cards:
 | Family Day | Chase / Ada / Sylvia cards + age-appropriate spot suggestions |
 | Project Session | Lowest-progress project + next milestone + hours before dinner |
 | Week Ahead | Monday calendar, Run Club reminder, training targets |
-| Family Hikes | Progress tracker (book 50 + custom) + seasonal suggestion + log completions |
+| Family Hikes | Open collection of hikes done together + geo-aware suggestion + log completions |
 
 ### Morning Briefing
 AI-generated daily briefing via Anthropic claude-sonnet-4-6 (server-side Edge Function only). Personal narrative ("About Ben") lives in `users.briefing_profile` JSONB — editable from a card on the Log page — so identity, current focus, health context, goals, and tone notes change without touching code. Anchor dates and family ages are pulled per request from `anchor_events` and `family_members`; the function pre-computes "days away" and injects them so the model never has to do date math. Weekday: recovery signals, mood, portfolio review, pilot light staleness — ends with one specific next action. Weekend: "What's the move?" voice — weather, family, recovery, no career urgency.
@@ -89,7 +89,7 @@ Event cards for target races (FOCO Fondo, Ride the Hurricane, West Line Winder 3
 Active projects with milestones, progress percentage, next action, and update log. Weekend surfaces the lowest-progress active project for deep session work.
 
 ### Family Hikes
-Started as *50 Hikes with Kids: Colorado* (Gorton & Tillack) — a forward-looking list to work through — and now holds **any family hike**, not just the book's 50. Surfaces a seasonal suggestion each weekend morning (prioritizes current-month hikes within 90 minutes of Denver), and **＋ Add a hike** records ones that aren't in the book (as a "want to do" for inspiration, or logged as already done). The progress ring still tracks the original 50; custom hikes are bonus. Tap to log completion with a family star rating.
+Started as *50 Hikes with Kids: Colorado* (Gorton & Tillack) and is now an **open, aspirational collection** of hikes done together — no book-50 goal, no completion ring (delight, not pace). Surfaces a **geo-aware suggestion** (undone hikes within ~90 miles of where you actually are, closest-first, in-season preferred — so it works near Howard, not just Denver), and **＋ Add a hike** records ones you want to do or have done, with an AllTrails link + an area that's geocoded to place it on the map. Tap to log completion with a family star rating. The original 50 live on as a library of ideas.
 
 ### Inspiration Widget
 Adventure photos from Supabase Storage surfaced by date proximity — "5 years ago today." Tap to expand into full-screen swipe gallery. Reminds you who you are when "why bother" creeps in.
@@ -101,7 +101,7 @@ A newspaper-style report card per metric (Weight, Body fat %, Miles run, Workout
 Geolocation snaps to a known place from a small `KNOWN_LOCATIONS` list (Denver, Howard) and labels propagate everywhere — weather widget, lock strip, morning hero stamp, trends masthead. Outside the radii, the label falls back to "Current location" rather than asserting somewhere wrong. HR-zone baselines stay calibrated for Denver elevation even when the rest of the UI shows Howard. Server-side: `useLocation()` persists the resolved place to `users.last_known_location` so the Apple Health webhook chain can pass real coords to the briefing without a client roundtrip.
 
 ### Smart Trainer
-This week's training targets (run, long run, cycling, strength) auto-derive from `training_goals`. Each upcoming event contributes a linear ramp from 30% of distance at the start of a 12-week build to 100% at peak (2 weeks before race), then a 2-week taper. Same-discipline events take the MAX of long workout and total miles; run + cycling targets stay independent. Strength comes from the active `program_tracker` schedule (3× in W1-2 of Total Strength, 4× in W3-4). A discreet "Override this week" link still lets you author a manual `training_weeks` row when life demands it; the override wins.
+This week's training targets (run, long run, cycling, strength) auto-derive from `training_goals`. Each upcoming event contributes a linear ramp from 30% of distance at the start of a 12-week build to 100% at peak (2 weeks before race), then a 2-week taper. Same-discipline events take the MAX of long workout and total miles; run + cycling targets stay independent. Strength comes from the active `program_tracker` schedule (Row Bootcamp, 2×/wk target with a 3× stretch). A discreet "Override this week" link still lets you author a manual `training_weeks` row when life demands it; the override wins.
 
 ### Briefing Dispatch (Web Push)
 When the iOS Health Auto Export Shortcut fires on wake-up, the webhook upserts `recovery_signals`, then chains the `morning-briefing` Edge Function with `force_regenerate: true` so any earlier-this-morning briefing gets overwritten with one that sees the just-landed RHR / sleep / HRV / mood. Subscribers in `push_subscriptions` get a VAPID-signed Web Push with the briefing's first sentence as the body. Tap the lock-screen notification → opens the PWA with the briefing already cached. Sleep is clamped (>12h or <30m → null) to keep a misbehaving Shortcut from poisoning the briefing data.
@@ -159,7 +159,7 @@ Log page ◆ EXPORT card downloads a Markdown brief of everything (identity, anc
 - `training_goals` + `training_weeks` — event targets and weekly actuals
 - `projects` + `project_milestones` — active projects
 - `oauth_tokens` — Strava, Withings, Google OAuth tokens
-- `family_hikes` — Family Hikes tracker (book 50 + family-added custom hikes; done, rating, notes per hike)
+- `family_hikes` — Family Hikes collection (the original 50 as idea-library + family-added hikes; done, rating, notes, trailhead coords per hike)
 - `weekend_plans` — one-row-per-day adventure planning
 - `weekend_spots` — curated family/adventure destinations
 - `family_members` — Ben/Tangier + 3 kids (birthdays, role, emoji, vibe) — source of truth for kid ages

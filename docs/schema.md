@@ -1,6 +1,8 @@
 # Database Schema
 
-**Migrations applied:** 001–029 (run `npx supabase db push` to apply new ones — no Docker needed)
+**Migrations applied:** 001–050 (run `npx supabase db push` to apply new ones — no Docker needed)
+
+> **Note** — the table definitions below were authored through migration 029. Tables/columns added since (030–050) are summarized in [Added since 029](#added-since-029) at the bottom rather than inlined; the live schema is the source of truth.
 
 > **RLS note** — migration 029 plugs an RLS hole on `projects`,
 > `project_milestones`, `project_updates`, `training_goals`, and
@@ -126,11 +128,15 @@ create table program_tracker (
   created_at timestamptz default now()
 );
 
--- HIKES (50 Hikes with Kids: Colorado — Gorton & Tillack)
-create table hikes_50 (
+-- FAMILY HIKES (was hikes_50; renamed in migration 042). Seeded from
+-- 50 Hikes with Kids: Colorado (Gorton & Tillack) — those rows are now just an
+-- idea library, not a goal. is_custom = a family-added hike; book_number is
+-- nullable for customs. No completion-goal UI (open collection).
+create table family_hikes (
   id                   uuid primary key default gen_random_uuid(),
   user_id              uuid references users(id) on delete cascade,
-  book_number          integer not null,
+  book_number          integer,              -- null for family-added (custom) hikes
+  is_custom            boolean default false,
   name                 text not null,
   region               text,
   hub                  text,
@@ -149,7 +155,7 @@ create table hikes_50 (
   family_rating        integer check (family_rating between 1 and 5),
   notes                text,
   created_at           timestamptz default now(),
-  unique(user_id, book_number)
+  unique(user_id, book_number)   -- customs share NULL book_number (NULLs distinct in PG)
 );
 
 -- WEEKEND PLANS (one row per day — manual entry via WAdventureToday / PlanDaySheet)
@@ -498,3 +504,25 @@ create table push_subscriptions (
 );
 create index push_subscriptions_user_idx on push_subscriptions(user_id);
 ```
+
+---
+
+## Added since 029
+
+Summary of schema added in migrations 030–050 (see the migration files for full DDL):
+
+- **030–031** — `activities` / `body_metrics` duplicate cleanup + one-row-per-weigh-in collapse.
+- **032–033** — `body_metrics` cardio columns (visceral fat, vascular age, pulse-wave velocity, BMR); `visceral_fat` made numeric.
+- **034** — `training_weeks` plan metadata (`phase_id`, `focus`, `key_marker`).
+- **035** — `training_goals.event_start_time`.
+- **036–037** — `training_weeks.quality_prescription` / `strength_prescription` / `strength_stretch_sessions`.
+- **038** — FIBArk 10K seeded into `training_goals` (Jun 21).
+- **039–041** — **Summer Mode**: new `adventures` catalog + `adventure_log` tables; `daily_plans.adventure_done/adventure_note/adventure_category`; `users.summer_week_type` (+ `summer_week_type_set_on`, summer briefing cache cols); adventures seeded from weekend_spots + hikes.
+- **042** — `hikes_50` → **`family_hikes`** rename; `is_custom` added, `book_number` made nullable.
+- **043** — `activity_streams` (per-second HR/pace/altitude streams per activity).
+- **044–045** — retire `projects` 'home' category (→ other); FJ62 truck todos re-homed into the FJ62 project.
+- **046** — `todos.home_site` (`birch` / `yellow_house`) — Home split across two houses.
+- **047** — `training_goals.commitment` (locked / conditional / aspirational); Bergen Peak HM seeded; WLW corrected to 18.1mi / 2,450ft.
+- **048** — `training_weeks` long-run progression + phase-label corrections + WLW race week.
+- **049** — `anchor_events` WLW distance note 18.6 → 18.1mi.
+- **050** — `projects.next_touch_date` (career "follow-up" date; replaces deadlines for the career category).

@@ -24,7 +24,7 @@ const USER_CONTEXT = {
   },
   // Sea level: HR ceiling ~8bpm higher (altitude RBC adaptation)
 
-  current_strength_program: "Total Strength (Andy Speer)",
+  current_strength_program: "Row Bootcamp",  // Total Strength retired 2026-05-29; 2×/wk target, 3× stretch
   strength_week: 1,             // restarted May 11 2026 post-vacation
   strength_reactivation_weights: {
     chest_press_lbs: 25,
@@ -75,7 +75,7 @@ const USER_CONTEXT = {
 | Velo-city Conference | June 16-19 2026 | Rimini Italy — Tangier's conference | Confirmed |
 | FOCO Fondo "Double Dog Dare You" | July 19 2026 | 62.6mi / 2,962ft gravel | Conditional on Italy |
 | Ride the Hurricane | Aug 2 2026 | 40mi / 5,250ft, Port Angeles WA | Conditional on Slovenia |
-| **West Line Winder 30K** | **Sept 26 2026** | **18.6mi trail, Buena Vista CO** | **ANCHOR — REGISTER NOW** |
+| **West Line Winder 30K** | **Sept 26 2026** | **18.1mi / 2,450ft trail, Buena Vista CO** | **ANCHOR** |
 
 ## Training Phases
 
@@ -95,5 +95,5 @@ Howard ranch runs = West Line Winder race-specific training (20min from BV).
 2. Location (Howard = trail run; travel = bodyweight/run)
 3. Recovery score (RHR + sleep + drinks + days since rest)
 4. Training phase (run base / cycling / trail focus / taper)
-5. Program sequence (Total Strength next session)
+5. Program sequence (Row Bootcamp next session)
 6. Schedule (Run Club Monday = always run, never override)

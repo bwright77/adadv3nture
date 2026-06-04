@@ -38,19 +38,17 @@ One place where career, family, home, body, and personal projects all live toget
 _Update this at the start of every Claude Code session._
 
 ```
-NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
-              Jun 2–Aug 26). Above the time grid: a FireBanner (fire todos
-              interrupt) + the Adventure-of-the-Day hero (week-type toggle
-              Solo/Camp/Weekend lives in the hero, not the Header) + WA week-ring
-              (career_done-derived) + season heat-map. Adventure is delight-only
-              (got-out dot + weekly real-adventure star; NO nag). Watcher narrows
-              to Fire+WA+Training INTERRUPTS only — pilot lights stay VISIBLE.
-              Briefing gains summer-solo/camp/weekend voices, server-derived from
-              users.summer_week_type. Confirm: catalog seeded from
-              weekend_spots+hikes_50; hero suggests by place/weather; logging
-              lights the heat-map + registers family MIT; "normal day ›" exits to
-              the standard dashboard. Deferred: v2 scoring, multi-day backfill.
-              Still open: Apple Health Shortcut sleep filter.
+NEXT PRIORITY: Summer band is live + refined (Jun 4). Order: FireBanner → date
+              → Adventure hero → WA progress bar → Summer Snapshots (photos;
+              the season heat-map was removed). Suggesters (adventure + family
+              hikes) are geo-aware (reachable-from-here). Family Hikes de-goaled.
+              Career opportunities use next_touch_date, not deadlines. Camp is
+              schedule-driven (CAMP_WEEKS Jun 8–12, Jul 6–10). Briefing hardened
+              (facts-only, training≠adventure, Row Bootcamp not Total Strength).
+              OPEN: feed today's exact training session into the briefing (it
+              knows weekly targets but not the day's prescription); seed
+              Howard-area ADVENTURES (adventure catalog still Denver-centric);
+              Apple Health Shortcut sleep filter. Deferred: v2 suggester scoring.
 ```
 
 ---
@@ -198,7 +196,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 ✓ 17. Weather widget
 ✓ 19. Inspiration widget — storage, on this day, swipe
   +. Training tab, Projects tab, Career tab, design system
-✓ WM. Weekend Mode — 4 views, 8 widgets, briefing variant, 50 Hikes tracker
+✓ WM. Weekend Mode — 4 views, 8 widgets, briefing variant, Family Hikes tracker
 ✓ 09. Withings OAuth — connect, sync metrics, weight + body-fat in trends
 ✓ 10. Daily check-in — mood entry (1–5 in WReview, drinks +/- already live)
 ✓ 18. Trends engine — sparkline charts, report card rows, weekly_summaries function
@@ -219,7 +217,7 @@ NEXT PRIORITY: Live-test Summer Mode v1 (migrations 039–041; auto-active now,
 ✓ 35. WTomorrow — template-lead, swap-aware recommendation engine
 ✓ 36. Timezone hardening — logicalToday() everywhere; stable auth user reference
 ✓ 37. Training-plan consolidation — FIBArk 10K (migration 038) + race-pace targets card; week character taxonomy (phase + character, numbers demoted); Thursday outdoor-quality 4-week rotation (activity-derived, phase-gated)
-✓ 38. Summer Mode v1 — seasonal re-weighting (migrations 039-041): adventure catalog + two-tier log + heat-map, summer band (fire interrupt + adventure hero + WA ring), week-type Solo/Camp/Weekend, summer briefing voices. Deferred: v2 suggester scoring, v3 learns-from-logs, multi-day backfill
+✓ 38. Summer Mode v1 — seasonal re-weighting (migrations 039-041): adventure catalog + two-tier log, summer band (fire interrupt → date → adventure hero → WA progress bar → Summer Snapshots photos), week-type Solo/Camp/Weekend. Post-v1 (Jun 4): heat-map replaced by Summer Snapshots; geo-aware adventure + hike suggesters; Family Hikes de-goaled; camp schedule-driven (CAMP_WEEKS); briefing hardened. Deferred: v2 suggester scoring, v3 learns-from-logs, multi-day backfill
 ✓ 39. Philosophy follow-ups + Family Hikes — cross-day backfill (getOpenDays + WBackfill on Log page), WLW banked-miles reframe, weekend-plan logicalToday() fix; "50 Hikes" → "Family Hikes" full rename (migration 042) with family-added custom hikes (＋ Add a hike) picker
 
   27. Apple Health sleep filter — Shortcut still over-counts; webhook clamps as defense  ← OPEN

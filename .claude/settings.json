@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "Bash(grep:*)",
+      "Bash(rg:*)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://asxlvpjijkhdcvrwnruj.supabase.co/storage/v1/object/public/inspiration-photos/thumbnails/20240123-IMG_3780_jpg.jpg\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://asxlvpjijkhdcvrwnruj.supabase.co/storage/v1/object/public/inspiration-photos/originals/20240123-IMG_3780_jpg.jpg\")",
       "Bash(node -e ' *)",
@@ -40,7 +42,12 @@
       "Bash(sed -n '182,187p' src/App.tsx)",
       "Bash(sed -n '123,132p' src/components/dashboard/WeekendDawnView.tsx)",
       "Bash(sed -n '27,37p' src/components/dashboard/WeekendDayView.tsx)",
-      "Bash(sed -n '29,38p' src/components/dashboard/WeekendSundayEveningView.tsx)"
+      "Bash(sed -n '29,38p' src/components/dashboard/WeekendSundayEveningView.tsx)",
+      "Bash(sed -n '30,90p' components/dashboard/WWAWeek.tsx)",
+      "Bash(sed -n '54,90p' hooks/useFamilyHikes.ts)",
+      "Bash(grep -rn '\\\\b__TRACKED_VAR__\\\\b' src/ supabase/ index.html)",
+      "Bash(grep -rln '\\\\b__TRACKED_VAR__\\\\b' src/ supabase/)",
+      "Bash(node /tmp/orphan.mjs)"
     ],
     "additionalDirectories": [
       "/Users/benjaminwright/.claude",
