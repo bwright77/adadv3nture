@@ -446,7 +446,8 @@ export function TrainingProgramSection() {
         </div>
       )}
 
-      {/* Volume chart — always all 19 for context, current stroked, future faded */}
+      {/* Volume chart — all 19 for context. The phase pills highlight their
+          weeks (others dim); current week is stroked as a "you are here" mark. */}
       <div style={{ background: '#fff', borderRadius: 12, border: `0.5px solid ${C.ink20}`, padding: '12px 14px', marginBottom: 10 }}>
         <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.15em', marginBottom: 8 }}>
           WEEKLY RUN VOLUME
@@ -457,15 +458,16 @@ export function TrainingProgramSection() {
             const color = PHASE_COLOR[phase]
             const h = ((w.target_run_miles ?? 0) / maxRun) * 52
             const isCurrent = i === currentIdx
-            const isFuture = i > currentIdx
+            const dim = phaseFilter !== 'all' && phase !== phaseFilter
             return (
               <div key={w.id} title={`W${i + 1}: ${w.target_run_miles}mi · ${w.phase_label}`}
                 style={{
                   flex: 1, height: Math.max(h, 2),
                   background: color,
-                  opacity: isFuture ? 0.4 : 1,
+                  opacity: dim ? 0.2 : 1,
                   borderTop: isCurrent ? `2px solid ${C.dark}` : 'none',
                   borderRadius: 1,
+                  transition: 'opacity 0.2s',
                 }}
               />
             )

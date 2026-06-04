@@ -5,6 +5,7 @@ import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
 import { getSeasonHeatmap, type HeatWeek } from '../../lib/adventures'
 import { SUMMER_START, SUMMER_END } from '../../hooks/useSummerMode'
+import { logicalToday } from '../../lib/utils'
 
 interface Props { dark?: boolean }
 
@@ -12,27 +13,35 @@ function monthTick(weekStart: string): string {
   return new Date(weekStart + 'T12:00:00').toLocaleDateString('en-US', { month: 'short' })
 }
 
-// The season filling in — a memory artifact, never a streak. A faint cell = we
-// got out that week; a star = a real adventure. A blank week is just blank.
+// The season filling in — a memory artifact, never a scorecard. Only the weeks
+// SO FAR are shown (it grows as summer goes), so it never reads as "12 empty
+// weeks of failure." A faint cell = we got out that week; a star = a real
+// adventure (a bigger outing — a hike, a trip). A blank week is just blank.
 export function SeasonHeatmap({ dark }: Props) {
   const { user } = useAuth()
   const [weeks, setWeeks] = useState<HeatWeek[]>([])
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     if (!user) return
     let cancelled = false
-    getSeasonHeatmap(user.id, SUMMER_START, SUMMER_END)
-      .then(w => { if (!cancelled) setWeeks(w) })
-      .catch(() => null)
+    const today = logicalToday()
+    const end = today < SUMMER_END ? today : SUMMER_END   // season so far, not the whole season
+    getSeasonHeatmap(user.id, SUMMER_START, end)
+      .then(w => { if (!cancelled) { setWeeks(w); setLoaded(true) } })
+      .catch(() => { if (!cancelled) setLoaded(true) })
     return () => { cancelled = true }
   }, [user])
 
   const real = weeks.filter(w => w.isReal).length
   const out = weeks.filter(w => w.gotOut).length
+  const nothingYet = loaded && out === 0
+
+  const subColor = dark ? 'rgba(245,237,214,0.6)' : C.ink60
 
   return (
     <Glass dark={dark} span={12} pad={14}>
-      <CardLabel dark={dark}>The summer, week by week</CardLabel>
+      <CardLabel dark={dark}>Summer, so far</CardLabel>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
         {weeks.map((w, i) => {
           const prevMonth = i > 0 ? monthTick(weeks[i - 1].weekStart) : null
@@ -61,9 +70,16 @@ export function SeasonHeatmap({ dark }: Props) {
           )
         })}
       </div>
-      <div className="mono" style={{ fontSize: 'var(--fs-11)', marginTop: 8, color: dark ? 'rgba(245,237,214,0.6)' : C.ink60 }}>
-        {out} weeks out · {real} real adventures ★
-      </div>
+
+      {nothingYet ? (
+        <div className="mono" style={{ fontSize: 'var(--fs-11)', marginTop: 8, color: subColor, lineHeight: 1.5 }}>
+          Get out and log it — every outing lights a cell. ★ = a real adventure (a hike, a trip).
+        </div>
+      ) : (
+        <div className="mono" style={{ fontSize: 'var(--fs-11)', marginTop: 8, color: subColor }}>
+          {out} {out === 1 ? 'week' : 'weeks'} out{real > 0 ? ` · ${real} real ★` : ''} · ● got out · ★ real adventure
+        </div>
+      )}
     </Glass>
   )
 }

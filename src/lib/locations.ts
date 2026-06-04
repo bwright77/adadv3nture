@@ -95,6 +95,24 @@ export const DEFAULT_LOCATION: ResolvedLocation = (() => {
   }
 })()
 
+export function resolvedFromKnown(loc: KnownLocation): ResolvedLocation {
+  return {
+    lat: loc.lat,
+    lon: loc.lon,
+    name: loc.name,
+    slug: loc.slug,
+    elevationFt: loc.elevationFt,
+    label: `${loc.name} · ${loc.elevationFt.toLocaleString()}ft`,
+    isKnown: true,
+    relief: loc.relief,
+  }
+}
+
+export function resolvedFromSlug(slug: KnownLocation['slug']): ResolvedLocation | null {
+  const loc = KNOWN_LOCATIONS.find(l => l.slug === slug)
+  return loc ? resolvedFromKnown(loc) : null
+}
+
 export function resolveLocation(coords: { lat: number; lon: number }): ResolvedLocation {
   const known = matchKnownLocation(coords)
   if (known) {

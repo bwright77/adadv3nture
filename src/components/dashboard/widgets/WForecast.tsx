@@ -2,6 +2,7 @@ import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useWeather } from '../../../hooks/useWeather'
+import { LocationToggle } from './LocationToggle'
 import type { DayForecast } from '../../../lib/openweather'
 
 interface WForecastProps { dark?: boolean }
@@ -81,11 +82,14 @@ export function WForecast({ dark }: WForecastProps) {
 
   return (
     <Glass dark={dark} span={6} style={{ height: 164 }} pad={12}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-        <CardLabel dark={dark}>Forecast</CardLabel>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+          <CardLabel dark={dark}>Forecast</CardLabel>
+          <LocationToggle dark={dark} />
+        </div>
         {tomorrow && (
-          <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.55 }}>
-            tmrw: {tomorrowRunOk ? 'run ✓' : 'run ✗'} · {tomorrowBikeOk ? 'bike ✓' : 'bike ✗'}
+          <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.55, whiteSpace: 'nowrap' }}>
+            {tomorrowRunOk ? 'run ✓' : 'run ✗'} · {tomorrowBikeOk ? 'bike ✓' : 'bike ✗'}
           </div>
         )}
       </div>

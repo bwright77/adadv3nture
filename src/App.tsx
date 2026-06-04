@@ -94,23 +94,50 @@ function Dashboard() {
   // body_metrics) include this in their effect deps to refetch.
   const bumpData = () => setDataVersion(v => v + 1)
 
+  // Browser back/forward moves between in-app views instead of leaving the site.
+  // Each navigation pushes a history entry; popstate restores the prior view.
+  useEffect(() => {
+    window.history.replaceState({ appNav: true, tab, listsTab: listsInitialTab ?? null, capture: false }, '')
+    function onPop(e: PopStateEvent) {
+      const s = (e.state && e.state.appNav) ? e.state : { tab: 'home' as Tab, listsTab: null, capture: false }
+      setTab(s.tab)
+      setListsInitialTab(s.listsTab ?? undefined)
+      setCapture(Boolean(s.capture))
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function go(nextTab: Tab, listsTab?: ListsTab) {
+    window.history.pushState({ appNav: true, tab: nextTab, listsTab: listsTab ?? null, capture: false }, '')
+    setTab(nextTab)
+    if (listsTab !== undefined) setListsInitialTab(listsTab)
+  }
+
+  function openCapture() {
+    window.history.pushState({ appNav: true, tab, listsTab: listsInitialTab ?? null, capture: true }, '')
+    setCapture(true)
+  }
+  function closeCapture() {
+    if (window.history.state?.capture) window.history.back()
+    else setCapture(false)
+  }
+
   function openTrainingEvent(goalId: string) {
-    setTab('lists')
-    setListsInitialTab('training')
+    go('lists', 'training')
     setInitialTrainingEventId(prev => ({ id: goalId, version: (prev?.version ?? 0) + 1 }))
   }
 
   function openCareer() {
-    setTab('lists')
-    setListsInitialTab('career')
+    go('lists', 'career')
   }
 
   function openListTab(subTab: ListsTab) {
-    setTab('lists')
-    setListsInitialTab(subTab)
+    go('lists', subTab)
   }
 
-  const openInbox = () => setTab('inbox')
+  const openInbox = () => go('inbox')
 
   function openFireTodo(category: TodoCategory) {
     openListTab(category === 'body' ? 'training' : category)
@@ -164,10 +191,10 @@ function Dashboard() {
         {tab === 'log'    && <LogPage onDataSynced={bumpData} />}
       </div>
 
-      <TabBar active={tab} dark={isDark} onChange={setTab} />
-      <FAB onClick={() => setCapture(true)} />
+      <TabBar active={tab} dark={isDark} onChange={t => go(t)} />
+      <FAB onClick={openCapture} />
 
-      {capture && <CaptureSheet onClose={() => setCapture(false)} onSaved={() => setInboxVersion(v => v + 1)} />}
+      {capture && <CaptureSheet onClose={closeCapture} onSaved={() => setInboxVersion(v => v + 1)} />}
     </div>
   )
 }
