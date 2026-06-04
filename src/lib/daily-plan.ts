@@ -40,11 +40,14 @@ export function applicableCategoriesForDate(dateStr: string): ReviewCategory[] {
 }
 
 // Route a project's category to the MIT slot it should register against.
-// Career projects (opportunities) → career; home projects → home; everything
-// else (art, software, other) → the catch-all projects slot.
+// Career projects (WA opportunities, shown on the Career tab) → career.
+// EVERYTHING else in the Projects tab — art, software, the truck (FJ62),
+// a "home"-tagged project, other — is a side project → the Projects slot.
+// The project's category is just a label/colour, NOT a life-category: house
+// work (Birch St / Yellow House) lives in the Home *todo* list, never as a
+// project, so a project must never credit the Home MIT.
 export function mapProjectCategoryToMIT(cat: string): ReviewCategory {
   if (cat === 'career') return 'career'
-  if (cat === 'home') return 'home'
   return 'projects'
 }
 

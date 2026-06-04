@@ -157,10 +157,11 @@ function AddProjectForm({ onSave, onCancel }: { onSave: (p: Project) => void; on
           style={selectStyle}
         />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {/* No "Home" option — a project is a side project (art/software/truck/
+              etc.); house work lives in the Home todo list, not as a project. */}
           <select style={selectStyle} value={category} onChange={e => setCategory(e.target.value as ProjectCategory)}>
             <option value="software">Software</option>
             <option value="art">Art</option>
-            <option value="home">Home</option>
             <option value="other">Other</option>
           </select>
           <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} style={selectStyle} placeholder="Deadline" />
