@@ -25,7 +25,10 @@
       "Read(//Users/benjaminwright/Downloads/**)",
       "Bash(echo \"EXIT $?\")",
       "Bash(git mv *)",
-      "Bash(git merge *)"
+      "Bash(git merge *)",
+      "Bash(sed -n '1,8p' supabase/migrations/002_todos_categories.sql)",
+      "Bash(sed -n '1,10p' supabase/migrations/008_seed_todos.sql)",
+      "Bash(grep -iE \"values \\\\\\(uid|values$|'art'|'software'|'home'|'career'|'other'|adadv|bottle|cap|land cruiser|truck|app\" supabase/migrations/012_seed_training_projects.sql)"
     ],
     "additionalDirectories": [
       "/Users/benjaminwright/.claude"

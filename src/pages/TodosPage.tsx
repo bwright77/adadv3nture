@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { C } from '../tokens'
 import {
-  getTodos, getCompletedTodos, addTodo, completeTodo, deleteTodo, moveTodo, setTodoUrgency,
-  type Todo, type TodoCategory, type TodoUrgency,
+  getTodos, getCompletedTodos, addTodo, completeTodo, deleteTodo, moveTodo, setTodoUrgency, setTodoSite,
+  type Todo, type TodoCategory, type TodoUrgency, type HomeSite,
 } from '../lib/todos'
+import { useLocation } from '../hooks/useLocation'
+import { HOME_SITES, siteForSlug } from '../lib/locations'
 import {
   getActiveReminders, addReminder, snoozeReminder, completeReminder, deleteReminder,
   type Reminder,
@@ -131,6 +133,20 @@ export function TodosPage({ bgPhoto, initialTab, initialTrainingEvent }: TodosPa
   const isTodoTab = isTodoCat(tab)
   const current = TABS.find(t => t.id === (isTodoTab ? cat : tab))!
 
+  // Home splits across the two houses; default to wherever you physically are.
+  const { location } = useLocation()
+  const currentSite = siteForSlug(location.slug)
+  const [siteFilter, setSiteFilter] = useState<HomeSite | 'both'>(currentSite)
+  // Follow the location into the Home tab (and when you travel); manual picks
+  // hold until the cat or your location changes.
+  useEffect(() => {
+    if (cat === 'home') setSiteFilter(currentSite)
+  }, [cat, currentSite])
+
+  const visibleTodos = cat === 'home' && siteFilter !== 'both'
+    ? todos.filter(t => (t.home_site ?? 'birch') === siteFilter)
+    : todos
+
   function sortByUrgency(list: Todo[]): Todo[] {
     return [...list].sort((a, b) => {
       const ud = URGENCY_ORDER[a.urgency] - URGENCY_ORDER[b.urgency]
@@ -160,11 +176,19 @@ export function TodosPage({ bgPhoto, initialTab, initialTrainingEvent }: TodosPa
 
   async function handleAdd() {
     if (!user || !draft.trim()) { setAdding(false); setDraft(''); return }
-    const item = await addTodo(user.id, cat, draft.trim(), draftUrgency)
+    const site: HomeSite | null = cat === 'home'
+      ? (siteFilter === 'both' ? currentSite : siteFilter)
+      : null
+    const item = await addTodo(user.id, cat, draft.trim(), draftUrgency, site)
     setTodos(prev => sortByUrgency([...prev, item]))
     setDraft('')
     setDraftUrgency('deck')
     setAdding(false)
+  }
+
+  async function handleSiteChange(id: string, site: HomeSite) {
+    setTodos(prev => prev.map(t => t.id === id ? { ...t, home_site: site } : t))
+    await setTodoSite(id, site)
   }
 
   async function handleUrgencyChange(id: string, urgency: TodoUrgency) {
@@ -361,11 +385,34 @@ export function TodosPage({ bgPhoto, initialTab, initialTrainingEvent }: TodosPa
         {/* List */}
         {!isTodoTab ? null :
         <div style={{ paddingBottom: 140 }}>
+          {/* House split — Home only. Defaults to where you are. */}
+          {cat === 'home' && (
+            <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+              {([{ id: 'both' as const, label: 'Both', place: '' }, ...HOME_SITES]).map(s => {
+                const on = siteFilter === s.id
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => setSiteFilter(s.id as HomeSite | 'both')}
+                    style={{
+                      padding: '5px 12px', borderRadius: 999, cursor: 'pointer', fontFamily: 'inherit',
+                      fontSize: 'var(--fs-12)', fontWeight: 600,
+                      background: on ? current.color : 'transparent',
+                      color: on ? '#fff' : C.ink60,
+                      border: `1px solid ${on ? current.color : C.ink20}`,
+                    }}
+                  >
+                    {s.label}{'place' in s && s.place ? ` · ${s.place}` : ''}
+                  </button>
+                )
+              })}
+            </div>
+          )}
           {loading ? (
             <div style={{ textAlign: 'center', padding: 40, color: C.ink40, fontSize: 'var(--fs-15)' }}>
               Loading…
             </div>
-          ) : todos.length === 0 && !adding ? (
+          ) : visibleTodos.length === 0 && !adding ? (
             <div style={{ textAlign: 'center', padding: '40px 0', color: C.ink40, fontSize: 'var(--fs-15)', lineHeight: 1.6 }}>
               No open items in {current.label}.<br />
               <button
@@ -376,17 +423,18 @@ export function TodosPage({ bgPhoto, initialTab, initialTrainingEvent }: TodosPa
               </button>
             </div>
           ) : (
-            todos.map((t, i) => (
+            visibleTodos.map((t, i) => (
               <TodoRow
                 key={t.id}
                 todo={t}
                 accent={current.color}
                 isFirst={i === 0}
-                isLast={i === todos.length - 1}
+                isLast={i === visibleTodos.length - 1}
                 onComplete={() => handleComplete(t.id)}
                 onDelete={() => handleDelete(t.id)}
                 onMove={dir => handleMove(t.id, dir)}
                 onUrgencyChange={u => handleUrgencyChange(t.id, u)}
+                onSiteChange={cat === 'home' ? s => handleSiteChange(t.id, s) : undefined}
               />
             ))
           )}
@@ -428,7 +476,7 @@ export function TodosPage({ bgPhoto, initialTab, initialTrainingEvent }: TodosPa
               </div>
             </div>
           ) : (
-            todos.length > 0 && (
+            visibleTodos.length > 0 && (
               <button
                 onClick={() => setAdding(true)}
                 style={{
@@ -492,7 +540,7 @@ export function TodosPage({ bgPhoto, initialTab, initialTrainingEvent }: TodosPa
 }
 
 function TodoRow({
-  todo, accent, isFirst, isLast, onComplete, onDelete, onMove, onUrgencyChange,
+  todo, accent, isFirst, isLast, onComplete, onDelete, onMove, onUrgencyChange, onSiteChange,
 }: {
   todo: Todo
   accent: string
@@ -502,6 +550,7 @@ function TodoRow({
   onDelete: () => void
   onMove: (dir: 'up' | 'down') => void
   onUrgencyChange: (u: TodoUrgency) => void
+  onSiteChange?: (s: HomeSite) => void
 }) {
   const urg = URGENCY[todo.urgency ?? 'deck']
   const isFire = todo.urgency === 'fire'
@@ -551,6 +600,21 @@ function TodoRow({
           }}>
             {todo.title}
           </span>
+
+          {/* House tag — tap to switch between the two homes */}
+          {onSiteChange && (
+            <button
+              onClick={() => onSiteChange((todo.home_site ?? 'birch') === 'birch' ? 'yellow_house' : 'birch')}
+              title="Switch house"
+              style={{
+                flexShrink: 0, padding: '2px 7px', borderRadius: 999,
+                border: `1px solid ${C.ink20}`, background: 'transparent', color: C.ink60,
+                fontSize: 'var(--fs-10)', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+              }}
+            >
+              {(todo.home_site ?? 'birch') === 'yellow_house' ? '🛖 Yellow' : '🏠 Birch'}
+            </button>
+          )}
 
           {/* Urgency chip */}
           <UrgencyChip urgency={todo.urgency ?? 'deck'} onChange={onUrgencyChange} />

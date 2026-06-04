@@ -6,6 +6,7 @@ export type TodoCategory = 'body' | 'career' | 'family' | 'home' | 'projects'
 export type TodoEffort = 'quick' | 'half_day' | 'full_day' | 'multi_day'
 export type TodoStatus = 'todo' | 'in_progress' | 'done'
 export type TodoUrgency = 'fire' | 'deck' | 'rain'
+export type HomeSite = 'birch' | 'yellow_house'
 
 export interface Todo {
   id: string
@@ -18,6 +19,7 @@ export interface Todo {
   priority_order: number
   urgency: TodoUrgency
   status: TodoStatus
+  home_site: HomeSite | null     // which house — home category only
   completed_at: string | null
   created_at: string
 }
@@ -64,6 +66,7 @@ export async function addTodo(
   category: TodoCategory,
   title: string,
   urgency: TodoUrgency = 'deck',
+  homeSite: HomeSite | null = null,
 ): Promise<Todo> {
   const { data: existing } = await supabase
     .from('todos')
@@ -77,11 +80,20 @@ export async function addTodo(
 
   const { data, error } = await db
     .from('todos')
-    .insert({ user_id: userId, category, title, urgency, priority_order: maxOrder + 1, status: 'todo' })
+    .insert({
+      user_id: userId, category, title, urgency,
+      priority_order: maxOrder + 1, status: 'todo',
+      home_site: category === 'home' ? homeSite : null,
+    })
     .select()
     .single()
   if (error) throw new Error(error.message)
   return data as Todo
+}
+
+export async function setTodoSite(id: string, site: HomeSite): Promise<void> {
+  const { error } = await db.from('todos').update({ home_site: site }).eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 export async function setTodoUrgency(id: string, urgency: TodoUrgency): Promise<void> {

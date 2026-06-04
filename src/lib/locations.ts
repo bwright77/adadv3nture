@@ -45,6 +45,24 @@ export function haversineMi(
   return 2 * R * Math.asin(Math.sqrt(x))
 }
 
+// The two houses, split out of the Home category. Each maps to a known
+// location so the Home list can default to wherever you physically are.
+export type HomeSite = 'birch' | 'yellow_house'
+
+export const HOME_SITES: { id: HomeSite; label: string; place: string; slug: KnownLocation['slug'] }[] = [
+  { id: 'birch',        label: 'Birch St',     place: 'Denver', slug: 'denver' },
+  { id: 'yellow_house', label: 'Yellow House', place: 'Howard', slug: 'howard' },
+]
+
+// Which house am I at? Howard → Yellow House; everything else → Birch (primary).
+export function siteForSlug(slug: string | null): HomeSite {
+  return slug === 'howard' ? 'yellow_house' : 'birch'
+}
+
+export function homeSiteLabel(site: HomeSite): string {
+  return site === 'yellow_house' ? 'Yellow House' : 'Birch St'
+}
+
 export function matchKnownLocation(coords: { lat: number; lon: number }): KnownLocation | null {
   for (const loc of KNOWN_LOCATIONS) {
     if (haversineMi(coords, loc) <= loc.radiusMi) return loc
