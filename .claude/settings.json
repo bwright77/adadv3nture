@@ -30,7 +30,9 @@
       "Bash(sed -n '1,10p' supabase/migrations/008_seed_todos.sql)",
       "Bash(grep -iE \"values \\\\\\(uid|values$|'art'|'software'|'home'|'career'|'other'|adadv|bottle|cap|land cruiser|truck|app\" supabase/migrations/012_seed_training_projects.sql)",
       "Bash(python3 -m json.tool)",
-      "Bash(grep -n \"VolumeChart\\\\|RunVolume\\\\|<div.*title={\\\\`W\" src/components/todos/TrainingProgramSection.tsx)"
+      "Bash(grep -n \"VolumeChart\\\\|RunVolume\\\\|<div.*title={\\\\`W\" src/components/todos/TrainingProgramSection.tsx)",
+      "Bash(python3 -c \"import sys,json; r=json.load\\(sys.stdin\\); print\\('deleted', len\\(r\\), 'row\\(s\\)'\\)\")",
+      "Bash(python3 -c ' *)"
     ],
     "additionalDirectories": [
       "/Users/benjaminwright/.claude"
