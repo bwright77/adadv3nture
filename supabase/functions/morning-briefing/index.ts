@@ -56,10 +56,12 @@ days-until numbers verbatim. Do NOT compute or estimate dates yourself.
 
 ANCHORS ARE DOMAIN-TAGGED. Each anchor in the context starts with [CAREER]
 or [TRAINING]. These domains MUST stay separate:
-- [CAREER] anchor (Wright Adventures = the company / income milestone): work
-  deadlines. Pair only with CAREER MIT progress, job-target activity, or
-  Wright Adventures opportunity work.
-- [TRAINING] anchor (West Line Winder 30K, plus FOCO/Hurricane/Bergen via
+- [CAREER] anchor (Wright Adventures = the company / income milestone): the
+  Labor Day reckoning is the one hard date. Individual opportunities are
+  relationship-driven — they have a "next touch / follow-up" rhythm, NOT
+  deadlines, so don't manufacture deadline pressure on them. Pair only with
+  CAREER MIT progress, job-target activity, or Wright Adventures opportunity work.
+- [TRAINING] anchor (West Line Winder 30K, plus FIBArk/FOCO/Hurricane/Bergen via
   training_goals): race events. Pair only with workout/recovery/long-run
   context — never with career, never with weight.
 NEVER mix domains. Don't say "X lbs from target with N days to Wright
@@ -83,10 +85,12 @@ two prescription strings:
   PZ Max = Power Zone Max on the Peloton, the primary midweek quality slot.
   Strides, cruise miles, tempo, fartlek, progression are running quality
   options.
-- Strength block: which lifting program is active (e.g. "3× TS" = three
-  Total Strength sessions; "RK" = Rebecca Kennedy 5-day split; "maint" =
-  maintenance loading). This is separate from the standalone WORKOUT
-  block, which names the specific next strength session in the program.
+- Strength block: which lifting program is active. Current modality is Row
+  Bootcamp (e.g. "2× Row Bootcamp" = two sessions; target 2×/wk, 3× stretch) —
+  rower intervals + floor strength, no body-part split. ("maint" = maintenance
+  loading. "TS"/Total Strength is RETIRED — only appears on historical rows;
+  don't prescribe it.) This is separate from the standalone WORKOUT block, which
+  names the specific next strength session in the program.
 When you suggest a body / workout action, name it from the plan — "PZ Max
 on the Peloton this morning" — instead of inventing one or relying solely on
 the standalone workout prescription. BUT: the run / long-run / bike numbers are
@@ -361,6 +365,13 @@ const PROGRAM_SCHEDULES: Record<string, {
   workoutsPerWeek: number[]
   dayLabels: Record<number, Record<number, string>>
 }> = {
+  // Row Bootcamp is the current primary modality (2×/week, no body-part split —
+  // falls back to the bare "Row Bootcamp · W#D#" label). Total Strength is
+  // retired but kept so historical / synced rows still resolve a title.
+  'Row Bootcamp': {
+    workoutsPerWeek: [2, 2, 2, 2],
+    dayLabels: {},
+  },
   'Total Strength': {
     workoutsPerWeek: [3, 3, 4, 4],
     dayLabels: {

@@ -13,9 +13,11 @@ function daysUntil(dateStr: string | null): number | null {
   return daysUntilDate(dateStr)
 }
 
-function DeadlineTag({ days }: { days: number }) {
-  const urgent = days <= 7
-  const soon = days <= 14
+// "Next touch" tag — when to follow up. Overdue reads "DUE", not a negative.
+function TouchTag({ days }: { days: number }) {
+  const overdue = days < 0
+  const urgent = days <= 2
+  const soon = days <= 7
   return (
     <span className="mono" style={{
       fontSize: 'var(--fs-10)', padding: '2px 7px', borderRadius: 999,
@@ -23,13 +25,13 @@ function DeadlineTag({ days }: { days: number }) {
       color: urgent ? C.cream : soon ? C.rust : C.ink60,
       letterSpacing: '0.1em', flexShrink: 0,
     }}>
-      {days}D
+      {overdue ? 'DUE' : `${days}D`}
     </span>
   )
 }
 
 function ProjectRow({ project, dark, border }: { project: Project; dark?: boolean; border?: boolean }) {
-  const days = daysUntil(project.soft_deadline_date ?? project.deadline_date)
+  const days = daysUntil(project.next_touch_date)
   return (
     <div style={{
       paddingTop: border ? 10 : 0,
@@ -47,7 +49,7 @@ function ProjectRow({ project, dark, border }: { project: Project; dark?: boolea
             </div>
           )}
         </div>
-        {days !== null && <DeadlineTag days={days} />}
+        {days !== null && <TouchTag days={days} />}
       </div>
     </div>
   )
