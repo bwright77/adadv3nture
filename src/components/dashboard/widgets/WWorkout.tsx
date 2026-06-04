@@ -4,7 +4,7 @@ import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { getRecentActivities } from '../../../lib/strava'
-import { getProgram, advanceProgram, type ProgramState } from '../../../lib/program-tracker'
+import { getCurrentTrainingWeek } from '../../../lib/training'
 import { logicalToday } from '../../../lib/utils'
 import type { Database } from '../../../types/database'
 
@@ -26,78 +26,26 @@ function formatPace(spm: number | null): string {
   return `${m}:${String(s).padStart(2, '0')}/mi`
 }
 
-function ProgramProgress({ program, dark, onDone, advancing }: {
-  program: ProgramState | null
-  dark?: boolean
-  onDone: () => void
-  advancing: boolean
-}) {
-  const week = program?.current_week ?? 1
-  const day = program?.current_day ?? 1
-  const totalWeeks = program?.total_weeks ?? 4
-  const totalDays = totalWeeks * 4
-  const completedDays = (week - 1) * 4 + (day - 1)
-  const progress = completedDays / totalDays
-
-  return (
-    <>
-      <div style={{
-        marginTop: 10, height: 3,
-        background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(26,18,8,0.08)',
-        borderRadius: 2,
-      }}>
-        <div style={{
-          width: `${Math.max(2, progress * 100)}%`,
-          height: '100%', background: C.rust, borderRadius: 2,
-        }} />
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, alignItems: 'center' }}>
-        <div className="mono" style={{ fontSize: 'var(--fs-11)', opacity: 0.85 }}>
-          W{week} of {totalWeeks} · D{day} of 4 · {Math.round(progress * 100)}% done
-        </div>
-        <button
-          onClick={onDone}
-          disabled={advancing}
-          style={{
-            background: C.cream, color: C.dark, border: 'none', cursor: 'pointer',
-            padding: '4px 10px', borderRadius: 8, fontSize: 'var(--fs-12)', fontWeight: 700,
-          }}
-        >
-          {advancing ? '…' : 'Done ✓'}
-        </button>
-      </div>
-    </>
-  )
-}
-
 export function WWorkout({ dark, span = 7 }: WWorkoutProps) {
   const { user } = useAuth()
   const today = logicalToday()
   const [todayAct, setTodayAct] = useState<Activity | null | undefined>(undefined)
-  const [program, setProgram] = useState<ProgramState | null>(null)
-  const [advancing, setAdvancing] = useState(false)
-
-  async function reload() {
-    if (!user) return
-    const [acts, prog] = await Promise.all([
-      getRecentActivities(user.id, 5),
-      getProgram(user.id),
-    ]) as [Activity[], ProgramState | null]
-    setTodayAct(acts.find(a => a.activity_date === today) ?? null)
-    setProgram(prog)
-  }
+  const [strength, setStrength] = useState<string | null>(null)
 
   useEffect(() => {
-    reload().catch(() => setTodayAct(null))
-  }, [user])
-
-  async function handleDone() {
     if (!user) return
-    setAdvancing(true)
-    await advanceProgram(user.id)
-    setProgram(await getProgram(user.id))
-    setAdvancing(false)
-  }
+    let cancelled = false
+    ;(async () => {
+      const [acts, week] = await Promise.all([
+        getRecentActivities(user.id, 5).catch(() => [] as Activity[]),
+        getCurrentTrainingWeek(user.id).catch(() => null),
+      ])
+      if (cancelled) return
+      setTodayAct(acts.find(a => a.activity_date === today) ?? null)
+      setStrength(week?.strength_prescription ?? null)
+    })()
+    return () => { cancelled = true }
+  }, [user, today])
 
   if (todayAct === undefined) {
     return (
@@ -108,9 +56,8 @@ export function WWorkout({ dark, span = 7 }: WWorkoutProps) {
     )
   }
 
-  // Today's workout already logged via Strava
+  // Today's workout already logged via Strava — reflect it.
   if (todayAct) {
-    const isStrength = ['strength', 'workout', 'weight_training'].includes(todayAct.activity_type)
     return (
       <Glass dark={dark} span={span} pad={14} flat style={{ background: C.tealDk, border: 'none' }}>
         <CardLabel dark={dark}>Today · done ✓</CardLabel>
@@ -135,26 +82,21 @@ export function WWorkout({ dark, span = 7 }: WWorkoutProps) {
             </>
           )}
         </div>
-        {isStrength && (
-          <ProgramProgress program={program} dark={dark} onDone={handleDone} advancing={advancing} />
-        )}
       </Glass>
     )
   }
 
-  // No activity yet — show prescribed
-  const title = program?.next_workout_title ?? 'Row Bootcamp'
-  const parts = title.split('·').map((p: string) => p.trim())
-
+  // Nothing logged yet — show what's on the menu this week (prospective, not a
+  // day prescription). Strength is part of the weekly schedule, not a program.
   return (
     <Glass dark={dark} span={span} pad={14} flat style={{ background: C.tealDk, border: 'none' }}>
-      <CardLabel dark={dark}>Today · prescribed</CardLabel>
+      <CardLabel dark={dark}>This week's strength</CardLabel>
       <div className="badge" style={{ fontSize: 'var(--fs-17)', lineHeight: 1.1, marginTop: 2 }}>
-        <span>{parts[0]}</span>
-        {parts[1] && <span> · {parts[1]}</span>}
-        {parts[2] && <span> · {parts[2]}</span>}
+        {(strength ?? 'Row Bootcamp').toUpperCase()}
       </div>
-      <ProgramProgress program={program} dark={dark} onDone={handleDone} advancing={advancing} />
+      <div className="mono" style={{ fontSize: 'var(--fs-12)', opacity: 0.8, marginTop: 8, lineHeight: 1.4 }}>
+        Fit it in when the day allows — Strava logs it. Nothing logged yet today.
+      </div>
     </Glass>
   )
 }

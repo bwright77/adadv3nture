@@ -3,7 +3,6 @@ import { Glass } from '../../ui/Glass'
 import { CardLabel } from '../../ui/CardLabel'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
-import { getAllPrograms, type ProgramState } from '../../../lib/program-tracker'
 import { getCurrentTrainingWeek, getAllTrainingWeeks, type TrainingWeek } from '../../../lib/training'
 import { templateForDow, computeWeekProgress, classifyPrimary, type WeekProgress } from '../../../lib/training-templates'
 import { deriveRotationIndex, thursdayPrescription, PELOTON_SYNC_WARNING } from '../../../lib/thursdayRotation'
@@ -46,25 +45,30 @@ interface Rec {
 // and falling through to the most-undone item when the template's prescription
 // is already fulfilled this week (swap-aware). Recovery / weather override
 // at the end.
+// Strength label is the week's prescription (e.g. "2× Row Bootcamp") — strength
+// is part of the weekly schedule now, not a tracked program.
+function strengthLabel(week: TrainingWeek | null): string {
+  return week?.strength_prescription ?? 'Row Bootcamp'
+}
+
 function buildRec(params: {
   week: TrainingWeek | null
   progress: WeekProgress
   recoveryTier: string
   runOk: boolean | null
   bikeOk: boolean | null
-  programs: ProgramState[]
   dow: number  // tomorrow's dow
 }): Rec {
-  const { week, progress, recoveryTier, runOk, bikeOk, programs, dow } = params
+  const { week, progress, recoveryTier, runOk, bikeOk, dow } = params
 
   // Recovery is the trump card — always respect it.
   if (recoveryTier === 'recovery') {
     const strengthLeft = (week?.target_strength_sessions ?? 0) - progress.strengthCount
-    if (strengthLeft > 0 && programs.length > 0) {
+    if (strengthLeft > 0) {
       return {
         type: 'strength', headline: 'Strength — recovery day',
         why: 'Body needs rest · indoor session fits',
-        program: programs[0].next_workout_title ?? undefined,
+        program: strengthLabel(week),
       }
     }
     return { type: 'rest', headline: 'Rest or easy walk', why: 'Recovery score is low — protect the adaptation' }
@@ -72,7 +76,7 @@ function buildRec(params: {
 
   // Without a phase-tagged plan week, use the legacy gap math.
   if (!week || !week.phase_id) {
-    return legacyGapRec(week, progress, runOk, bikeOk, programs)
+    return legacyGapRec(week, progress, runOk, bikeOk)
   }
 
   const phase = week.phase_id
@@ -90,7 +94,7 @@ function buildRec(params: {
     (kind === 'strength'   && strengthLeft <= 0)
 
   if (alreadyDone) {
-    return swapRec(week, progress, programs, runOk, bikeOk)
+    return swapRec(week, progress, runOk, bikeOk)
   }
 
   // Render the prescribed primary, with light overrides for weather.
@@ -113,7 +117,7 @@ function buildRec(params: {
         type: 'strength',
         headline: template.primary,
         why: strengthLeft > 0 ? `${strengthLeft} session${strengthLeft > 1 ? 's' : ''} left this week` : (template.sub ?? ''),
-        program: programs[0]?.next_workout_title ?? undefined,
+        program: strengthLabel(week),
       }
     case 'race':
       return { type: 'long_run', headline: template.primary, why: template.sub ?? 'Race day' }
@@ -139,7 +143,6 @@ function buildRec(params: {
 function swapRec(
   week: TrainingWeek,
   progress: WeekProgress,
-  programs: ProgramState[],
   runOk: boolean | null,
   bikeOk: boolean | null,
 ): Rec {
@@ -159,12 +162,12 @@ function swapRec(
   if (!progress.pzMaxDone) {
     return { type: 'ride', headline: 'PZ Max · 30–45 min', why: "Swap: today's primary already done — PZ Max still open" }
   }
-  if (strengthLeft > 0 && programs.length > 0) {
+  if (strengthLeft > 0) {
     return {
       type: 'strength',
       headline: `Strength · ${strengthLeft} session${strengthLeft > 1 ? 's' : ''} left`,
       why: 'Swap: keep the strength count on pace',
-      program: programs[0].next_workout_title ?? undefined,
+      program: strengthLabel(week),
     }
   }
   if (runGap >= 2 && runOk !== false) {
@@ -182,7 +185,6 @@ function legacyGapRec(
   progress: WeekProgress,
   runOk: boolean | null,
   bikeOk: boolean | null,
-  programs: ProgramState[],
 ): Rec {
   if (!week) {
     return { type: 'rest', headline: 'No targets set this week', why: 'Add a training week in the Training tab' }
@@ -201,11 +203,11 @@ function legacyGapRec(
   if (rideGap >= 5 && bikeOk !== false) {
     return { type: 'ride', headline: `Ride · ~${Math.round(rideGap)}mi to go`, why: `${progress.bikeMiles.toFixed(0)} of ${week.target_cycling_miles}mi this week` }
   }
-  if (strengthLeft > 0 && programs.length > 0) {
+  if (strengthLeft > 0) {
     return {
       type: 'strength', headline: `Strength · ${strengthLeft} session${strengthLeft > 1 ? 's' : ''} left`,
       why: `${progress.strengthCount} of ${week.target_strength_sessions} done this week`,
-      program: programs[0].next_workout_title ?? undefined,
+      program: strengthLabel(week),
     }
   }
   return { type: 'rest', headline: 'Week targets on track', why: 'All targets met — free choice tomorrow' }
@@ -219,7 +221,6 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
   const { user } = useAuth()
   const [week, setWeek] = useState<TrainingWeek | null>(null)
   const [progress, setProgress] = useState<WeekProgress>({ longRunDone: false, pzMaxDone: false, strengthCount: 0, runMiles: 0, bikeMiles: 0 })
-  const [programs, setPrograms] = useState<ProgramState[]>([])
   const [recoveryTier, setRecoveryTier] = useState<string>('unknown')
   const [rotationIndex, setRotationIndex] = useState<number | null>(null)
   const { weather } = useWeather()
@@ -231,7 +232,6 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
 
     Promise.allSettled([
       getCurrentTrainingWeek(user.id),
-      getAllPrograms(user.id),
       loadRecovery(user.id),
       (supabase as any)
         .from('activities')
@@ -242,10 +242,9 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
         .gte('activity_date', monday)
         .lte('activity_date', today),
       getAllTrainingWeeks(user.id),
-    ]).then(async ([weekRes, programsRes, recoveryRes, activitiesRes, weeksRes]) => {
+    ]).then(async ([weekRes, recoveryRes, activitiesRes, weeksRes]) => {
       const w = weekRes.status === 'fulfilled' ? weekRes.value : null
       setWeek(w)
-      setPrograms(programsRes.status === 'fulfilled' ? programsRes.value : [])
       if (recoveryRes.status === 'fulfilled') {
         setRecoveryTier(recoveryRes.value.tier ?? 'unknown')
       }
@@ -281,7 +280,7 @@ export function WTomorrow({ dark, onNavigate }: WTomorrowProps) {
     ? tomorrowForecast.highF < 95 && !tomorrowForecast.isRaining && !tomorrowForecast.isSnowing
     : null
 
-  const rec = buildRec({ week, progress, recoveryTier, runOk, bikeOk, programs, dow })
+  const rec = buildRec({ week, progress, recoveryTier, runOk, bikeOk, dow })
 
   // When tomorrow is Thursday and the plan calls for outdoor quality, surface
   // which rotation type is up (phase-aware) plus the Peloton class + sync note.

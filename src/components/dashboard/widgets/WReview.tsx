@@ -71,8 +71,7 @@ export function WReview({ dark, hideCareer, forDate, labelOverride, onSaved }: W
       // BODY MIT: when reviewing today, catch workouts in the logical-today
       // window (6am today through 6am tomorrow) so late-night activities
       // pick up. For prior days just match activity_date.
-      // Skip sub-10-minute activities (warm-ups, stretches) — same floor
-      // program-tracker uses when counting strength sessions.
+      // Skip sub-10-minute activities (warm-ups, stretches).
       setTodayAct(
         (acts as Activity[]).find(a => {
           if ((a.duration_seconds ?? 0) <= 600) return false

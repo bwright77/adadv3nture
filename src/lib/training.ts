@@ -1,6 +1,5 @@
 import { supabase } from './supabase'
 import { deriveTrainingWeek } from './trainingPlan'
-import { getProgram } from './program-tracker'
 import { logicalToday } from './utils'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any
@@ -98,12 +97,9 @@ export async function getCurrentTrainingWeek(userId: string): Promise<TrainingWe
   if (error) throw new Error(error.message)
   if (data) return data as TrainingWeek
 
-  // 2. No override — derive targets from upcoming events + active program.
-  const [events, program] = await Promise.all([
-    getTrainingGoals(userId),
-    getProgram(userId).catch(() => null),
-  ])
-  return deriveTrainingWeek(userId, events, program, d)
+  // 2. No override — derive targets from upcoming events.
+  const events = await getTrainingGoals(userId)
+  return deriveTrainingWeek(userId, events, d)
 }
 
 export async function addTrainingGoal(

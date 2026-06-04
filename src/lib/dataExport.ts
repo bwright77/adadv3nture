@@ -3,7 +3,6 @@ import { getBriefingProfile } from './briefingProfile'
 import { getFamilyMembers, ageDecimal } from './family'
 import { getAnchorEvent, daysUntilDate } from './anchorEvents'
 import { getTrainingGoals, getCurrentTrainingWeek } from './training'
-import { getAllPrograms } from './program-tracker'
 import { getProjects, getProjectWithMilestones, type Project } from './projects'
 
 // Personal data export → Markdown brief, intended for upload into a
@@ -29,7 +28,7 @@ export async function exportToMarkdown(userId: string, opts: ExportOptions): Pro
 
   const [
     profile, family, wlw, laborDay,
-    goals, currentWeek, programs,
+    goals, currentWeek,
     careerProjects, allProjects,
     activitiesRes, bodyMetricsRes, recoveryRes, dailyPlansRes,
     briefingsRes,
@@ -40,7 +39,6 @@ export async function exportToMarkdown(userId: string, opts: ExportOptions): Pro
     getAnchorEvent(userId, 'labor_day').catch(() => null),
     getTrainingGoals(userId).catch(() => []),
     getCurrentTrainingWeek(userId).catch(() => null),
-    getAllPrograms(userId).catch(() => []),
     getProjects(userId, 'career').catch(() => []),
     getProjects(userId).catch(() => []),
     supabase
@@ -178,14 +176,6 @@ export async function exportToMarkdown(userId: string, opts: ExportOptions): Pro
     w(`|---|---|---|---|---|---|---|`)
     for (const g of goals) {
       w(`| ${g.event_name} | ${g.event_date} | ${g.event_type} | ${g.distance_label ?? ''} | ${g.location ?? ''} | ${g.is_anchor ? '★' : ''} | ${g.status} |`)
-    }
-    w(``)
-  }
-  if (programs.length > 0) {
-    w(`**Active programs:**`)
-    w(``)
-    for (const pr of programs) {
-      w(`- ${pr.program_name}${pr.instructor ? ` (${pr.instructor})` : ''} — W${pr.current_week}D${pr.current_day} of ${pr.total_weeks ?? '?'}, last completed ${pr.last_completed_date ?? 'never'}.`)
     }
     w(``)
   }

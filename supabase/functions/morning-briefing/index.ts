@@ -77,32 +77,36 @@ recovery score, sleep, weekly training volume vs plan — not weight progress.
 Do NOT say "X lbs from goal," "X lbs to target," or imply weight loss is the
 objective. Weight is logged 2–3× per week; quote whatever's there as data.
 
-TRAINING WEEK is the structured WLW prep context for the current Monday.
-When present, it states which week of 19, the phase (BASE/BUILD/PEAK/TAPER),
-this week's focus, run / long run / bike / strength volume targets, plus
-two prescription strings:
+TRAINING WEEK is the WLW prep context for the current Monday: the phase
+(BASE/BUILD/PEAK/TAPER), this week's focus, run / long run / bike / strength
+volume targets, plus two prescription strings:
 - Quality: the week's intensity menu (e.g. "PZ Max 1× · Strides 2×").
   PZ Max = Power Zone Max on the Peloton, the primary midweek quality slot.
   Strides, cruise miles, tempo, fartlek, progression are running quality
   options.
-- Strength block: which lifting program is active. Current modality is Row
-  Bootcamp (e.g. "2× Row Bootcamp" = two sessions; target 2×/wk, 3× stretch) —
-  rower intervals + floor strength, no body-part split. ("maint" = maintenance
-  loading. "TS"/Total Strength is RETIRED — only appears on historical rows;
-  don't prescribe it.) This is separate from the standalone WORKOUT block, which
-  names the specific next strength session in the program.
-When you suggest a body / workout action, name it from the plan — "PZ Max
-on the Peloton this morning" — instead of inventing one or relying solely on
-the standalone workout prescription. BUT: the run / long-run / bike numbers are
-WEEKLY targets, not today's session. The long run is its own dedicated day —
-never assign it to today unless the context says today is the long-run day, and
-never state a specific today mileage you weren't given. A hike or family outing
-is NOT a training run and never counts toward a run target.
+- Strength block: the week's strength menu. Current modality is Row Bootcamp
+  (e.g. "2× Row Bootcamp" = two sessions; target 2×/wk, 3× stretch) — rower
+  intervals + floor strength, no body-part split. ("maint" = maintenance
+  loading. "TS"/Total Strength is RETIRED — never prescribe it.)
+
+THE PLAN IS PROSPECTIVE, NOT PRESCRIPTIVE. The targets + quality + strength are
+the MENU of sessions to get in THIS WEEK — Ben places them himself by energy,
+weather, family, travel. So:
+- Frame training as "what's left to get in this week," using TRAINING WEEK
+  targets minus the LOGGED-THIS-WEEK block. e.g. "still need the long run, a
+  quality session, and 1 Row Bootcamp."
+- NEVER say "today is X" / "do the long run today" / assign a session to a day,
+  and never state a specific today mileage you weren't given. The single
+  next-action at the end may name one session to consider, but as a suggestion
+  to fit in, not a day assignment.
+- A hike or family outing is NOT a training run and never counts toward a run
+  target. Movement is framed as energy/care, never debt.
+- No week numbers (no "week 3/19", "W3") — lead with phase + character.
 
 Portfolio categories (match the Lists tabs): CAREER (non-negotiable, this is
 where Wright Adventures opportunities live), FAMILY, HOME, PROJECTS (personal
 art/software/other — NOT Wright Adventures). Body / workout is tracked
-separately via the program tracker, not the portfolio review. Pilot lights =
+separately (training week + Strava), not the portfolio review. Pilot lights =
 days since each portfolio category was last completed. When a category goes
 dark (3+ days), name it specifically — not "you've been neglecting family"
 but "Chase and Ada haven't had intentional time in 4 days."
@@ -358,98 +362,6 @@ const ANCHOR_DOMAIN: Record<string, string> = {
   wlw: 'TRAINING',
 }
 
-// Mirrored from src/lib/program-tracker.ts so the briefing can self-correct
-// the program position from completed Strava activities, instead of waiting
-// for the client to open the Training tab and run syncProgramFromStrava.
-const PROGRAM_SCHEDULES: Record<string, {
-  workoutsPerWeek: number[]
-  dayLabels: Record<number, Record<number, string>>
-}> = {
-  // Row Bootcamp is the current primary modality (2×/week, no body-part split —
-  // falls back to the bare "Row Bootcamp · W#D#" label). Total Strength is
-  // retired but kept so historical / synced rows still resolve a title.
-  'Row Bootcamp': {
-    workoutsPerWeek: [2, 2, 2, 2],
-    dayLabels: {},
-  },
-  'Total Strength': {
-    workoutsPerWeek: [3, 3, 4, 4],
-    dayLabels: {
-      1: { 1: 'Upper Body', 2: 'Lower Body', 3: 'Full Body' },
-      2: { 1: 'Upper Body', 2: 'Lower Body', 3: 'Full Body' },
-      3: { 1: 'Full Body',  2: 'Upper Body', 3: 'Lower Body', 4: 'Full Body' },
-      4: { 1: 'Full Body',  2: 'Upper Body', 3: 'Lower Body', 4: 'Full Body' },
-    },
-  },
-}
-
-function programTitle(programName: string, week: number, day: number): string {
-  const label = PROGRAM_SCHEDULES[programName]?.dayLabels[week]?.[day]
-  return label ? `${programName} · W${week}D${day} · ${label}` : `${programName} · W${week}D${day}`
-}
-
-function nextProgramPosition(programName: string, sessionsCompleted: number): { week: number; day: number } | null {
-  const schedule = PROGRAM_SCHEDULES[programName]
-  if (!schedule) {
-    const week = Math.floor(sessionsCompleted / 4) + 1
-    const day = (sessionsCompleted % 4) + 1
-    return { week, day }
-  }
-  let remaining = sessionsCompleted
-  for (let w = 0; w < schedule.workoutsPerWeek.length; w++) {
-    const inWeek = schedule.workoutsPerWeek[w]
-    if (remaining < inWeek) return { week: w + 1, day: remaining + 1 }
-    remaining -= inWeek
-  }
-  return null
-}
-
-// Pulls completed strength activities since the program started, derives the
-// correct position, and writes it back to program_tracker if it drifted.
-// Returns the (possibly-updated) program state so the briefing's prompt
-// reflects yesterday's session regardless of when the user opens the app.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function advanceProgramFromActivities(admin: any, userId: string, program: any) {
-  if (!program) return program
-  const startDate = program.started_at ?? program.last_completed_date
-  if (!startDate) return program
-
-  const { data: activities } = await admin
-    .from('activities')
-    .select('activity_date')
-    .eq('user_id', userId)
-    .eq('source', 'strava')
-    .gte('activity_date', startDate)
-    .ilike('title', '%strength%')
-    .gt('duration_seconds', 600)
-    .order('activity_date', { ascending: true }) as { data: { activity_date: string }[] | null }
-
-  if (!activities || activities.length === 0) return program
-
-  const distinctDates = [...new Set(activities.map(a => a.activity_date))].sort()
-  const sessionsCompleted = distinctDates.length
-  const next = nextProgramPosition(program.program_name, sessionsCompleted)
-  if (!next) {
-    // Program complete — flag inactive and reflect in the returned shape.
-    await admin.from('program_tracker').update({ active: false }).eq('id', program.id)
-    return { ...program, active: false }
-  }
-
-  if (next.week === program.current_week && next.day === program.current_day) {
-    return program
-  }
-
-  const lastDate = distinctDates[distinctDates.length - 1]
-  const updated = {
-    current_week: next.week,
-    current_day: next.day,
-    next_workout_title: programTitle(program.program_name, next.week, next.day),
-    last_completed_date: lastDate,
-  }
-  await admin.from('program_tracker').update(updated).eq('id', program.id)
-  return { ...program, ...updated }
-}
-
 interface TrainingWeekRow {
   week_start: string
   phase_id: string | null
@@ -529,20 +441,20 @@ async function loadAnchorsAndFamily(admin: any, userId: string, today: string): 
     : 'FAMILY: not configured'
 
   // Locate the current plan week (week_start == this Monday). Surface the
-  // structured prescription so the model can name the day's prescribed
-  // workout instead of inventing one or relying solely on the standalone
-  // strength program tracker.
+  // the week's prescription menu (quality + strength + targets) so the model
+  // can name what's on tap this week without inventing it — paired with the
+  // LOGGED-THIS-WEEK block to frame what's left, never a day-by-day schedule.
   const currentMonday = mondayOf(today)
   const idx = trainingWeeks.findIndex(w => w.week_start === currentMonday)
   let trainingWeekBlock = 'TRAINING WEEK: no plan-week row for this Monday'
   if (idx >= 0) {
     const w = trainingWeeks[idx]
     const lines: string[] = []
-    // Lead with phase + character (the meaningful label); week number stays as
-    // trailing metadata only.
+    // Lead with phase + character (the meaningful label). No week number — the
+    // plan is prospective, framed by phase + the week's session menu.
     const phasePrefix = w.phase_id ? w.phase_id.toUpperCase() : (w.phase_label ?? '').toUpperCase()
     const character = weekCharacterPhrase(w.phase_id, w.key_marker, w.week_start, trainingGoals)
-    lines.push(`TRAINING WEEK (${[phasePrefix, character].filter(Boolean).join(' · ')} — WLW prep, wk ${idx + 1}/${trainingWeeks.length}):`)
+    lines.push(`TRAINING WEEK (${[phasePrefix, character].filter(Boolean).join(' · ')} — WLW prep):`)
     if (w.key_marker) lines.push(`- Key marker: ${w.key_marker}`)
     if (w.focus) lines.push(`- Focus: ${w.focus}`)
     const targets: string[] = []
@@ -889,18 +801,20 @@ ${weightContextLine(weight, weightMeasuredAt)}`
     } else {
       // ── Weekday context (unchanged) ────────────────────────────────────────
       const yesterday = prevDate(today, 1)
-      const [recoveryRes, programRes, inboxRes, weightRes, reviewRes] = await Promise.all([
+      const weekMonday = mondayOf(today)
+      const [recoveryRes, weekActsRes, inboxRes, weightRes, reviewRes] = await Promise.all([
         admin.from('recovery_signals')
           .select('signal_date, rhr, sleep_duration_hours, drinks_consumed, recovery_score, recovery_tier')
           .eq('user_id', user.id)
           .in('signal_date', [today, yesterday])
           .order('signal_date', { ascending: false }),
-        admin.from('program_tracker')
-          .select('program_name, current_week, current_day, total_weeks, next_workout_title, last_completed_date')
+        // What's been logged so far this week — so the briefing can frame
+        // training as "sessions left to get in", not a day-by-day prescription.
+        admin.from('activities')
+          .select('activity_type, title, distance_miles, duration_seconds, activity_date')
           .eq('user_id', user.id)
-          .eq('active', true)
-          .limit(1)
-          .maybeSingle(),
+          .gte('activity_date', weekMonday)
+          .lte('activity_date', today),
         admin.from('inbox_items')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', user.id)
@@ -942,14 +856,26 @@ ${weightContextLine(weight, weightMeasuredAt)}`
       ) as Signal | undefined
       const todaySignal = wakeupSignal       // alias used by template below
       const ySignal = yesterdayRow as { drinks_consumed: number } | undefined
-      // Self-correct the program from completed Strava strength sessions so
-      // a workout logged yesterday but not yet reflected by the client-side
-      // syncProgramFromStrava (which only runs when the user opens the
-      // Training tab) doesn't leave the briefing one day behind.
-      const program = (await advanceProgramFromActivities(admin, user.id, programRes.data)) as {
-        program_name: string; current_week: number; current_day: number
-        total_weeks: number | null; next_workout_title: string | null; last_completed_date: string | null
-      } | null
+
+      // Tally what's logged this week so the briefing surfaces what's LEFT to
+      // get in (prospective menu), never a day-by-day "do X today" schedule.
+      type WeekAct = { activity_type: string; title: string | null; distance_miles: number | null; duration_seconds: number | null; activity_date: string }
+      const weekActs = (weekActsRes.data ?? []) as WeekAct[]
+      const isBikeAct = (t: string) => t === 'ride' || t.includes('bike') || t.includes('cycl')
+      const isRunAct = (t: string) => t === 'run' || t === 'trail_run'
+      const isStrengthAct = (a: WeekAct) =>
+        /strength|bootcamp/i.test(`${a.activity_type} ${a.title ?? ''}`) && (a.duration_seconds ?? 0) > 600
+      const sumMi = (xs: WeekAct[]) => Math.round(xs.reduce((s, a) => s + (a.distance_miles ?? 0), 0) * 10) / 10
+      const runActs = weekActs.filter(a => isRunAct(a.activity_type))
+      const runMilesWk = sumMi(runActs)
+      const bikeMilesWk = sumMi(weekActs.filter(a => isBikeAct(a.activity_type)))
+      const longestRunWk = runActs.length ? Math.max(...runActs.map(a => a.distance_miles ?? 0)) : 0
+      const strengthDoneWk = new Set(weekActs.filter(isStrengthAct).map(a => a.activity_date)).size
+      const loggedThisWeekBlock = `LOGGED THIS WEEK (Mon–today — subtract from the TRAINING WEEK targets to see what's LEFT to get in; do NOT assign sessions to specific days):
+- Run: ${runMilesWk}mi (longest single run ${longestRunWk.toFixed(1)}mi)
+- Bike: ${bikeMilesWk}mi
+- Strength: ${strengthDoneWk} session${strengthDoneWk === 1 ? '' : 's'}`
+
       const inboxCount = inboxRes.count ?? 0
       const weightRow = weightRes.data as { weight_lbs: number | null; measured_at: string | null } | null
       const weight = weightRow?.weight_lbs ?? null
@@ -1014,13 +940,6 @@ ${weightContextLine(weight, weightMeasuredAt)}`
         return `  ${catLabels[cat]}: ${days}d since last · cadence ${cadence}d · ${status}${suffix}`
       }).join('\n')
 
-      // Only show a WORKOUT block when a structured program is active. Total
-      // Strength was retired (Row Bootcamp is the modality now) — its weekly
-      // target lives in the TRAINING WEEK block's strength prescription, so
-      // we don't fabricate a "W1 of 4" line from a deactivated program.
-      const workoutBlock = program
-        ? `WORKOUT:\n- Prescribed: ${program.next_workout_title ?? 'check program'}\n- Progress: W${program.current_week} of ${program.total_weeks} (${program.current_week - 1} weeks complete)\n\n`
-        : ''
       const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' })
 
       contextMsg = `Today is ${dayName}, ${today}.
@@ -1032,6 +951,8 @@ ${anchorBlock}
 
 ${trainingWeekBlock}
 
+${loggedThisWeekBlock}
+
 RECOVERY:
 - RHR: ${todaySignal?.rhr ?? 'no data'} bpm (baseline 63)
 - Sleep: ${todaySignal?.sleep_duration_hours != null ? `${todaySignal.sleep_duration_hours.toFixed(1)}h` : 'no data'}
@@ -1039,7 +960,7 @@ RECOVERY:
 - Mood yesterday (1-5): ${yReview?.mood_score ?? 'not logged'}
 - Recovery score: ${todaySignal?.recovery_score != null ? Math.round(todaySignal.recovery_score) : 'unknown'}/100${todaySignal?.recovery_tier ? ` · ${todaySignal.recovery_tier}` : ''}
 
-${workoutBlock}INBOX: ${inboxCount} unprocessed items
+INBOX: ${inboxCount} unprocessed items
 ${weightContextLine(weight, weightMeasuredAt)}
 
 YESTERDAY'S PORTFOLIO REVIEW:

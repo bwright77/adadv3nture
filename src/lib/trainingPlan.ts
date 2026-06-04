@@ -14,12 +14,11 @@
 // total. (Most demanding prep wins; doubling up doesn't make sense.)
 // Different disciplines are independent — run and cycling don't compete.
 //
-// Strength comes from program-tracker (existing prescription), not the
-// event derivation.
+// Strength is the weekly Row Bootcamp target (2×), not event-derived.
 
 import type { TrainingGoal, TrainingWeek } from './training'
-import type { ProgramState } from './program-tracker'
-import { weeklyStrengthSessions } from './program-tracker'
+
+const DEFAULT_STRENGTH_SESSIONS = 2   // Row Bootcamp: 2×/wk target
 
 const BASE_PCT = 0.30                // starting long-workout = 30% of event distance
 const BUILD_WEEKS = 12               // length of the build ramp
@@ -147,7 +146,6 @@ const PHASE_LABEL: Record<Phase, string> = {
 export function deriveTrainingWeek(
   userId: string,
   events: TrainingGoal[],
-  program: ProgramState | null,
   today: Date = new Date(),
 ): TrainingWeek {
   const runParts: Contribution[] = []
@@ -167,7 +165,7 @@ export function deriveTrainingWeek(
   const run = combineContributions(runParts)
   const ride = combineContributions(cyclingParts)
   const phase = pickHigherPhase(run.phase, ride.phase)
-  const strength = weeklyStrengthSessions(program)
+  const strength = DEFAULT_STRENGTH_SESSIONS
 
   return {
     id: `derived-${thisMonday(today)}`,

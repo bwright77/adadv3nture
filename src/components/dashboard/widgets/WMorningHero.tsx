@@ -3,7 +3,6 @@ import { Glass } from '../../ui/Glass'
 import { C } from '../../../tokens'
 import { useAuth } from '../../../contexts/AuthContext'
 import { loadRecovery, type RecoveryResult } from '../../../lib/recovery'
-import { getProgram, type ProgramState } from '../../../lib/program-tracker'
 import { supabase } from '../../../lib/supabase'
 import { useAnchorEvent } from '../../../hooks/useAnchorEvent'
 import { daysUntil } from '../../../lib/countdown'
@@ -93,13 +92,11 @@ function Dotted() {
 export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMorningHeroProps) {
   const { user } = useAuth()
   const [recovery, setRecovery] = useState<RecoveryResult | null>(null)
-  const [program, setProgram] = useState<ProgramState | null>(null)
   const [drinksAvg, setDrinksAvg] = useState<number | null>(null)
 
   useEffect(() => {
     if (!user) return
     loadRecovery(user.id).then(setRecovery).catch(() => null)
-    getProgram(user.id).then(setProgram).catch(() => null)
     const dates = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(Date.now() - i * 86400000)
       return d.toISOString().substring(0, 10)
@@ -133,7 +130,7 @@ export function WMorningHero({ dark = true, briefingText, briefingLoading }: WMo
   const locationStamp = location.elevationFt != null
     ? `${location.name.toUpperCase()} ${location.elevationFt.toLocaleString()}FT`
     : location.name.toUpperCase()
-  const workoutTitle = program?.next_workout_title ?? 'TOTAL STRENGTH'
+  const workoutTitle = 'ROW BOOTCAMP'
   const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()
 
   return (
