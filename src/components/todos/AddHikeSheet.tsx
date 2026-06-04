@@ -27,6 +27,7 @@ function StarPicker({ value, onChange }: { value: number; onChange: (v: number) 
 export function AddHikeSheet({ onClose, onAdd }: Props) {
   const [name, setName] = useState('')
   const [hub, setHub] = useState('')
+  const [allTrailsUrl, setAllTrailsUrl] = useState('')
   const [distance, setDistance] = useState('')
   const [driveMin, setDriveMin] = useState('')
   const [alreadyDid, setAlreadyDid] = useState(false)
@@ -60,6 +61,7 @@ export function AddHikeSheet({ onClose, onAdd }: Props) {
     await onAdd({
       name: name.trim(),
       hub: hub.trim() || null,
+      alltrails_url: allTrailsUrl.trim() || null,
       distance_mi: distance ? parseFloat(distance) : null,
       drive_minutes_denver: driveMin ? parseInt(driveMin, 10) : null,
       done: alreadyDid,
@@ -85,10 +87,15 @@ export function AddHikeSheet({ onClose, onAdd }: Props) {
           <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Lair o' the Bear loop" style={input} autoFocus />
         </div>
 
-        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+        <div style={{ marginBottom: 16 }}>
+          <div className="mono" style={label}>AllTrails link (optional)</div>
+          <input value={allTrailsUrl} onChange={e => setAllTrailsUrl(e.target.value)} inputMode="url" placeholder="https://www.alltrails.com/trail/…" style={input} />
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, marginBottom: 8 }}>
           <div style={{ flex: 2 }}>
-            <div className="mono" style={label}>Area (optional)</div>
-            <input value={hub} onChange={e => setHub(e.target.value)} placeholder="Morrison" style={input} />
+            <div className="mono" style={label}>Area — locates the hike</div>
+            <input value={hub} onChange={e => setHub(e.target.value)} placeholder="Salida" style={input} />
           </div>
           <div style={{ flex: 1 }}>
             <div className="mono" style={label}>Miles</div>
@@ -98,6 +105,9 @@ export function AddHikeSheet({ onClose, onAdd }: Props) {
             <div className="mono" style={label}>Drive</div>
             <input value={driveMin} onChange={e => setDriveMin(e.target.value)} inputMode="numeric" placeholder="35" style={input} />
           </div>
+        </div>
+        <div className="mono" style={{ fontSize: 'var(--fs-10)', opacity: 0.5, marginBottom: 20, lineHeight: 1.4 }}>
+          The town/area places the hike on the map so it shows up when you're nearby. (AllTrails blocks reading coordinates from the link.)
         </div>
 
         {/* Did we already do it? Reveals completion fields. */}

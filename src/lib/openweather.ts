@@ -61,6 +61,38 @@ async function fetchJSON<T>(url: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
+// Colorado bounding box — a backstop when a geocode result lacks a state field.
+const CO_BBOX = { latMin: 36.99, latMax: 41.01, lonMin: -109.07, lonMax: -102.03 }
+const inColorado = (r: { lat: number; lon: number; state?: string }): boolean =>
+  r.state === 'Colorado' ||
+  (r.lat >= CO_BBOX.latMin && r.lat <= CO_BBOX.latMax && r.lon >= CO_BBOX.lonMin && r.lon <= CO_BBOX.lonMax)
+
+// Forward-geocode a place name (a town / trail area) to coordinates via the
+// OpenWeather Geocoding API, constrained to Colorado — many CO town names
+// (Morrison, Evergreen, Breckenridge, Buena Vista…) also exist in bigger states
+// and the `,CO,US` query bias is NOT reliably honored, so we fetch several
+// candidates and keep the first that's actually in Colorado. Town-level accuracy
+// — enough to place a hike for proximity, not exact trailhead. Null on miss.
+export async function geocodePlace(query: string): Promise<{ lat: number; lon: number } | null> {
+  const q = query.trim()
+  if (!q || !API_KEY) return null
+  // Try each slash-separated token ("Sanpiero/Grand Junction" → try both) and
+  // keep the first that resolves to a Colorado place.
+  for (const token of q.split('/').map(t => t.trim()).filter(Boolean)) {
+    const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(`${token}, CO, US`)}&limit=5&appid=${API_KEY}`
+    try {
+      const res = await fetch(url)
+      if (!res.ok) continue
+      const data = (await res.json()) as { lat: number; lon: number; state?: string }[]
+      const co = Array.isArray(data) ? data.find(inColorado) : null
+      if (co) return { lat: co.lat, lon: co.lon }
+    } catch {
+      // try next token
+    }
+  }
+  return null
+}
+
 export async function getWeather(loc: ResolvedLocation = DEFAULT_LOCATION): Promise<WeatherData> {
 
   const base = `https://api.openweathermap.org/data/2.5`

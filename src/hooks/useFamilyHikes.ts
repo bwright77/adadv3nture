@@ -5,6 +5,7 @@ import { useLocation } from './useLocation'
 import { registerMITActivity } from '../lib/daily-plan'
 import { logicalToday } from '../lib/utils'
 import { haversineMi } from '../lib/locations'
+import { geocodePlace } from '../lib/openweather'
 
 export interface Hike {
   id: string
@@ -29,13 +30,14 @@ export interface Hike {
   strava_activity_id: number | null
 }
 
-// Fields for adding a family hike that isn't in the original 50.
+// Fields for adding a family hike.
 export interface NewHike {
   name: string
   hub?: string | null
   distance_mi?: number | null
   drive_minutes_denver?: number | null
   best_months?: string[] | null
+  alltrails_url?: string | null
   // Optional immediate completion (logging one we already did).
   done?: boolean
   date_done?: string | null
@@ -108,6 +110,14 @@ export function useFamilyHikes() {
   async function addHike(fields: NewHike): Promise<void> {
     if (!user) return
     const isDone = fields.done ?? false
+    // Derive coordinates from the area so the hike geo-filters into suggestions.
+    // Town-level is enough; a miss just leaves it "unplaced" (always suggestable).
+    let lat: number | null = null
+    let lng: number | null = null
+    if (fields.hub) {
+      const geo = await geocodePlace(fields.hub)
+      if (geo) { lat = geo.lat; lng = geo.lon }
+    }
     await (supabase as any).from('family_hikes').insert({
       user_id: user.id,
       name: fields.name,
@@ -117,6 +127,9 @@ export function useFamilyHikes() {
       distance_mi: fields.distance_mi ?? null,
       drive_minutes_denver: fields.drive_minutes_denver ?? null,
       best_months: fields.best_months ?? null,
+      alltrails_url: fields.alltrails_url ?? null,
+      trailhead_lat: lat,
+      trailhead_lng: lng,
       done: isDone,
       date_done: isDone ? (fields.date_done ?? logicalToday()) : null,
       family_rating: fields.family_rating ?? null,
