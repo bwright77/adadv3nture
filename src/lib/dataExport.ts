@@ -159,15 +159,50 @@ export async function exportToMarkdown(userId: string, opts: ExportOptions): Pro
   w(`## Training`)
   w(``)
   if (currentWeek) {
-    w(`**This week** (${currentWeek.phase_label}, derived from upcoming events):`)
+    // Prospective "what's left to get in this week" — targets minus what's
+    // logged Mon–today. A menu to place, NOT a day-by-day schedule.
+    const weekStart = currentWeek.week_start
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wk = activities.filter((a: any) => a.activity_date >= weekStart && a.activity_date <= todayStr)
+    const isRun = (t: string) => t === 'run' || t === 'trail_run'
+    const isBike = (t: string) => t === 'ride' || t.includes('bike') || t.includes('cycl')
+    const isStrengthAct = (a: { activity_type: string; title?: string | null; duration_seconds?: number | null }) =>
+      /strength|bootcamp/i.test(`${a.activity_type} ${a.title ?? ''}`) && (a.duration_seconds ?? 0) > 600
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sumMi = (xs: any[]) => Math.round(xs.reduce((s: number, a: any) => s + (a.distance_miles ?? 0), 0) * 10) / 10
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const runActs = wk.filter((a: any) => isRun(a.activity_type))
+    const runDone = sumMi(runActs)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const bikeDone = sumMi(wk.filter((a: any) => isBike(a.activity_type)))
+    const strengthDone = new Set(wk.filter(isStrengthAct).map((a: { activity_date: string }) => a.activity_date)).size
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const longestRun = runActs.length ? Math.max(...runActs.map((a: any) => a.distance_miles ?? 0)) : 0
+    const longTarget = currentWeek.target_long_run_miles ?? 0
+    const longDone = longTarget > 0 && longestRun >= longTarget * 0.9
+    const rem = (target: number | null, done: number) => target != null ? Math.max(0, Math.round((target - done) * 10) / 10) : null
+
+    w(`**This Week — What's Left** (${currentWeek.phase_label}) — a menu to place by energy/weather/family, not a day schedule:`)
     w(``)
-    w(`| Metric | Target |`)
-    w(`|---|---|`)
-    if (currentWeek.target_run_miles != null) w(`| Run miles | ${currentWeek.target_run_miles} |`)
-    if (currentWeek.target_long_run_miles != null) w(`| Long run miles | ${currentWeek.target_long_run_miles} |`)
-    if (currentWeek.target_cycling_miles != null) w(`| Cycling miles | ${currentWeek.target_cycling_miles} |`)
-    if (currentWeek.target_strength_sessions != null) w(`| Strength sessions | ${currentWeek.target_strength_sessions} |`)
+    w(`| Category | Target | Done | Remaining |`)
+    w(`|---|---|---|---|`)
+    if (currentWeek.target_run_miles != null) w(`| Run miles | ${currentWeek.target_run_miles} | ${runDone} | ${rem(currentWeek.target_run_miles, runDone)} |`)
+    if (longTarget > 0) w(`| Long run | ${longTarget} mi | ${longDone ? `✓ (${longestRun.toFixed(1)}mi)` : '—'} | ${longDone ? '0' : `1 long run (${longTarget}mi)`} |`)
+    if (currentWeek.target_cycling_miles != null) w(`| Cycling miles | ${currentWeek.target_cycling_miles} | ${bikeDone} | ${rem(currentWeek.target_cycling_miles, bikeDone)} |`)
+    if (currentWeek.target_strength_sessions != null) w(`| Strength | ${currentWeek.target_strength_sessions}× | ${strengthDone}× | ${Math.max(0, currentWeek.target_strength_sessions - strengthDone)}× |`)
     w(``)
+    const menu: string[] = []
+    if (currentWeek.quality_prescription) menu.push(`Quality: ${currentWeek.quality_prescription}`)
+    if (currentWeek.strength_prescription) menu.push(`Strength: ${currentWeek.strength_prescription}`)
+    if (menu.length) { w(`Session menu to place this week: ${menu.join(' · ')}`); w(``) }
+    // Days to the next race.
+    const nextRace = goals
+      .filter(g => g.status === 'active' && g.event_date >= todayStr)
+      .sort((a, b) => a.event_date.localeCompare(b.event_date))[0]
+    if (nextRace) {
+      w(`Next race: ${nextRace.event_name} — ${daysUntilDate(nextRace.event_date)} days (${nextRace.event_date}${nextRace.location ? `, ${nextRace.location}` : ''})`)
+      w(``)
+    }
   }
   if (goals.length > 0) {
     w(`**Upcoming events:**`)
@@ -299,7 +334,7 @@ export async function exportToMarkdown(userId: string, opts: ExportOptions): Pro
   if (briefings.length > 0) {
     w(`## Recent Morning Briefings`)
     w(``)
-    w(`_For tone / voice calibration._`)
+    w(`_Historical daily snapshots — accurate when written, NOT current. They may reference an old plan state (week numbers, retired programs). For current week status use **"This Week — What's Left"** in the Training section above, not these. Here for tone / voice calibration._`)
     w(``)
     for (const b of briefings) {
       const text = b.morning_briefing ?? b.weekend_briefing
