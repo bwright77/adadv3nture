@@ -28,24 +28,35 @@ export function WBackfill({ dark }: Props) {
     if (!user) return
     const days = await getOpenDays(user.id)
     setOpen(days)
-    setSelected(s => (s && !days.includes(s)) ? null : s)
     setLoaded(true)
+    // NOTE: do NOT clear `selected` here. Logging mood removes the day from the
+    // open list, but the user is mid-fill — keep the form open so they can enter
+    // every category for that day. The form closes only on manual deselect.
   }, [user])
 
   useEffect(() => { refresh() }, [refresh])
 
-  // Quiet when there's nothing to fill — no wall, no nag.
-  if (!loaded || open.length === 0) return null
+  // Quiet when there's nothing to fill — but keep the widget mounted while a
+  // day is actively being filled (even after it leaves the open list).
+  if (!loaded || (open.length === 0 && !selected)) return null
+
+  // Keep the in-progress day's chip visible even once it's been given a mood.
+  const chipDays = selected && !open.includes(selected) ? [selected, ...open] : open
 
   return (
     <Glass dark={dark} span={12} pad={16}>
-      <CardLabel dark={dark}>Catch up · {open.length} {open.length === 1 ? 'day' : 'days'} unlogged</CardLabel>
+      <CardLabel dark={dark}>
+        {open.length > 0
+          ? `Catch up · ${open.length} ${open.length === 1 ? 'day' : 'days'} unlogged`
+          : 'Catch up · filling in'}
+      </CardLabel>
       <div style={{ fontSize: 'var(--fs-13)', color: dark ? 'rgba(245,237,214,0.7)' : C.ink60, lineHeight: 1.45, marginBottom: 10 }}>
-        No rush — these days never got a mood. Tap one to fill it in; any synced
-        run, weight or sleep already there stays put.
+        No rush — tap a day to fill it in. Log mood and any category; the form
+        stays open until you tap the day again. Any synced run, weight or sleep
+        already there stays put.
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        {open.map(d => {
+        {chipDays.map(d => {
           const on = selected === d
           return (
             <button key={d} onClick={() => setSelected(on ? null : d)} style={{
