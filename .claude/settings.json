@@ -56,7 +56,10 @@
       "Bash(sed -i '' '509,715d' src/components/todos/TrainingView.tsx)",
       "Bash(sed -n '506,512p' src/components/todos/TrainingView.tsx)",
       "Bash(sed -i '' '361,452d' supabase/functions/morning-briefing/index.ts)",
-      "Bash(sed -n '358,363p' supabase/functions/morning-briefing/index.ts)"
+      "Bash(sed -n '358,363p' supabase/functions/morning-briefing/index.ts)",
+      "Bash(sed -n '1,40p' src/components/dashboard/InspireDetail.tsx)",
+      "Bash(sed -n '20,55p' src/components/dashboard/widgets/WInspire.tsx)",
+      "Bash(awk '/InspirationPhoto/{p=1} p{print} /^}/{if\\(p\\)exit}' src/hooks/useInspiration.ts)"
     ],
     "additionalDirectories": [
       "/Users/benjaminwright/.claude",

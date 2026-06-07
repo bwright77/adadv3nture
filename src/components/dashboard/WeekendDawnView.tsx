@@ -3,7 +3,7 @@ import { Header } from '../ui/Header'
 import { WMorningHero } from './widgets/WMorningHero'
 import { WWorkout } from './widgets/WWorkout'
 import { WThinkingPrompt } from './widgets/WThinkingPrompt'
-import { WDrinks } from './widgets/WDrinks'
+import { WDrinkEntry } from './widgets/WDrinkEntry'
 import { WSteps } from './widgets/WSteps'
 import { WInspire } from './widgets/WInspire'
 import { WCalendar } from './widgets/WCalendar'
@@ -153,7 +153,7 @@ export function WeekendDawnView({ weekendBlock, isOverride, onSetWeekendBlock, h
         <WMorningHero dark briefingText={briefingData?.briefing ?? null} briefingLoading={briefingLoading} />
         <WWorkout dark />
         <WThinkingPrompt dark prompt={briefingData?.thinking_prompt ?? null} loading={briefingLoading} />
-        <WDrinks dark span={6} />
+        <WDrinkEntry dark />
         <WSteps dark span={6} />
         <WCalendar dark span={12} />
         <WInspire dark span={12} />

@@ -7,6 +7,7 @@ import { useLocation } from '../../hooks/useLocation'
 import { SUMMER_START } from '../../hooks/useSummerMode'
 import { logicalToday } from '../../lib/utils'
 import { getPhotosSince, addInspirationPhoto, type InspirationPhoto } from '../../lib/inspiration'
+import { InspireDetail } from './InspireDetail'
 
 interface Props { dark?: boolean }
 
@@ -108,20 +109,14 @@ export function SummerSnapshots({ dark = true }: Props) {
         </div>
       )}
 
-      {/* Lightbox */}
+      {/* Full-page viewer — same as inspiration photos, swiping the summer set */}
       {zoom && (
-        <div
-          onClick={() => setZoom(null)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,0.88)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20,
-          }}
-        >
-          <img src={zoom.original_url} alt={zoom.caption ?? ''} style={{ maxWidth: '100%', maxHeight: '82vh', borderRadius: 12, objectFit: 'contain' }} />
-          <div className="mono" style={{ color: C.cream, marginTop: 12, fontSize: 'var(--fs-12)', textAlign: 'center' }}>
-            {zoom.caption ? `${zoom.caption} · ` : ''}{zoom.takenAt}{zoom.location ? ` · ${zoom.location}` : ''}
-          </div>
-        </div>
+        <InspireDetail
+          photo={zoom}
+          photoSet={photos}
+          startIndex={photos.findIndex(p => p.id === zoom.id)}
+          onClose={() => setZoom(null)}
+        />
       )}
     </Glass>
   )

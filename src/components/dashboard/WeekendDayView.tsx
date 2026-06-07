@@ -1,7 +1,7 @@
 import { Header } from '../ui/Header'
 import { WCalendar } from './widgets/WCalendar'
 import { WInbox } from './widgets/WInbox'
-import { WDrinks } from './widgets/WDrinks'
+import { WDrinkEntry } from './widgets/WDrinkEntry'
 import { WSteps } from './widgets/WSteps'
 import { WInspire } from './widgets/WInspire'
 import { WWorkout } from './widgets/WWorkout'
@@ -42,7 +42,7 @@ export function WeekendDayView({ weekendBlock, isOverride, onSetWeekendBlock, on
         <WWorkout dark span={12} />
         <WCalendar dark span={12} />
         <WInbox dark span={12} onOpen={onOpenInbox} />
-        <WDrinks dark span={6} />
+        <WDrinkEntry dark />
         <WSteps dark span={6} />
         <WLongEffort dark />
         <WProjectSession dark />

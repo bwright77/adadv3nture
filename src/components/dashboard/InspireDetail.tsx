@@ -8,6 +8,10 @@ import { formatFullDate } from '../../lib/utils'
 interface InspireDetailProps {
   photo: InspirationPhoto
   onClose: () => void
+  // Optional caller-supplied set to swipe through (e.g. Summer Snapshots). When
+  // given, this is used verbatim instead of the "on this day" around-date fetch.
+  photoSet?: InspirationPhoto[]
+  startIndex?: number
 }
 
 // Stacked <img> layers: cached thumbnail underneath (blur-up placeholder),
@@ -50,10 +54,10 @@ function PhotoLayer({ photo, style }: { photo: InspirationPhoto; style?: React.C
   )
 }
 
-export function InspireDetail({ photo, onClose }: InspireDetailProps) {
+export function InspireDetail({ photo, onClose, photoSet, startIndex }: InspireDetailProps) {
   const { user } = useAuth()
-  const [photos, setPhotos] = useState<InspirationPhoto[]>([photo])
-  const [idx, setIdx] = useState(0)
+  const [photos, setPhotos] = useState<InspirationPhoto[]>(photoSet?.length ? photoSet : [photo])
+  const [idx, setIdx] = useState(photoSet?.length ? (startIndex ?? 0) : 0)
   const [dx, setDx] = useState(0)
   const [dragging, setDragging] = useState(false)
   const [exitDx, setExitDx] = useState<number | null>(null)
@@ -61,14 +65,16 @@ export function InspireDetail({ photo, onClose }: InspireDetailProps) {
   const THRESHOLD = 72
 
   useEffect(() => {
-    if (!user) return
+    // A caller-supplied set is authoritative — don't override it with the
+    // around-date ("on this day") fetch.
+    if (!user || photoSet?.length) return
     getPhotosAroundDate(user.id, 4).then(list => {
       if (list.length === 0) return
       const i = list.findIndex(p => p.id === photo.id)
       setPhotos(list)
       setIdx(i >= 0 ? i : 0)
     }).catch(() => null)
-  }, [user, photo.id])
+  }, [user, photo.id, photoSet])
 
   const current = photos[idx] ?? photo
   const yearsAgo = new Date().getFullYear() - current.year

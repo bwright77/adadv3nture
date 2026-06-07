@@ -115,11 +115,22 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
     }
   }
 
+  // Point next_action at the first remaining incomplete milestone (in display
+  // order). Used after delete/reorder so the "next action" never points at a
+  // milestone that's gone or no longer first. Mirrors the check-off behavior.
+  async function syncNextAction(ms: ProjectMilestone[]) {
+    const title = ms.find(m => !m.done)?.title ?? ''
+    setLocalNextAction(title)
+    setActionDraft(title)
+    await updateNextAction(project.id, title)
+  }
+
   async function handleDeleteMilestone(id: string) {
     const updated = localMilestones.filter(m => m.id !== id)
     setLocalMilestones(updated)
     await deleteMilestone(id)
     await recalcProgress(updated)
+    await syncNextAction(updated)
   }
 
   async function handleAddMilestone() {
@@ -164,6 +175,8 @@ export function ProjectDetail({ project, milestones, updates, contacts, onClose,
     if (dragIdx === null) return
     setDragIdx(null)
     reorderMilestones(localMilestones.map((m, i) => ({ id: m.id, sort_order: i }))).catch(() => null)
+    // Reordering can change which incomplete milestone is first — re-point next_action.
+    syncNextAction(localMilestones).catch(() => null)
   }
 
   async function handleAddContact() {
