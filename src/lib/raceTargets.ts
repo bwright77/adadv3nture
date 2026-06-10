@@ -22,6 +22,7 @@ export interface RaceTarget {
   url?: string
   courseMapUrl?: string
   targetFinish: string
+  fuel?: string                // race-day carb rate, g/hr (the trained number)
   paces: RacePaces
   role: 'tune_up' | 'A_race'
   // Plain-English segment labels paired with the `paces` keys, in race order,
@@ -63,6 +64,7 @@ export const RACE_TARGETS: Record<string, RaceTarget> = {
     distance: 13.1,
     elevationGain: 2451,
     targetFinish: '2:34–2:44',
+    fuel: '90–100',
     role: 'A_race',
     paces: {
       climbs: '13:00–14:00',
@@ -76,7 +78,7 @@ export const RACE_TARGETS: Record<string, RaceTarget> = {
       { key: 'descents', label: 'Descents' },
       { key: 'blended', label: 'Blended' },
     ],
-    notes: 'Summit 9,708 ft. The single best WLW predictor — run controlled, read the data.',
+    notes: 'Summit 9,708 ft. The single best WLW predictor and the full dress rehearsal: no aid — carry everything, fuel 90–100 g/hr, and race the descent (eccentric / downhill-durability rehearsal). Run controlled, read the data.',
   },
   westLineWinder30K: {
     key: 'westLineWinder30K',
@@ -84,6 +86,7 @@ export const RACE_TARGETS: Record<string, RaceTarget> = {
     distance: 18.1,
     elevationGain: 2450,
     targetFinish: '3:24–3:45',
+    fuel: '95–105',
     role: 'A_race',
     paces: {
       climbs: '12:30–13:30',

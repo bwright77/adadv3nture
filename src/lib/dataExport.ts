@@ -5,6 +5,14 @@ import { getAnchorEvent, daysUntilDate } from './anchorEvents'
 import { getTrainingGoals, getCurrentTrainingWeek } from './training'
 import { getProjects, getProjectWithMilestones, type Project } from './projects'
 
+// Standing long-run fueling formula. Mirrored verbatim in the morning-briefing
+// edge function — keep the two in sync (full protocol in docs/fueling.md).
+const FUELING_FORMULA =
+  'Fueling formula: 2 firm bananas early (easy miles) + Tailwind in flask + ' +
+  'CARBS Fuel 50g gel (caffeinated one in the back third) + 1 GU waffle. Drink mix ' +
+  'carries the bulk of the hourly target; eat on the clock and start full (GLP-1 ' +
+  'suppresses appetite — depletion, not absorption, is the failure mode).'
+
 // Personal data export → Markdown brief, intended for upload into a
 // Claude conversation. Self-contained: identity, anchors, all major
 // time-series, training plan, projects, recent reviews, briefings.
@@ -190,6 +198,17 @@ export async function exportToMarkdown(userId: string, opts: ExportOptions): Pro
     if (longTarget > 0) w(`| Long run | ${longTarget} mi | ${longDone ? `✓ (${longestRun.toFixed(1)}mi)` : '—'} | ${longDone ? '0' : `1 long run (${longTarget}mi)`} |`)
     if (currentWeek.target_cycling_miles != null) w(`| Cycling miles | ${currentWeek.target_cycling_miles} | ${bikeDone} | ${rem(currentWeek.target_cycling_miles, bikeDone)} |`)
     if (currentWeek.target_strength_sessions != null) w(`| Strength | ${currentWeek.target_strength_sessions}× | ${strengthDone}× | ${Math.max(0, currentWeek.target_strength_sessions - strengthDone)}× |`)
+    w(``)
+    // Long run is duration + fuel-rate led ("tracked like pace").
+    if (currentWeek.long_run_duration || currentWeek.long_run_fuel_g_hr) {
+      const lr: string[] = []
+      if (currentWeek.long_run_duration) lr.push(`~${currentWeek.long_run_duration}`)
+      if (currentWeek.long_run_fuel_g_hr) lr.push(`fuel ${currentWeek.long_run_fuel_g_hr} g/hr`)
+      if (currentWeek.actual_long_run_fuel_g_hr != null) lr.push(`actual ${currentWeek.actual_long_run_fuel_g_hr} g/hr`)
+      w(`Long run prescription: ${lr.join(' · ')} — fuel rate is a primary objective, tracked like pace.`)
+      w(``)
+    }
+    w(FUELING_FORMULA)
     w(``)
     const menu: string[] = []
     if (currentWeek.quality_prescription) menu.push(`Quality: ${currentWeek.quality_prescription}`)

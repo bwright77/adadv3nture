@@ -5,7 +5,7 @@
 One place where career, family, home, body, and personal projects all live together.
 **The point of the app is to collect me** — gather the scattered signal of a life and reflect back where I'm diverging from where I meant to go. Every morning it surfaces the single highest-leverage move — not what's loudest, what actually moves the needle.
 
-**Reference docs:** [philosophy](docs/philosophy.md) · [design-system](docs/design-system.md) · [schema](docs/schema.md) · [intelligence](docs/intelligence.md) · [user-context](docs/user-context.md) · [reference](docs/reference.md)
+**Reference docs:** [philosophy](docs/philosophy.md) · [design-system](docs/design-system.md) · [schema](docs/schema.md) · [intelligence](docs/intelligence.md) · [user-context](docs/user-context.md) · [fueling](docs/fueling.md) · [reference](docs/reference.md)
 
 ---
 
@@ -38,24 +38,28 @@ One place where career, family, home, body, and personal projects all live toget
 _Update this at the start of every Claude Code session._
 
 ```
-NEXT PRIORITY: Summer band is live + refined (Jun 4). Order: FireBanner → date
-              → Adventure hero → WA progress bar → Summer Snapshots (photos;
-              the season heat-map was removed). Suggesters (adventure + family
-              hikes) are geo-aware (reachable-from-here). Family Hikes de-goaled.
-              Career opportunities use next_touch_date, not deadlines. Camp is
-              schedule-driven (CAMP_WEEKS Jun 8–12, Jul 6–10). Briefing hardened
-              (facts-only, training≠adventure, Row Bootcamp not Total Strength).
-              OPEN: feed today's exact training session into the briefing (it
-              knows weekly targets but not the day's prescription); seed
-              Howard-area ADVENTURES (adventure catalog still Denver-centric);
-              Apple Health Shortcut sleep filter. Deferred: v2 suggester scoring.
+NEXT PRIORITY: WLW 30K plan update is live (Jun 9 handoff, migration 052):
+              Ride the Hurricane DROPPED (status=skipped, Aug 2 → long run);
+              FOCO Fondo DEMOTED (long aerobic + fuel rehearsal, no bike-build
+              weekends); long-run calendar rebuilt around DURATION + FUEL RATE
+              (new training_weeks.long_run_duration / long_run_fuel_g_hr, led on
+              WeekCard + briefing + export, actual g/hr logged like pace);
+              Bergen 14mi sim removed (Bergen IS the rehearsal); peak duration
+              = Aug 9. New docs/fueling.md is the standing protocol; the kit
+              formula feeds the briefing + export. HR zones unchanged (already
+              matched). raceTargets gained a fuel field (Bergen 90–100, WLW
+              95–105). OPEN: 20-min running threshold field test before Build
+              (verify 152/165 caps); WLW drop-bag / aid-station logistics; feed
+              today's exact training session into the briefing; seed Howard-area
+              ADVENTURES; Apple Health sleep filter. Deferred: per-activity fuel
+              logging; v2 suggester scoring.
 ```
 
 ---
 
 ## What's Live (as of Jun 3, 2026)
 
-**Migrations applied:** 001–051 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
+**Migrations applied:** 001–052 · **Deployed:** https://adadv3ntures.vercel.app/ (Vercel auto-deploy from main) · **Edge Functions deploy via** `npx supabase functions deploy <name>` (or `--no-verify-jwt` for webhooks; pinned in `supabase/config.toml`)
 
 | Area | Status |
 |------|--------|
@@ -67,7 +71,7 @@ NEXT PRIORITY: Summer band is live + refined (Jun 4). Order: FireBanner → date
 | Inbox — FAB capture + swipe triage (left=delete, right=MIT) | ✓ |
 | Todo lists — career/family/home, urgency fire/deck/rain | ✓ |
 | Persistent reminders | ✓ |
-| Training tab — FOCO Fondo, Hurricane Ridge, WLW + weekly targets | ✓ |
+| Training tab — FIBArk, FOCO Fondo, Bergen, WLW + weekly targets (long run is duration + fuel-rate led; actual g/hr logged on the WeekCard) | ✓ |
 | Projects tab — milestones, contacts, image/url/progress editing | ✓ |
 | Career tab — opportunity cards with contacts | ✓ |
 | Inspiration widget — Supabase storage, "on this day", swipe ±4 days | ✓ |
@@ -164,7 +168,7 @@ NEXT PRIORITY: Summer band is live + refined (Jun 4). Order: FireBanner → date
 7. **Strength = Row Bootcamp, part of the weekly schedule** (program-tracker removed; no programs). It's the week's `strength_prescription` (2×/wk target, 3× stretch), detection `/strength|bootcamp/i`, Strava logs actuals. The plan is **prospective** — the briefing/export surface "sessions left to get in this week" (targets − logged), never "do X today" or a day-by-day schedule.
 8. **Inbox = zero friction** — FAB always visible, zero categorization at capture.
 9. **Evening is protected** — never colonize it with MITs.
-10. **West Line Winder = anchor event** — Sept 26, Buena Vista (18.1mi / 2,450ft gain; high 8,530 / low 7,930 / avg 8,260). Bergen Peak HM (Aug 22, "Bergen Peak Half Marathon" — 13.1mi / 2,451ft) is the key predictor and a `training_goals` row. The 19-week plan is the body goal. Race events carry a `commitment` (locked/conditional/aspirational); Ride the Hurricane is **conditional** — lower-prominence "MAYBE" in the Training tab, never nagged.
+10. **West Line Winder = anchor event** — Sept 26, Buena Vista (18.1mi / 2,450ft gain; high 8,530 / low 7,930 / avg 8,260). Bergen Peak HM (Aug 22, "Bergen Peak Half Marathon" — 13.1mi / 2,451ft) is the key predictor and the **full WLW dress rehearsal** (no aid, carry everything, 90–100 g/hr, race the descent), a `training_goals` row. The plan is the body goal. Race events carry a `commitment` (locked/conditional/aspirational). **Ride the Hurricane was DROPPED** (Jun 9 handoff, status=skipped) — the Aug 2 weekend became a long run; **FOCO Fondo is demoted** to a long aerobic + fueling effort (no bike-build weekends). The long-run build is **duration + fuel-rate led** ("tracked like pace" — see [docs/fueling.md](docs/fueling.md)), not distance.
 11. **MIT cadence > completion %** — each category has its own expected interval (career 3 / family 2 / home 5 / projects 5 days). Goal is forward motion, not uniform daily quota. Flag DARK (past interval); never aggregate into a single %.
 12. **Career is weekday-only** — empty Career on Sat/Sun is by design; cadence counts weekday gaps only.
 13. **Bike ✗ if wet recently or forecast-today wet** — not just "currently raining." Running in the rain is fine (runOk is temperature-only).

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { C } from '../../tokens'
 import { useAuth } from '../../contexts/AuthContext'
-import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, addTrainingWeek, updateTrainingGoalNotes, updateTrainingGoalDetails, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
+import { getTrainingGoals, getCurrentTrainingWeek, addTrainingGoal, addTrainingWeek, updateTrainingGoalNotes, updateTrainingGoalDetails, updateTrainingWeekFuelActual, type TrainingGoal, type TrainingWeek, type TrainingEventType } from '../../lib/training'
 import { TrainingProgramSection } from './TrainingProgramSection'
 import { updateTrainingGoalImageUrl, updateTrainingGoalWebsiteUrl } from '../../lib/training'
 import { isDerivedWeek } from '../../lib/trainingPlan'
@@ -407,6 +407,14 @@ function EventDetail({ goal, onClose, onUpdate }: {
                     </span>
                   </div>
                 ))}
+                {rt.fuel && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginTop: 3, paddingTop: 7, borderTop: `0.5px solid ${C.ink20}` }}>
+                    <span style={{ fontSize: 'var(--fs-12)', color: C.dark }}>Fuel rate</span>
+                    <span className="mono" style={{ fontSize: 'var(--fs-12)', fontWeight: 700, color: C.dark, whiteSpace: 'nowrap' }}>
+                      {rt.fuel} g/hr
+                    </span>
+                  </div>
+                )}
               </div>
               {rt.courseMapUrl && (
                 <a
@@ -454,12 +462,36 @@ function EventDetail({ goal, onClose, onUpdate }: {
 }
 
 function WeekCard({ week, derived }: { week: TrainingWeek; derived?: boolean }) {
+  const { user } = useAuth()
   const items: { label: string; target: number | null; actual: number | null; unit: string }[] = [
     { label: 'RUN',      target: week.target_run_miles,        actual: week.actual_run_miles,         unit: 'MI' },
     { label: 'LONG RUN', target: week.target_long_run_miles,   actual: null,                          unit: 'MI' },
     { label: 'CYCLING',  target: week.target_cycling_miles,    actual: week.actual_cycling_miles,     unit: 'MI' },
     { label: 'STRENGTH', target: week.target_strength_sessions,actual: week.actual_strength_sessions, unit: 'X' },
   ].filter(i => (i.target ?? 0) > 0)
+
+  // Long run is duration + fuel-rate led. Show the prescription and let the user
+  // log the actual g/hr they hit — tracked like pace (planned-vs-actual).
+  const hasFuelPlan = !!(week.long_run_duration || week.long_run_fuel_g_hr)
+  const [fuelDraft, setFuelDraft] = useState(
+    week.actual_long_run_fuel_g_hr != null ? String(week.actual_long_run_fuel_g_hr) : '',
+  )
+  const [savedFuel, setSavedFuel] = useState<number | null>(week.actual_long_run_fuel_g_hr)
+  const [savingFuel, setSavingFuel] = useState(false)
+
+  async function saveFuel() {
+    if (!user || derived) return
+    const trimmed = fuelDraft.trim()
+    const val = trimmed === '' ? null : Number(trimmed)
+    if (val !== null && !Number.isFinite(val)) return
+    if (val === savedFuel) return
+    setSavingFuel(true)
+    try {
+      await updateTrainingWeekFuelActual(user.id, week.week_start, val)
+      setSavedFuel(val)
+    } catch { /* leave draft for retry */ }
+    finally { setSavingFuel(false) }
+  }
 
   return (
     <div style={{
@@ -501,6 +533,45 @@ function WeekCard({ week, derived }: { week: TrainingWeek; derived?: boolean }) 
           )
         })}
       </div>
+      {hasFuelPlan && (
+        <div style={{
+          marginTop: 10, paddingTop: 10, borderTop: `0.5px solid ${C.ink20}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap',
+        }}>
+          <div>
+            <div className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.1em', marginBottom: 2 }}>LONG RUN</div>
+            <div style={{ fontSize: 'var(--fs-14)', color: C.dark }}>
+              {week.long_run_duration && <span style={{ fontWeight: 700 }}>~{week.long_run_duration}</span>}
+              {week.long_run_duration && week.long_run_fuel_g_hr && <span style={{ color: C.ink40 }}> · </span>}
+              {week.long_run_fuel_g_hr && (
+                <span>fuel <span style={{ fontWeight: 700 }}>{week.long_run_fuel_g_hr}</span> g/hr</span>
+              )}
+            </div>
+          </div>
+          {!derived && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span className="mono" style={{ fontSize: 'var(--fs-10)', color: C.ink40, letterSpacing: '0.08em' }}>ACTUAL</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={fuelDraft}
+                onChange={e => setFuelDraft(e.target.value)}
+                onBlur={saveFuel}
+                onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+                placeholder="—"
+                style={{
+                  width: 52, textAlign: 'center', border: `1px solid ${C.ink20}`, borderRadius: 8,
+                  padding: '4px 6px', fontSize: 'var(--fs-14)', fontFamily: 'inherit', color: C.dark,
+                  background: '#fff', outline: 'none',
+                }}
+              />
+              <span className="mono" style={{ fontSize: 'var(--fs-10)', color: savingFuel ? C.teal : C.ink40 }}>
+                {savingFuel ? '…' : 'g/hr'}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

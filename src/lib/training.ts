@@ -49,6 +49,11 @@ export interface TrainingWeek {
   target_cycling_miles: number | null
   target_strength_sessions: number | null
   strength_stretch_sessions: number | null   // optional stretch goal above target
+  // Long run is duration + fuel-rate led ("tracked like pace"). Distance above
+  // is kept as a secondary/approx display field.
+  long_run_duration: string | null           // planned, e.g. '2:30' / '2:00–2:15'
+  long_run_fuel_g_hr: string | null           // planned rate, e.g. '70–80'
+  actual_long_run_fuel_g_hr: number | null    // logged actual g/hr for the week's long run
   actual_run_miles: number | null
   actual_cycling_miles: number | null
   actual_strength_sessions: number | null
@@ -189,6 +194,23 @@ export async function updateTrainingGoalDetails(
     .single()
   if (error) throw new Error(error.message)
   return data as TrainingGoal
+}
+
+// Log the actual fuel rate (g carbs/hr) achieved on the week's long run. Upserts
+// the week row so a derived (no-DB-row) week can still record an actual. Pass null
+// to clear. Tracked like pace — planned target lives in long_run_fuel_g_hr.
+export async function updateTrainingWeekFuelActual(
+  userId: string,
+  weekStart: string,                  // YYYY-MM-DD — the week's Monday
+  gHr: number | null,
+): Promise<void> {
+  const { error } = await db
+    .from('training_weeks')
+    .upsert(
+      { user_id: userId, week_start: weekStart, actual_long_run_fuel_g_hr: gHr },
+      { onConflict: 'user_id,week_start' },
+    )
+  if (error) throw new Error(error.message)
 }
 
 export async function addTrainingWeek(

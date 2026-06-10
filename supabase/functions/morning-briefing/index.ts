@@ -375,6 +375,8 @@ interface TrainingWeekRow {
   target_long_run_miles: number | null
   target_cycling_miles: number | null
   target_strength_sessions: number | null
+  long_run_duration: string | null
+  long_run_fuel_g_hr: string | null
 }
 
 // Monday of the week containing `dateStr` (YYYY-MM-DD), local-anchored at noon
@@ -386,6 +388,16 @@ function mondayOf(dateStr: string): string {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// Standing long-run fueling formula. Mirrored verbatim in src/lib/dataExport.ts —
+// keep the two in sync (see docs/fueling.md for the full protocol). GLP-1
+// suppresses appetite, so the failure mode is starting depleted, not in-run
+// absorption: eat on the clock, not on hunger.
+const FUELING_FORMULA =
+  '- Fueling formula: 2 firm bananas early (easy miles) + Tailwind in flask + ' +
+  'CARBS Fuel 50g gel (caffeinated one in the back third) + 1 GU waffle. Drink mix ' +
+  'carries the bulk of the hourly target; eat on the clock and start full (GLP-1 ' +
+  'suppresses appetite — depletion, not absorption, is the failure mode).'
+
 async function loadAnchorsAndFamily(admin: any, userId: string, today: string): Promise<{
   anchorBlock: string
   familyBlock: string
@@ -400,7 +412,7 @@ async function loadAnchorsAndFamily(admin: any, userId: string, today: string): 
       .eq('user_id', userId)
       .order('sort_order', { ascending: true }),
     admin.from('training_weeks')
-      .select('week_start, phase_id, phase_label, focus, notes, key_marker, quality_prescription, strength_prescription, target_run_miles, target_long_run_miles, target_cycling_miles, target_strength_sessions')
+      .select('week_start, phase_id, phase_label, focus, notes, key_marker, quality_prescription, strength_prescription, target_run_miles, target_long_run_miles, target_cycling_miles, target_strength_sessions, long_run_duration, long_run_fuel_g_hr')
       .eq('user_id', userId)
       .order('week_start', { ascending: true }),
     admin.from('training_goals')
@@ -463,9 +475,18 @@ async function loadAnchorsAndFamily(admin: any, userId: string, today: string): 
     if (w.target_cycling_miles)     targets.push(`${w.target_cycling_miles}mi bike`)
     if (w.target_strength_sessions) targets.push(`${w.target_strength_sessions}× strength`)
     if (targets.length) lines.push(`- Targets: ${targets.join(' · ')}`)
+    // Long run is duration + fuel-rate led ("tracked like pace") — name the
+    // prescription so the model frames the long run by time + fueling, not miles.
+    if (w.long_run_duration || w.long_run_fuel_g_hr) {
+      const lr: string[] = []
+      if (w.long_run_duration) lr.push(`~${w.long_run_duration}`)
+      if (w.long_run_fuel_g_hr) lr.push(`fuel ${w.long_run_fuel_g_hr} g/hr`)
+      lines.push(`- Long run: ${lr.join(' · ')}`)
+    }
     if (w.quality_prescription)  lines.push(`- Quality: ${w.quality_prescription}`)
     if (w.strength_prescription) lines.push(`- Strength block: ${w.strength_prescription}`)
     if (w.notes) lines.push(`- Notes: ${w.notes}`)
+    lines.push(FUELING_FORMULA)
     trainingWeekBlock = lines.join('\n')
   }
 
