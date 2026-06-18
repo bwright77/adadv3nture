@@ -21,6 +21,7 @@ export function CaptureSheet({ onClose, onSaved }: CaptureSheetProps) {
   const [recent, setRecent] = useState<InboxItem[]>([])
   const [listening, setListening] = useState(false)
   const [interim, setInterim] = useState('')
+  const [kbInset, setKbInset] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null)
@@ -31,6 +32,25 @@ export function CaptureSheet({ onClose, onSaved }: CaptureSheetProps) {
       getInboxItems(user.id).then(items => setRecent(items.slice(0, 3))).catch(() => null)
     }
   }, [user])
+
+  // Keep the sheet above the on-screen keyboard (iOS doesn't resize fixed layout).
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const onChange = () => {
+      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      setKbInset(inset)
+    }
+    onChange()
+    vv.addEventListener('resize', onChange)
+    vv.addEventListener('scroll', onChange)
+    return () => {
+      vv.removeEventListener('resize', onChange)
+      vv.removeEventListener('scroll', onChange)
+    }
+  }, [])
+
+  const kbOpen = kbInset > 0
 
   function startListening() {
     if (!hasSpeech || listening) return
@@ -120,8 +140,10 @@ export function CaptureSheet({ onClose, onSaved }: CaptureSheetProps) {
 
       {/* Sheet */}
       <div style={{
-        position: 'fixed', left: 10, right: 10, bottom: 10, top: 160,
+        position: 'fixed', left: 10, right: 10,
+        bottom: kbInset + 10, top: kbOpen ? 104 : 160,
         zIndex: 50, display: 'flex', flexDirection: 'column',
+        transition: 'bottom 0.2s ease, top 0.2s ease',
       }}>
         {/* Tape strips */}
         <div style={{
@@ -259,8 +281,8 @@ export function CaptureSheet({ onClose, onSaved }: CaptureSheetProps) {
             </button>
           </div>
 
-          {/* Recent saves */}
-          {recent.length > 0 && (
+          {/* Recent saves — hidden while the keyboard is up to keep SAVE in view */}
+          {recent.length > 0 && !kbOpen && (
             <>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '14px 0 10px' }}>
                 <div style={{ flex: 1, height: 1, background: 'repeating-linear-gradient(to right, rgba(26,18,8,0.2) 0 3px, transparent 3px 6px)' }} />
